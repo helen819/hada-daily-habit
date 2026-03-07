@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2 } from "lucide-react";
+import { Loader2, Clock } from "lucide-react";
 import OnboardingStep from "@/components/onboarding/OnboardingStep";
 import GenderSelector from "@/components/onboarding/GenderSelector";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
+import { format } from "date-fns";
 
 const TOTAL_STEPS = 4;
 
@@ -15,6 +16,7 @@ export default function Onboarding() {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const queryClient = useQueryClient();
+  const [loading, setLoading] = useState(false);
 
   // 이미 프로필이 있으면 홈으로 리다이렉트
   useEffect(() => {
@@ -24,7 +26,7 @@ export default function Onboarding() {
       }
     });
   }, []);
-  const [loading, setLoading] = useState(false);
+
   const [form, setForm] = useState({
     full_name: "",
     birth_date: "",
@@ -33,6 +35,26 @@ export default function Onboarding() {
     location: "",
     goal: "",
   });
+
+  // --- 시간 선택을 위한 별도 상태 ---
+  const [useTime, setUseTime] = useState(false);
+  const [timeState, setTimeState] = useState({
+    ampm: "오전",
+    hour: "12",
+    minute: "00",
+  });
+
+  // 시간 상태 변경 시 form.birth_time 업데이트
+  useEffect(() => {
+    if (useTime) {
+      let h = parseInt(timeState.hour);
+      if (timeState.ampm === "오후" && h < 12) h += 12;
+      if (timeState.ampm === "오전" && h === 12) h = 0;
+      update("birth_time", `${String(h).padStart(2, "0")}:${timeState.minute}`);
+    } else {
+      update("birth_time", ""); // 시간 모름일 경우 빈 값
+    }
+  }, [timeState, useTime]);
 
   const update = (key, val) => setForm((p) => ({ ...p, [key]: val }));
   const canNext =
@@ -261,16 +283,75 @@ export default function Onboarding() {
                   className="rounded-xl h-12 bg-gray-50 border-gray-200 text-base"
                 />
               </div>
-              <div>
-                <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">
-                  출생 시간 (선택)
-                </label>
-                <Input
-                  type="time"
-                  value={form.birth_time}
-                  onChange={(e) => update("birth_time", e.target.value)}
-                  className="rounded-xl h-12 bg-gray-50 border-gray-200 text-base"
-                />
+              {/* 시간 입력 (3개 블록 가득 찬 스타일) */}
+              <div className="space-y-2">
+                <div className="flex justify-between items-center ml-1">
+                  <label className="text-[11px] font-bold text-purple-400 uppercase">
+                    출생 시간
+                  </label>
+                  <button
+                    onClick={() => setUseTime(!useTime)}
+                    className={`text-[10px] px-2 py-1 rounded-md font-bold transition-colors ${useTime ? "bg-purple-100 text-purple-600" : "bg-gray-100 text-gray-400"}`}
+                  >
+                    {useTime ? "입력 중" : "시간 모름"}
+                  </button>
+                </div>
+
+                {useTime ? (
+                  <motion.div
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="grid grid-cols-3 gap-2"
+                  >
+                    <select
+                      value={timeState.ampm}
+                      onChange={(e) =>
+                        setTimeState((p) => ({ ...p, ampm: e.target.value }))
+                      }
+                      className="h-14 bg-white border border-purple-100 rounded-2xl text-center font-bold text-purple-700 shadow-sm appearance-none focus:ring-2 focus:ring-purple-200"
+                    >
+                      <option>오전</option>
+                      <option>오후</option>
+                    </select>
+                    <select
+                      value={timeState.hour}
+                      onChange={(e) =>
+                        setTimeState((p) => ({ ...p, hour: e.target.value }))
+                      }
+                      className="h-14 bg-white border border-purple-100 rounded-2xl text-center font-bold text-gray-800 shadow-sm appearance-none"
+                    >
+                      {Array.from({ length: 12 }, (_, i) =>
+                        String(i + 1).padStart(2, "0"),
+                      ).map((h) => (
+                        <option key={h} value={h}>
+                          {h}시
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      value={timeState.minute}
+                      onChange={(e) =>
+                        setTimeState((p) => ({ ...p, minute: e.target.value }))
+                      }
+                      className="h-14 bg-white border border-purple-100 rounded-2xl text-center font-bold text-gray-800 shadow-sm appearance-none"
+                    >
+                      {["00", "10", "20", "30", "40", "50"].map((m) => (
+                        <option key={m} value={m}>
+                          {m}분
+                        </option>
+                      ))}
+                    </select>
+                  </motion.div>
+                ) : (
+                  <Button
+                    onClick={() => setUseTime(true)}
+                    variant="outline"
+                    className="w-full h-14 justify-start text-gray-400 rounded-2xl border-dashed border-gray-200 bg-gray-50/30"
+                  >
+                    <Clock className="mr-2 h-4 w-4 opacity-50" />
+                    시간을 모르면 비워두셔도 됩니다
+                  </Button>
+                )}
               </div>
             </div>
           </OnboardingStep>

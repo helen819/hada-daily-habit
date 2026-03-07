@@ -32,7 +32,7 @@ export default function Home() {
 
   // Redirect to onboarding if needed
   useEffect(() => {
-    if (!profile || profile.length === 0 || !profile[0].onboarding_completed) {
+    if (!profile || profile.length === 0) {
       console.log("프로필이 없거나 온보딩 미완료 - 이동함");
       navigate("/Onboarding", { replace: true });
     } else {

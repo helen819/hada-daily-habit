@@ -3,7 +3,7 @@ import { appParams } from "@/lib/app-params";
 
 const { appId } = appParams;
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-const GEMINI_MODEL = "gemini-2.5-pro";
+const GEMINI_MODEL = "gemini-2.5-flash";
 
 const getStoreKey = (entity) => `${appId}_entity_${entity}`;
 
