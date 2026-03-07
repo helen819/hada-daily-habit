@@ -1,6 +1,6 @@
 /**
  * fileSystem.js
- * LocalStorage를 "파일 시스템"처럼 다루는 핵심 유틸리티.
+ * Capacitor Preferences를 "파일 시스템"처럼 다루는 핵심 유틸리티.
  * key 네임스페이스를 관리하고 JSON 직렬화/역직렬화를 자동 처리한다.
  */
 
@@ -12,8 +12,11 @@ export const fileSystem = {
    * @param {string} path  - 가상 경로 (예: "destinyChart/user123")
    * @param {any}    data  - 저장할 데이터 (자동으로 JSON 직렬화)
    */
-  write(path, data) {
-    localStorage.setItem(NS + path, JSON.stringify({ data, updatedAt: Date.now() }));
+  async write(path, data) {
+    await Preferences.set({
+      key: NS + path,
+      value: JSON.stringify({ data, updatedAt: Date.now() }),
+    });
   },
 
   /**
@@ -21,11 +24,11 @@ export const fileSystem = {
    * @param {string} path
    * @returns {any|null} 저장된 데이터, 없으면 null
    */
-  read(path) {
-    const raw = localStorage.getItem(NS + path);
-    if (!raw) return null;
+  async read(path) {
+    const { value } = await Preferences.get({ key: NS + path });
+    if (!value) return null;
     try {
-      return JSON.parse(raw).data;
+      return JSON.parse(value).data;
     } catch {
       return null;
     }
@@ -36,8 +39,9 @@ export const fileSystem = {
    * @param {string} path
    * @returns {boolean}
    */
-  exists(path) {
-    return localStorage.getItem(NS + path) !== null;
+  async exists(path) {
+    const { value } = await Preferences.get({ key: NS + path });
+    return value !== null;
   },
 
   /**
@@ -45,11 +49,11 @@ export const fileSystem = {
    * @param {string} path
    * @returns {{ updatedAt: number }|null}
    */
-  stat(path) {
-    const raw = localStorage.getItem(NS + path);
-    if (!raw) return null;
+  async stat(path) {
+    const { value } = await Preferences.get({ key: NS + path });
+    if (!value) return null;
     try {
-      const parsed = JSON.parse(raw);
+      const parsed = JSON.parse(value);
       return { updatedAt: parsed.updatedAt };
     } catch {
       return null;
@@ -60,28 +64,31 @@ export const fileSystem = {
    * 파일 삭제
    * @param {string} path
    */
-  remove(path) {
-    localStorage.removeItem(NS + path);
+  async remove(path) {
+    await Preferences.remove({ key: NS + path });
   },
-
   /**
    * 특정 디렉터리(prefix) 아래 모든 파일 경로 목록 반환
    * @param {string} dir - 예: "dailyLog/"
    * @returns {string[]} path 목록 (NS prefix 제거 후)
    */
-  listDir(dir) {
+  async listDir(dir) {
     const prefix = NS + dir;
-    return Object.keys(localStorage)
-      .filter(k => k.startsWith(prefix))
-      .map(k => k.slice(NS.length));
+    const { keys } = await Preferences.keys();
+    return keys
+      .filter((k) => k.startsWith(prefix))
+      .map((k) => k.slice(NS.length));
   },
 
   /**
    * 전체 네임스페이스 초기화 (앱 데이터 전부 삭제)
    */
-  clearAll() {
-    Object.keys(localStorage)
-      .filter(k => k.startsWith(NS))
-      .forEach(k => localStorage.removeItem(k));
+  async clearAll() {
+    const { keys } = await Preferences.keys();
+    const hadaKeys = keys.filter((k) => k.startsWith(NS));
+
+    for (const key of hadaKeys) {
+      await Preferences.remove({ key });
+    }
   },
 };

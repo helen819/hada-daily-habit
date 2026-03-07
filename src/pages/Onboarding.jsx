@@ -437,7 +437,12 @@ export default function Onboarding() {
                       <Calendar
                         mode="single"
                         selected={date}
-                        onSelect={setDate}
+                        onSelect={(newDate) => {
+                          if (newDate) {
+                            // 선택된 날짜가 있을 때만 상태를 업데이트함 (null이면 무시)
+                            setDate(newDate);
+                          }
+                        }}
                         month={currentMonth}
                         onMonthChange={setCurrentMonth}
                         locale={ko}

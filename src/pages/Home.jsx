@@ -73,18 +73,20 @@ export default function Home() {
   // Show mode card 3 seconds after loading
   useEffect(() => {
     if (profile && reading?.mode_card) {
-      const todayDate = new Date().toISOString().split("T")[0];
-      const lastShownDate = localStorage.getItem("modeCardLastShownDate");
+      const checkAndShowPopup = async () => {
+        const todayDate = new Date().toISOString().split("T")[0];
+        const lastShownDate = await base44.storage.get("modeCardLastShownDate");
 
-      // 오늘 아직 안 봤다면 타이머 시작
-      if (lastShownDate !== todayDate) {
-        const timer = setTimeout(() => {
-          setShowModeCard(true);
-          // 팝업 띄우면서 '오늘 봤음' 기록 저장
-          localStorage.setItem("modeCardLastShownDate", todayDate);
-        }, 3000);
-        return () => clearTimeout(timer);
-      }
+        if (lastShownDate !== todayDate) {
+          const timer = setTimeout(async () => {
+            setShowModeCard(true);
+            await base44.storage.set("modeCardLastShownDate", todayDate);
+          }, 3000);
+          return () => clearTimeout(timer);
+        }
+      };
+
+      checkAndShowPopup();
     }
   }, [profile, reading]);
 
@@ -368,12 +370,12 @@ base_stats: ${JSON.stringify(profile.base_stats)}
           <p className="text-[10px] font-semibold text-purple-500 uppercase tracking-widest mb-1">
             HADA
           </p>
-          <h1 className="text-lg font-bold text-gray-900 leading-snug truncate">
+          <h1 className="text-lg font-bold text-gray-900 leading-snug break-keep whitespace-normal">
             {reading?.today_hint
               ? `"${reading.today_hint}"`
               : `안녕하세요, ${profile.full_name}님`}
           </h1>
-          <p className="text-[11px] text-gray-600 mt-1 truncate">
+          <p className="text-[11px] text-gray-600 mt-1 break-keep whitespace-normal">
             {reading?.welcome_subtitle || profile.goal}
           </p>
         </motion.div>
