@@ -68,23 +68,20 @@ function TarotDetailModal({ action, onClose, onAdd, added, onNext, onPrev }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-5"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-5 touch-none"
       onClick={onClose}
+      onScroll={(e) => e.stopPropagation()}
+      onTouchStart={(e) => e.stopPropagation()}
+      onTouchMove={(e) => e.stopPropagation()}
     >
       <motion.div
-        initial={{ scale: 0.85, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.85, opacity: 0 }}
+        initial={{ scale: 0.85, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.85, opacity: 0, y: 20 }}
         onClick={(e) => e.stopPropagation()}
-        drag="x"
-        dragConstraints={{ left: 0, right: 0 }}
-        dragElastic={0.2}
-        onDragEnd={(e, info) => {
-          if (info.offset.x < -60) onNext?.();
-          else if (info.offset.x > 60) onPrev?.();
-        }}
-        className={`bg-white rounded-3xl w-full max-w-sm shadow-2xl border-l-4 ${borderColor} overflow-hidden`}
+        className={`relative bg-white rounded-3xl w-full max-w-sm shadow-2xl border-l-4 ${borderColor} overflow-hidden`}
       >
+        {/* 상단 헤더 영역 */}
         <div
           className={`bg-gradient-to-r ${backGradient} p-5 flex items-center justify-between`}
         >
@@ -104,41 +101,39 @@ function TarotDetailModal({ action, onClose, onAdd, added, onNext, onPrev }) {
           </button>
         </div>
 
-        <div className="p-5 space-y-4">
+        {/* 3. 본문 영역: 배경색이 투명하지 않도록 다시 한번 bg-white 확인 */}
+        <div className="p-6 space-y-5 bg-white">
           <p className="text-xl font-black text-gray-800 leading-snug">
             {action.micro_action}
           </p>
 
+          {/* 진행도 바 영역 */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <p className="text-xs font-semibold text-gray-500">오늘 진행도</p>
-              <span
-                className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                  progress > 80
-                    ? "bg-green-500 text-white"
-                    : progress > 50
-                      ? "bg-yellow-500 text-white"
-                      : "bg-orange-500 text-white"
-                }`}
-              >
-                {progress}%
+              <span className="text-xs font-bold text-orange-500 bg-orange-50 px-2 py-0.5 rounded-full">
+                65%
               </span>
             </div>
             <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
               <div
                 className="h-full bg-gradient-to-r from-orange-400 to-red-400 rounded-full"
-                style={{ width: `${progress}%` }}
+                style={{ width: `65%` }}
               />
             </div>
           </div>
 
-          {(action.how || action.fortune) && (
-            <p className="text-sm text-gray-500 leading-relaxed">
+          {/* 설명 텍스트 영역 */}
+          <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
+            <p className="text-sm text-gray-600 leading-relaxed break-keep">
               {action.how}
-              {action.how && action.fortune ? " • " : ""}
-              {action.fortune}
+              {action.fortune && (
+                <span className="block mt-2 text-purple-600 font-medium">
+                  ✨ {action.fortune}
+                </span>
+              )}
             </p>
-          )}
+          </div>
 
           <button
             onClick={() => {
@@ -146,16 +141,16 @@ function TarotDetailModal({ action, onClose, onAdd, added, onNext, onPrev }) {
               onClose();
             }}
             disabled={added}
-            className={`w-full py-3 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 transition-all ${
+            className={`w-full py-4 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 transition-all ${
               added
                 ? "bg-green-100 text-green-600"
-                : "bg-purple-500 text-white hover:bg-purple-600"
+                : "bg-purple-500 text-white shadow-lg shadow-purple-100"
             }`}
           >
             {added ? (
-              <Check className="w-4 h-4" strokeWidth={1.5} />
+              <Check className="w-4 h-4" />
             ) : (
-              <Plus className="w-4 h-4" strokeWidth={1.5} />
+              <Plus className="w-4 h-4" />
             )}
             {added ? "할일에 추가됨" : "할일 목록에 추가"}
           </button>
@@ -249,50 +244,52 @@ function MiniTarotCard({ action, onAddToTodo, onNext, onPrev }) {
               backfaceVisibility: "hidden",
               WebkitBackfaceVisibility: "hidden",
               transform: "rotateY(180deg)",
+              display: "flex", // Flex 적용
+              flexDirection: "column", // 세로 정렬
+              height: "100%", // 높이 100%
             }}
           >
-            <div className="flex flex-col h-full">
-              {/* 아이콘 + 미션 텍스트 (핵심만) */}
-              <div className="flex items-start gap-1.5 flex-1">
-                <div
-                  className={`w-5 h-5 rounded-md bg-white/70 flex items-center justify-center flex-shrink-0 mt-0.5 ${iconColor}`}
-                >
-                  <Icon className="w-3 h-3" strokeWidth={1.5} />
-                </div>
-                <p className="text-[12px] font-black text-gray-800 leading-snug flex-1">
-                  {action.micro_action}
-                </p>
+            {/* 상단: 아이콘 + 텍스트 영역 (가변 높이 확보) */}
+            <div className="flex items-start gap-1.5 flex-1 min-h-0 overflow-hidden">
+              <div
+                className={`w-5 h-5 rounded-md bg-white/70 flex items-center justify-center flex-shrink-0 mt-0.5 ${iconColor}`}
+              >
+                <Icon className="w-3 h-3" strokeWidth={1.5} />
               </div>
+              {/* line-clamp-4: 최대 4줄까지만 보여주고 나머지는 ... 처리 */}
+              <p className="text-[11px] font-black text-gray-800 leading-snug flex-1 line-clamp-4 overflow-hidden break-keep">
+                {action.micro_action}
+              </p>
+            </div>
 
-              {/* 버튼 영역 */}
-              <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-200/60">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowDetail(true);
-                  }}
-                  className="flex items-center justify-center w-6 h-6 rounded-lg bg-white/60 hover:bg-white transition-colors"
-                >
-                  <Maximize2
-                    className="w-3 h-3 text-gray-500"
-                    strokeWidth={1.5}
-                  />
-                </button>
-                <button
-                  onClick={handleAdd}
-                  className={`flex items-center justify-center w-6 h-6 rounded-lg transition-all ${
-                    added
-                      ? "bg-green-100 text-green-600"
-                      : "bg-purple-100 text-purple-500 hover:bg-purple-200"
-                  }`}
-                >
-                  {added ? (
-                    <Check className="w-3 h-3" strokeWidth={1.5} />
-                  ) : (
-                    <Plus className="w-3 h-3" strokeWidth={1.5} />
-                  )}
-                </button>
-              </div>
+            {/* 하단: 버튼 영역 (카드 하단에 고정) */}
+            <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-200/60 flex-shrink-0">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowDetail(true);
+                }}
+                className="flex items-center justify-center w-7 h-7 rounded-lg bg-white/60 hover:bg-white active:scale-90 transition-all"
+              >
+                <Maximize2
+                  className="w-3.5 h-3.5 text-gray-500"
+                  strokeWidth={1.5}
+                />
+              </button>
+              <button
+                onClick={handleAdd}
+                className={`flex items-center justify-center w-6 h-6 rounded-lg transition-all ${
+                  added
+                    ? "bg-green-100 text-green-600"
+                    : "bg-purple-100 text-purple-500 hover:bg-purple-200"
+                }`}
+              >
+                {added ? (
+                  <Check className="w-3 h-3" strokeWidth={1.5} />
+                ) : (
+                  <Plus className="w-3 h-3" strokeWidth={1.5} />
+                )}
+              </button>
             </div>
           </div>
         </motion.div>

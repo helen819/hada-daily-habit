@@ -163,9 +163,12 @@ export const base44 = {
               potentials: [{ name: "인복", value: 95 }],
             },
             recommended_mode: "action",
-            welcome_title: "환영합니다! 운명이 당신을 돕고 있습니다.",
-            welcome_subtitle: "오늘부터 HADA와 함께 행운을 쌓아보세요.",
-            today_hint: "자신감을 갖고 도전하세요!",
+            welcome_title:
+              "환영합니다! 운명이 당신을 돕고 있습니다. (적어도 다 눈에 보여야 하니까 이렇게 길게 만들어서 잘 나오는지 확인하는게 맞겠죠)",
+            welcome_subtitle:
+              "오늘부터 HADA와 함께 행운을 쌓아보세요. (AI한테 아무리 글자수 제한을 줘도 자기 맘대로 길게 여러문장 출력합니다)",
+            today_hint:
+              "자신감을 갖고 도전하세요! (가짜로 넣은 데이터인데 길어지면 어떻게 표시되는지 알고 싶습니다)",
             cards: [
               {
                 keyword: "명상",
