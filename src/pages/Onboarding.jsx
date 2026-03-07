@@ -3,12 +3,31 @@ import { AnimatePresence, motion } from "framer-motion";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, Clock } from "lucide-react";
+import {
+  Loader2,
+  Clock,
+  Calendar as CalendarIcon,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import OnboardingStep from "@/components/onboarding/OnboardingStep";
 import GenderSelector from "@/components/onboarding/GenderSelector";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { format } from "date-fns";
+import {
+  format,
+  addMonths,
+  subMonths,
+  setYear,
+  setMonth as setDateMonth,
+} from "date-fns";
+import { ko } from "date-fns/locale";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 const TOTAL_STEPS = 4;
 
@@ -22,27 +41,36 @@ export default function Onboarding() {
   useEffect(() => {
     base44.entities.UserProfile.list().then((profiles) => {
       if (profiles && profiles.length > 0) {
-        navigate("/");
+        navigate("/Home", { replace: true });
       }
     });
-  }, []);
+  }, [navigate]);
 
   const [form, setForm] = useState({
     full_name: "",
-    birth_date: "",
+    birth_date: format(new Date(2000, 0, 1), "yyyy-MM-dd"),
     birth_time: "",
     gender: "",
     location: "",
     goal: "",
   });
 
-  // --- 시간 선택을 위한 별도 상태 ---
+  // --- 날짜/시간 관리를 위한 상태 ---
+  const [date, setDate] = useState(new Date(2000, 0, 1)); // 기본값 1995년 1월 1일
+  const [currentMonth, setCurrentMonth] = useState(new Date(2000, 0, 1)); // 달력 화면 위치
   const [useTime, setUseTime] = useState(false);
   const [timeState, setTimeState] = useState({
     ampm: "오전",
     hour: "12",
     minute: "00",
   });
+
+  // 날짜 선택 시 form 업데이트
+  useEffect(() => {
+    if (date) {
+      update("birth_date", format(date, "yyyy-MM-dd"));
+    }
+  }, [date]);
 
   // 시간 상태 변경 시 form.birth_time 업데이트
   useEffect(() => {
@@ -271,17 +299,159 @@ export default function Onboarding() {
             title="생년월일을 알려주세요"
             subtitle="시간까지 입력하면 더 정확해요."
           >
-            <div className="space-y-5">
-              <div>
-                <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">
+            <div className="space-y-6">
+              {/* --- 커스텀 캘린더 섹션 --- */}
+              <div className="space-y-2">
+                <label className="text-[11px] font-bold text-purple-400 ml-1 uppercase">
                   생년월일
                 </label>
-                <Input
-                  type="date"
-                  value={form.birth_date}
-                  onChange={(e) => update("birth_date", e.target.value)}
-                  className="rounded-xl h-12 bg-gray-50 border-gray-200 text-base"
-                />
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full h-14 justify-start text-left font-normal rounded-2xl border-purple-100 bg-white shadow-sm hover:bg-white active:scale-[0.98]"
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4 text-purple-500" />
+                      {date ? (
+                        format(date, "yyyy년 MM월 dd일", { locale: ko })
+                      ) : (
+                        <span>날짜 선택</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    className="w-[260px] p-0 rounded-3xl shadow-2xl border-none overflow-hidden"
+                    align="center"
+                  >
+                    <div className="p-4 bg-white">
+                      {/* 헤더 부분 (기존과 동일) */}
+                      <div className="flex items-center justify-between mb-4 px-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-purple-500"
+                          onClick={() =>
+                            setCurrentMonth(subMonths(currentMonth, 1))
+                          }
+                        >
+                          <ChevronLeft size={20} />
+                        </Button>
+                        <div className="flex gap-1">
+                          <select
+                            value={currentMonth.getFullYear()}
+                            onChange={(e) =>
+                              setCurrentMonth(
+                                setYear(currentMonth, parseInt(e.target.value)),
+                              )
+                            }
+                            className="bg-purple-50 text-purple-700 font-bold text-sm rounded-lg px-2 py-1 border-none focus:ring-0 appearance-none cursor-pointer"
+                          >
+                            {Array.from(
+                              { length: 100 },
+                              (_, i) => 2025 - i,
+                            ).map((y) => (
+                              <option key={y} value={y}>
+                                {y}년
+                              </option>
+                            ))}
+                          </select>
+                          <select
+                            value={currentMonth.getMonth()}
+                            onChange={(e) =>
+                              setCurrentMonth(
+                                setDateMonth(
+                                  currentMonth,
+                                  parseInt(e.target.value),
+                                ),
+                              )
+                            }
+                            className="bg-purple-50 text-purple-700 font-bold text-sm rounded-lg px-2 py-1 border-none focus:ring-0 appearance-none cursor-pointer"
+                          >
+                            {Array.from({ length: 12 }, (_, i) => i).map(
+                              (m) => (
+                                <option key={m} value={m}>
+                                  {m + 1}월
+                                </option>
+                              ),
+                            )}
+                          </select>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-purple-500"
+                          onClick={() =>
+                            setCurrentMonth(addMonths(currentMonth, 1))
+                          }
+                        >
+                          <ChevronRight size={20} />
+                        </Button>
+                      </div>
+
+                      {/* 🔥 수정된 스타일 정의 🔥 */}
+                      <style>{`
+      /* 1. 상단 'n월 YYYY' 텍스트 완전 제거 */
+      .rdp-vhidden, .rdp-caption_label, .rdp-caption { 
+        display: none !important; 
+      }
+      
+      /* 2. 달력 본체 가로 꽉 채우기 및 중앙 정렬 */
+      .rdp {
+        margin: 0 !important;
+        width: 100% !important;
+      }
+      .rdp-months {
+        justify-content: center !important;
+        width: 100% !important;
+      }
+      .rdp-month {
+        width: 100% !important;
+      }
+      .rdp-table {
+        width: 100% !important;
+        max-width: none !important;
+      }
+      
+      /* 3. 각 날짜 셀 크기 균등 배분 */
+      .rdp-cell {
+        text-align: center !important;
+        padding: 0 !important;
+      }
+      .rdp-day {
+        width: 40px !important;
+        height: 40px !important;
+        margin: auto !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+      }
+
+      /* 4. 선택된 날짜 보라색 배경 */
+      .rdp-day_selected { 
+        background-color: #a855f7 !important; 
+        color: white !important; 
+        border-radius: 12px !important; 
+      }
+    `}</style>
+
+                      <Calendar
+                        mode="single"
+                        selected={date}
+                        onSelect={setDate}
+                        month={currentMonth}
+                        onMonthChange={setCurrentMonth}
+                        locale={ko}
+                        disableNavigation
+                        className="p-0 border-none"
+                        classNames={{
+                          caption_label: "hidden",
+                          caption:
+                            "flex justify-center relative items-center h-0", // 높이를 0으로 만들어 공간 제거
+                        }}
+                      />
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
               {/* 시간 입력 (3개 블록 가득 찬 스타일) */}
               <div className="space-y-2">
