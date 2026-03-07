@@ -1,0 +1,176 @@
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&family=Indie+Flower&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* 기본 색상 */
+    --background: 0 0% 100%;
+    --foreground: 240 10% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 10%;
+    --primary: 262 60% 60%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 262 30% 96%;
+    --secondary-foreground: 262 40% 30%;
+    --muted: 260 20% 96%;
+    --muted-foreground: 260 10% 50%;
+    --accent: 38 90% 65%;
+    --accent-foreground: 38 90% 15%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 260 15% 92%;
+    --input: 260 15% 92%;
+    --ring: 262 60% 60%;
+    --radius: 1rem;
+    --chart-1: 262 60% 60%;
+    --chart-2: 330 70% 70%;
+    --chart-3: 38 90% 65%;
+    --chart-4: 190 70% 60%;
+    --chart-5: 150 50% 55%;
+
+    /* 라이트 모드 색상 팔레트 */
+    --light-bg-primary: #FAFBFC;
+    --light-bg-secondary: #FFFFFF;
+    --light-bg-surface: #F8FAFC;
+    --light-bg-elevated: #FFFFFF;
+    --light-text-primary: #0F172A;
+    --light-text-secondary: #475569;
+    --light-text-tertiary: #64748B;
+    --light-border-primary: #E2E8F0;
+    --light-border-secondary: #F1F5F9;
+    --light-primary: #6366F1;
+    --light-primary-container: #E0E7FF;
+    --light-secondary: #A855F7;
+    --light-success: #10B981;
+    --light-warning: #F59E0B;
+    --light-info: #3B82F6;
+    --light-error: #EF4444;
+  }
+
+  .dark {
+    /* 다크 모드 색상 팔레트 */
+    --light-bg-primary: #0A0C12;
+    --light-bg-secondary: #131622;
+    --light-bg-surface: #1A1F2E;
+    --light-bg-elevated: #1E232D;
+    --light-text-primary: #F8FAFC;
+    --light-text-secondary: #CBD5E1;
+    --light-text-tertiary: #94A3B8;
+    --light-border-primary: #334155;
+    --light-border-secondary: #1E293B;
+    --light-primary: #A78BFA;
+    --light-primary-container: #4C1D95;
+    --light-secondary: #C084FC;
+    --light-success: #34D399;
+    --light-warning: #FBBF24;
+    --light-info: #60A5FA;
+    --light-error: #F87171;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  
+  /* 단어 단위 줄바꿈 전역 설정 */
+  p, span, h1, h2, h3, h4, h5, h6, button, label, div {
+    word-break: keep-all;
+    overflow-wrap: break-word;
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.shimmer-bg {
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: shimmer 2s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { 
+    box-shadow: 0 0 20px rgba(168, 85, 247, 0.4), 0 0 40px rgba(168, 85, 247, 0.2);
+  }
+  50% { 
+    box-shadow: 0 0 30px rgba(168, 85, 247, 0.6), 0 0 60px rgba(168, 85, 247, 0.4);
+  }
+}
+
+@keyframes glow-border {
+  0%, 100% { 
+    box-shadow: inset 0 0 20px rgba(168, 85, 247, 0.3), 0 0 30px rgba(168, 85, 247, 0.3);
+  }
+  50% { 
+    box-shadow: inset 0 0 30px rgba(168, 85, 247, 0.5), 0 0 40px rgba(168, 85, 247, 0.5);
+  }
+}
+
+@keyframes starlight {
+  0% { opacity: 0.3; }
+  50% { opacity: 0.7; }
+  100% { opacity: 0.3; }
+}
+
+@keyframes card-lift {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+  100% { transform: translateY(0px); }
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-glow-border {
+  animation: glow-border 2.5s ease-in-out infinite;
+}
+
+.animate-starlight {
+  animation: starlight 3s ease-in-out infinite;
+}
+
+.animate-card-lift {
+  animation: card-lift 0.6s ease-in-out;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">HADA</string>
+    <string name="title_activity_main">HADA</string>
+    <string name="package_name">com.preson88.hada</string>
+    <string name="custom_url_scheme">com.preson88.hada</string>
+</resources>
