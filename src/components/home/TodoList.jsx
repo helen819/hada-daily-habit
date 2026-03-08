@@ -75,7 +75,7 @@ export default function TodoList({
     const container = document.querySelector(".min-h-screen") || document.body;
     // 입력을 마치면 여백 제거
     setTimeout(() => {
-      container.style.paddingBottom = "0px";
+      container.style.paddingBottom = "";
     }, 300);
   };
 
@@ -148,7 +148,14 @@ export default function TodoList({
                 onFocus={handleInputFocus}
                 onBlur={handleInputBlur}
                 placeholder="할 일 추가하기..."
-                className="rounded-xl bg-gray-50 border-gray-200 text-xs flex-1"
+                /* 
+                  🔥 개선된 스타일: 
+                  1. focus-visible:ring-0 (기본 파란색/검은색 링 제거)
+                  2. focus:outline-none (브라우저 기본 아웃라인 제거)
+                  3. focus:border-purple-400 (포커스 시 나타날 부드러운 테두리 색상)
+                  4. ring-offset-0 (링 여백 제거)
+                */
+                className="rounded-xl bg-gray-50 border-gray-200 text-xs flex-1 transition-all focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:border-purple-400 focus:bg-white"
               />
               <button
                 onClick={handleAdd}

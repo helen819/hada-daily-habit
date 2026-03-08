@@ -90,7 +90,7 @@ export default function Layout({ children, currentPageName }) {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background dark:bg-slate-950">
       <AdModal
         visible={showModeAd}
         onClose={applyModeChange}
@@ -139,9 +139,9 @@ export default function Layout({ children, currentPageName }) {
 
         {/* 2. 메인 콘텐츠: 상단 노치 여백과 하단 탭바 여백을 설정합니다 */}
         <main
-          className="flex-1"
+          className="flex-1 w-full"
           style={{
-            paddingTop: "calc(env(safe-area-inset-top) + 16px)", // 노치 + 여유공간
+            paddingTop: "calc(env(safe-area-inset-top) + 20px)", // 노치 + 여유공간
             paddingBottom: "calc(env(safe-area-inset-bottom) + 80px)", // 하단바 + 탭바 높이
           }}
         >
@@ -150,11 +150,11 @@ export default function Layout({ children, currentPageName }) {
 
         {/* 3. 하단 네비게이션: 배경은 바닥까지, 아이콘만 안전영역 위로 */}
         {!hideNav && (
-          <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-t border-gray-100 dark:border-slate-800">
-            <div
-              className="max-w-md mx-auto flex items-center justify-around py-2 px-4"
-              style={{ paddingBottom: "env(safe-area-inset-bottom)" }} // 제스처 바 영역 회피
-            >
+          <nav
+            className="fixed left-0 right-0 z-40 p-4"
+            style={{ bottom: "env(safe-area-inset-bottom)" }}
+          >
+            <div className="max-w-md mx-auto bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-gray-100 dark:border-slate-800 rounded-3xl shadow-2xl flex items-center justify-around py-3 px-2">
               {navItems.map(({ name, icon: Icon, label }) => {
                 const isActive = currentPageName === name;
                 return (

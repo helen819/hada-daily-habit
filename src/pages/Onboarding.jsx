@@ -260,8 +260,8 @@ export default function Onboarding() {
       className="min-h-screen bg-gradient-to-b from-white via-purple-50/30 to-white"
       style={{
         paddingTop: "env(safe-area-inset-top)",
-        // 하단 네비게이션 버튼 영역 높이(약 96px)와 하단 바 여백만큼 확보
-        paddingBottom: "calc(env(safe-area-inset-bottom) + 96px)",
+        // 버튼 영역의 높이(12 + 48 + 24 = 약 84px) 만큼 바닥 여백 확보
+        paddingBottom: "calc(env(safe-area-inset-bottom) + 100px)",
       }}
     >
       <AnimatePresence mode="wait">
@@ -576,8 +576,13 @@ export default function Onboarding() {
 
       {/* Navigation */}
       <div
-        className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-white via-white to-transparent"
-        style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 1.5rem)" }} // 1.5rem은 기존 p-6 값
+        className="fixed bottom-0 left-0 right-0 p-6 z-50"
+        style={{
+          /*1. env(...) 만큼 마진을 주어 시스템 바를 완전히 피합니다. 
+       2. 하단에 배경색이 겹치지 않게 bg-gradient를 제거하거나 투명하게 조절합니다.
+    */
+          marginBottom: "env(safe-area-inset-bottom)",
+        }}
       >
         <div className="flex gap-3 max-w-md mx-auto">
           {step > 0 && (
