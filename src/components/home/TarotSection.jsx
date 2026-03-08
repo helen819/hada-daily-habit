@@ -488,7 +488,7 @@ function InfiniteCardCarousel({ actions, onAddToTodo }) {
         </div>
 
         {/* 인디케이터 */}
-        <div className="absolute bottom-0 left-0 right-0 flex justify-center gap-1 pb-0.5 pointer-events-none z-20">
+        {/* <div className="absolute bottom-0 left-0 right-0 flex justify-center gap-1 pb-0.5 pointer-events-none z-20">
           {items.map((item, i) => (
             <div
               key={i}
@@ -501,7 +501,7 @@ function InfiniteCardCarousel({ actions, onAddToTodo }) {
               }`}
             />
           ))}
-        </div>
+        </div> */}
       </div>
     </React.Fragment>
   );

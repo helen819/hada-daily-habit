@@ -1,10 +1,11 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import AdModal from "@/components/shop/AdModal";
+import { Keyboard } from "@capacitor/keyboard"; // 🔥 추가
 
 function ProgressTask({ todo, onToggle }) {
   return (
@@ -36,6 +37,48 @@ export default function TodoList({
   const addCountRef = useRef(0);
   const adShownRef = useRef(false);
 
+  // 🔥 1. 전체 리스트를 가리키는 ref 생성
+  const listRef = useRef(null);
+  const inputRef = useRef(null); // 🔥 인풋 직접 제어를 위한 ref
+
+  // 🔥 키보드 이벤트 감시 및 자동 Blur 처리
+  useEffect(() => {
+    // 키보드가 닫혔을 때 실행될 리스너
+    const hideListener = Keyboard.addListener("keyboardWillHide", () => {
+      if (inputRef.current) {
+        inputRef.current.blur(); // 1. 강제로 포커스 해제
+      }
+      handleInputBlur(); // 2. 바닥 여백 원복
+    });
+
+    return () => {
+      hideListener.remove(); // 컴포넌트 언마운트 시 리스너 제거
+    };
+  }, []);
+
+  // 🔥 2. 포커스 시 컴포넌트 상단을 화면 최상단으로 이동
+  const handleInputFocus = () => {
+    // 바닥에 충분한 공간을 주어야 최상단까지 올라갈 수 있습니다.
+    const container = document.querySelector(".min-h-screen") || document.body;
+    container.style.paddingBottom = "10vh";
+
+    setTimeout(() => {
+      // 컴포넌트(listRef)의 시작 부분을 화면의 'start'(최상단)로 정렬
+      listRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 300);
+  };
+
+  const handleInputBlur = () => {
+    const container = document.querySelector(".min-h-screen") || document.body;
+    // 입력을 마치면 여백 제거
+    setTimeout(() => {
+      container.style.paddingBottom = "0px";
+    }, 300);
+  };
+
   const handleAdd = () => {
     if (!newTodo.trim()) return;
     onAdd(newTodo.trim());
@@ -47,6 +90,8 @@ export default function TodoList({
         adShownRef.current = true;
       }
     }
+    // 팁: 추가 완료 후에도 키보드를 닫고 싶다면 여기서 blur() 호출
+    inputRef.current?.blur();
   };
 
   const allTodos = todos || [];
@@ -59,7 +104,10 @@ export default function TodoList({
         onClose={() => setShowAd(false)}
         closeLabel="닫기"
       />
-      <div className="p-5 rounded-3xl shadow-md border border-gray-100 bg-white">
+      <div
+        ref={listRef}
+        className="p-5 rounded-3xl shadow-md border border-gray-100 bg-white"
+      >
         <div className="flex justify-between mb-4 items-center">
           <h3 className="text-[14px] font-bold text-gray-900">오늘 할 일</h3>
           <div className="flex items-center gap-2">
@@ -88,10 +136,17 @@ export default function TodoList({
               <Input
                 // autoFocus
                 value={newTodo}
+                ref={inputRef}
                 onChange={(e) => setNewTodo(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") handleAdd();
+                  if (e.key === "Enter") {
+                    handleAdd();
+                    e.target.blur(); // 키보드 닫기
+                  }
                 }}
+                // 🔥 추가된 부분: 포커스 시 스크롤 실행
+                onFocus={handleInputFocus}
+                onBlur={handleInputBlur}
                 placeholder="할 일 추가하기..."
                 className="rounded-xl bg-gray-50 border-gray-200 text-xs flex-1"
               />

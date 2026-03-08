@@ -11,6 +11,10 @@ const config: CapacitorConfig = {
       // 상태바 아이콘 색상 설정 (밝은 배경이면 'DARK', 어두운 배경이면 'LIGHT')
       style: 'DEFAULT', 
     },
+    Keyboard: {
+      resize: "body", // 키보드가 올라올 때 body 전체 크기를 조절함
+      resizeOnFullScreen: true,
+    },
   },
 };
 
