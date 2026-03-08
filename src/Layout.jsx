@@ -96,9 +96,16 @@ export default function Layout({ children, currentPageName }) {
         onClose={applyModeChange}
         closeLabel="모드 전환하기 ✨"
       />
-      <div className="max-w-md mx-auto relative">
+      {/* 
+          1. 전체 컨테이너에 상단/하단 여백 확보 
+          pt: 노치 높이만큼, pb: 하단바 높이만큼 (기본 패딩 포함)
+      */}
+      <div className="flex-1 w-full max-w-md mx-auto relative flex flex-col">
         {!hideNav && (
-          <div className="fixed top-0 right-0 z-30 p-4 flex items-center gap-2">
+          <div
+            className="fixed right-0 z-30 p-4 flex items-center gap-2"
+            style={{ top: "env(safe-area-inset-top)" }} // 노치 아래로 버튼을 밀어줌
+          >
             {/* Mode Toggle */}
             <button
               onClick={toggleMode}
@@ -130,33 +137,44 @@ export default function Layout({ children, currentPageName }) {
           </div>
         )}
 
-        {children}
+        {/* 2. 메인 콘텐츠: 상단 노치 여백과 하단 탭바 여백을 설정합니다 */}
+        <main
+          className="flex-1"
+          style={{
+            paddingTop: "calc(env(safe-area-inset-top) + 16px)", // 노치 + 여유공간
+            paddingBottom: "calc(env(safe-area-inset-bottom) + 80px)", // 하단바 + 탭바 높이
+          }}
+        >
+          {children}
+        </main>
 
+        {/* 3. 하단 네비게이션: 배경은 바닥까지, 아이콘만 안전영역 위로 */}
         {!hideNav && (
-          <nav className="fixed bottom-0 left-0 right-0 z-40">
-            <div className="max-w-md mx-auto bg-white/90 backdrop-blur-xl border-t border-gray-100">
-              <div className="flex items-center justify-around py-2 px-4">
-                {navItems.map(({ name, icon: Icon, label }) => {
-                  const isActive = currentPageName === name;
-                  return (
-                    <Link
-                      key={name}
-                      to={createPageUrl(name)}
-                      className={`flex flex-col items-center gap-0.5 px-4 py-2 rounded-xl transition-all`}
+          <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-t border-gray-100 dark:border-slate-800">
+            <div
+              className="max-w-md mx-auto flex items-center justify-around py-2 px-4"
+              style={{ paddingBottom: "env(safe-area-inset-bottom)" }} // 제스처 바 영역 회피
+            >
+              {navItems.map(({ name, icon: Icon, label }) => {
+                const isActive = currentPageName === name;
+                return (
+                  <Link
+                    key={name}
+                    to={createPageUrl(name)}
+                    className={`flex flex-col items-center gap-0.5 px-4 py-2 rounded-xl transition-all`}
+                  >
+                    <Icon
+                      className={`w-5 h-5 ${isActive ? "text-purple-500" : "text-gray-400"}`}
+                      strokeWidth={1.5}
+                    />
+                    <span
+                      className={`text-[9px] font-semibold ${isActive ? "text-purple-600" : "text-gray-400"}`}
                     >
-                      <Icon
-                        className={`w-5 h-5 ${isActive ? "text-purple-500" : "text-gray-400"}`}
-                        strokeWidth={1.5}
-                      />
-                      <span
-                        className={`text-[9px] font-semibold ${isActive ? "text-purple-600" : "text-gray-400"}`}
-                      >
-                        {label}
-                      </span>
-                    </Link>
-                  );
-                })}
-              </div>
+                      {label}
+                    </span>
+                  </Link>
+                );
+              })}
             </div>
           </nav>
         )}

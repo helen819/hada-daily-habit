@@ -88,7 +88,7 @@ export default function Onboarding() {
   const canNext =
     (step === 0 && form.full_name && form.gender) ||
     (step === 1 && form.birth_date) ||
-    (step === 2 && form.location) ||
+    step === 2 || // 🔥 위치 단계는 입력 여부 상관없이 항상 활성화
     (step === 3 && form.goal);
 
   const handleSubmit = async () => {
@@ -101,7 +101,7 @@ export default function Onboarding() {
 - 생년월일: ${form.birth_date}
 - 출생시간: ${form.birth_time || "미입력"}
 - 성별: ${form.gender}
-- 위치: ${form.location}
+- 위치: ${form.location || "미입력"}
 
 아래 6가지 학문을 종합 분석하되, 전문 용어는 절대 드러내지 마라:
 1. 사주 (사계절/십간십이지/오행)
@@ -256,7 +256,14 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white via-purple-50/30 to-white">
+    <div
+      className="min-h-screen bg-gradient-to-b from-white via-purple-50/30 to-white"
+      style={{
+        paddingTop: "env(safe-area-inset-top)",
+        // 하단 네비게이션 버튼 영역 높이(약 96px)와 하단 바 여백만큼 확보
+        paddingBottom: "calc(env(safe-area-inset-bottom) + 96px)",
+      }}
+    >
       <AnimatePresence mode="wait">
         {step === 0 && (
           <OnboardingStep
@@ -538,12 +545,12 @@ export default function Onboarding() {
             step={2}
             totalSteps={TOTAL_STEPS}
             title="지금 어디에 계세요?"
-            subtitle="도시 이름을 입력해 주세요."
+            subtitle="도시 이름을 알려주시면 더 정확해요. (선택사항)"
           >
             <Input
               value={form.location}
               onChange={(e) => update("location", e.target.value)}
-              placeholder="서울"
+              placeholder="서울, 부산 등 (건너뛰기 가능)"
               className="rounded-xl h-12 bg-gray-50 border-gray-200 text-base"
             />
           </OnboardingStep>
@@ -568,7 +575,10 @@ export default function Onboarding() {
       </AnimatePresence>
 
       {/* Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-white via-white to-transparent">
+      <div
+        className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-white via-white to-transparent"
+        style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 1.5rem)" }} // 1.5rem은 기존 p-6 값
+      >
         <div className="flex gap-3 max-w-md mx-auto">
           {step > 0 && (
             <Button
