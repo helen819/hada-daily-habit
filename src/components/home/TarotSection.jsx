@@ -480,12 +480,12 @@ function InfiniteCardCarousel({ actions, onAddToTodo }) {
         </div>
 
         {/* 좌우 화살표 힌트 */}
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 z-20 pointer-events-none pl-0.5">
+        {/* <div className="absolute left-0 top-1/2 -translate-y-1/2 z-20 pointer-events-none pl-0.5">
           <ChevronLeft className="w-4 h-4 text-gray-300" strokeWidth={1.5} />
         </div>
         <div className="absolute right-0 top-1/2 -translate-y-1/2 z-20 pointer-events-none pr-0.5">
           <ChevronRight className="w-4 h-4 text-gray-300" strokeWidth={1.5} />
-        </div>
+        </div> */}
 
         {/* 인디케이터 */}
         {/* <div className="absolute bottom-0 left-0 right-0 flex justify-center gap-1 pb-0.5 pointer-events-none z-20">
