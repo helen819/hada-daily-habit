@@ -63,6 +63,16 @@ function TarotDetailModal({ action, onClose, onAdd, added, onNext, onPrev }) {
   const borderColor = borderColors[action.stat_focus] || "border-purple-400";
   const progress = 65;
 
+  // TarotDetailModal 컴포넌트 내부
+  useEffect(() => {
+    // 모달이 열릴 때 클래스 추가
+    document.body.classList.add("modal-open");
+    return () => {
+      // 모달이닫힐 때 클래스 제거
+      document.body.classList.remove("modal-open");
+    };
+  }, []);
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -203,7 +213,9 @@ function MiniTarotCard({ action, onAddToTodo, onNext, onPrev }) {
       </AnimatePresence>
 
       <div
-        className={`relative cursor-pointer transition-opacity ${added ? "opacity-40 pointer-events-none" : ""}`}
+        className={`relative cursor-pointer transition-opacity ${
+          added ? "opacity-40 pointer-events-none" : ""
+        }`}
         style={{ perspective: "800px", height: "150px" }}
         onClick={() => !flipped && !added && setFlipped(true)}
       >

@@ -85,47 +85,18 @@
 }
 
 
-/* 스크롤바 전체 스타일 */
+/* 모달이 열렸을 때 네비게이션 바를 아래로 숨김 */
 
-.custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
-    /* 스크롤바 너비 */
-    display: block !important;
-    /* 무조건 표시 */
+body.modal-open nav {
+    transform: translateY(100%);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s ease-in-out;
 }
 
 
-/* 스크롤바 트랙 (바탕) */
+/* 기본 네비게이션 바에 트랜지션 추가 */
 
-.custom-scrollbar::-webkit-scrollbar-track {
-    background: #f8fafc;
-    /* 아주 연한 회색 */
-    border-radius: 10px;
-}
-
-
-/* 스크롤바 핸들 (움직이는 부분) */
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #e2e8f0;
-    /* 기본 상태: 연한 회색 */
-    border-radius: 10px;
-    border: 1.5px solid #f8fafc;
-    /* 트랙과의 간격 효과 */
-}
-
-
-/* 마우스 올리거나 스크롤 시 핸들 강조 */
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #cbd5e1;
-    /* 약간 더 진한 회색 */
-}
-
-
-/* 모바일에서 스크롤 중이 아닐 때도 보이게 강제함 (선택 사항) */
-
-.custom-scrollbar {
-    scrollbar-width: thin;
-    scrollbar-color: #e2e8f0 #f8fafc;
+nav {
+    transition: all 0.3s ease-in-out;
 }
