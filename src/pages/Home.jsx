@@ -111,12 +111,12 @@ export default function Home() {
       hour < 6
         ? "밤"
         : hour < 12
-          ? "아침"
-          : hour < 18
-            ? "낮"
-            : hour < 22
-              ? "저녁"
-              : "밤";
+        ? "아침"
+        : hour < 18
+        ? "낮"
+        : hour < 22
+        ? "저녁"
+        : "밤";
 
     const res = await base44.integrations.Core.InvokeLLM({
       prompt: `너는 HADA 앱의 마이크로 액션 생성 엔진이다.
@@ -202,12 +202,12 @@ user_level: ${profile.level || 1}
       hour < 6
         ? "밤"
         : hour < 12
-          ? "오전"
-          : hour < 18
-            ? "오후"
-            : hour < 22
-              ? "저녁"
-              : "밤";
+        ? "오전"
+        : hour < 18
+        ? "오후"
+        : hour < 22
+        ? "저녁"
+        : "밤";
 
     const res = await base44.integrations.Core.InvokeLLM({
       prompt: `너는 HADA 앱의 일일 리딩 엔진이다.

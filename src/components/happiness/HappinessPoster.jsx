@@ -1,6 +1,6 @@
 import React, { useRef, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Download, Loader2 } from "lucide-react";
+import { X, Download, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 
 const PASTEL_COLORS = [
   { bg: "#E8D5F2", border: "#D4A5E8", text: "#6B4C7A" },
@@ -14,75 +14,53 @@ const STAR = "✦";
 
 function MaskingTape() {
   return (
-    <div 
-      className="absolute -top-1 left-0 right-0 h-3 opacity-60"
+    <div
+      className="absolute -top-1 left-4 right-4 h-3 opacity-60 z-20"
       style={{
         background: "linear-gradient(90deg, #FFFACD 0%, #FFFACD 100%)",
-        boxShadow: "0 1px 2px rgba(0,0,0,0.1)",
-        transform: "skewY(-1deg)",
+        boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+        transform: "rotate(-1deg)",
       }}
     />
   );
 }
 
 function PosterCard({ record, index, color }) {
-  const rotation = (Math.sin(index * 7.3) * 5);
-  
+  // 모바일에서 더 자연스럽게 보이도록 회전각 조절
+  const rotation = index % 2 === 0 ? -2 : 2;
+
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.85, rotate: rotation }}
+      initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1, rotate: rotation }}
-      transition={{ delay: index * 0.08, type: "spring", damping: 18 }}
-      className="relative"
-      style={{
-        width: "140px",
-        minHeight: "160px",
-      }}
+      className="relative w-full aspect-[4/5] max-w-[160px]"
     >
       <div
-        className="rounded-2xl p-4 h-full flex flex-col justify-between relative overflow-hidden"
+        className="rounded-xl p-3 h-full flex flex-col relative overflow-hidden border border-white/50"
         style={{
           background: color.bg,
-          boxShadow: "0 4px 12px rgba(0,0,0,0.08), inset 0 1px 2px rgba(255,255,255,0.8)",
+          boxShadow: "0 4px 10px rgba(0,0,0,0.05)",
         }}
       >
         <MaskingTape />
-        
-        {/* 종이 질감 */}
-        <div 
-          className="absolute inset-0 opacity-[0.03] pointer-events-none"
-          style={{
-            backgroundImage: `
-              repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(0,0,0,0.1) 1px, rgba(0,0,0,0.1) 2px),
-              repeating-linear-gradient(90deg, transparent, transparent 1px, rgba(0,0,0,0.1) 1px, rgba(0,0,0,0.1) 2px)
-            `
-          }}
-        />
 
-        <div className="relative z-10 flex flex-col flex-1 justify-between">
-          {/* 상단: 날짜 */}
-          <div className="text-right">
-            <p 
-              className="text-[10px] font-semibold"
-              style={{ color: color.text, opacity: 0.6 }}
-            >
-              {record.date}
-            </p>
-          </div>
+        <div className="relative z-10 flex flex-col h-full justify-between py-1">
+          <p
+            className="text-[8px] font-bold text-right opacity-50"
+            style={{ color: color.text }}
+          >
+            {record.date?.slice(5)}
+          </p>
 
-          {/* 중앙: 이모지 + 텍스트 */}
-          <div className="flex flex-col items-center gap-2 flex-1 justify-center">
-            <span className="text-2xl">{record.emoji}</span>
-            <p 
-              className="text-[11px] leading-tight text-center font-medium"
-              style={{ color: color.text, wordBreak: "keep-all" }}
+          <div className="flex flex-col items-center gap-1.5 flex-1 justify-center">
+            <span className="text-xl">{record.emoji || "✨"}</span>
+            <p
+              className="text-[10px] leading-tight text-center font-bold break-keep"
+              style={{ color: color.text }}
             >
               {record.text}
             </p>
           </div>
-
-          {/* 하단: 공간 (균형) */}
-          <div className="h-2" />
         </div>
       </div>
     </motion.div>
@@ -94,54 +72,33 @@ export default function HappinessPoster({ records, onClose }) {
   const [saving, setSaving] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(new Date());
 
-  // 월별로 필터링된 기록
   const filteredRecords = useMemo(() => {
     const monthStr = selectedMonth.toISOString().split("T")[0].slice(0, 7);
-    const filtered = records.filter(r => r.date?.startsWith(monthStr));
-    
-    // 랜덤 5개 추출 (5개 미만이면 모두)
-    if (filtered.length <= 5) {
-      return filtered.sort((a, b) => new Date(a.date) - new Date(b.date));
-    }
-    
-    const shuffled = [...filtered].sort(() => Math.random() - 0.5);
-    return shuffled.slice(0, 5);
+    const filtered = records.filter((r) => r.date?.startsWith(monthStr));
+    return filtered.slice(0, 6); // 모바일에서는 6개가 적당함 (2열 3행)
   }, [records, selectedMonth]);
 
-  const monthStr = selectedMonth.toLocaleDateString("ko-KR", { 
-    year: "numeric", 
-    month: "numeric" 
-  }).replace(/\s/g, "");
+  const monthLabel = `${selectedMonth.getFullYear()}년 ${
+    selectedMonth.getMonth() + 1
+  }월`;
 
   const handleSave = async () => {
     setSaving(true);
     try {
       const html2canvas = (await import("html2canvas")).default;
-      const element = posterRef.current;
-      
-      const canvas = await html2canvas(element, {
+      const canvas = await html2canvas(posterRef.current, {
         backgroundColor: "#FAF8F3",
-        scale: 2,
+        scale: 3, // 저장 화질 개선
         useCORS: true,
-        allowTaint: true,
       });
-
       const link = document.createElement("a");
-      link.download = `행복보관함_${selectedMonth.toISOString().split("T")[0]}.png`;
+      link.download = `HADA_행복포스터_${monthLabel}.png`;
       link.href = canvas.toDataURL("image/png");
       link.click();
     } catch (e) {
-      console.error("Error saving:", e);
+      console.error("Save error:", e);
     }
     setSaving(false);
-  };
-
-  const handlePrevMonth = () => {
-    setSelectedMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1));
-  };
-
-  const handleNextMonth = () => {
-    setSelectedMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1));
   };
 
   return (
@@ -149,169 +106,114 @@ export default function HappinessPoster({ records, onClose }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex flex-col bg-gradient-to-b from-amber-50 via-orange-50 to-pink-50"
+      className="fixed inset-0 z-[100] flex flex-col bg-white"
+      style={{
+        paddingTop: "env(safe-area-inset-top)",
+        paddingBottom: "env(safe-area-inset-bottom)",
+      }}
     >
-      {/* 헤더 (저장 모드에서 숨김) */}
-      <div className="relative flex items-center justify-between px-5 pt-6 pb-4 bg-white/30 backdrop-blur-sm border-b border-amber-100 sticky top-0">
-        <div className="flex-1">
-          <p className="text-[10px] font-semibold text-amber-600 uppercase tracking-widest mb-0.5">HADA</p>
-          <h2 className="text-lg font-bold text-gray-900">행복 보관함</h2>
-        </div>
+      {/* 상단 컨트롤 바 */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-50">
+        <button onClick={onClose} className="p-2 rounded-full bg-gray-100">
+          <X size={18} />
+        </button>
 
         <div className="flex items-center gap-2">
-          {/* 월 선택 */}
-          <div className="flex items-center gap-1 px-3 py-2 bg-white/50 rounded-xl">
-            <button
-              onClick={handlePrevMonth}
-              className="px-2 py-1 text-xs font-semibold text-amber-600 hover:bg-amber-50 rounded transition-colors"
-            >
-              ◀
-            </button>
-            <span className="text-xs font-semibold text-gray-700 min-w-[60px] text-center">
-              {monthStr}
-            </span>
-            <button
-              onClick={handleNextMonth}
-              className="px-2 py-1 text-xs font-semibold text-amber-600 hover:bg-amber-50 rounded transition-colors"
-            >
-              ▶
-            </button>
-          </div>
-
-          {/* 저장 버튼 */}
           <button
-            onClick={handleSave}
-            disabled={saving || filteredRecords.length === 0}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-200 hover:bg-amber-300 text-amber-900 text-xs font-semibold transition-colors disabled:opacity-50"
+            onClick={() =>
+              setSelectedMonth(
+                new Date(selectedMonth.setMonth(selectedMonth.getMonth() - 1)),
+              )
+            }
+            className="p-1"
           >
-            {saving ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              <Download className="w-3.5 h-3.5" />
-            )}
-            {saving ? "저장 중..." : "이미지 저장"}
+            <ChevronLeft size={20} />
           </button>
-
-          {/* 닫기 버튼 */}
+          <span className="text-sm font-black">{monthLabel}</span>
           <button
-            onClick={onClose}
-            className="p-2 rounded-xl bg-amber-100 hover:bg-amber-200 transition-colors"
+            onClick={() =>
+              setSelectedMonth(
+                new Date(selectedMonth.setMonth(selectedMonth.getMonth() + 1)),
+              )
+            }
+            className="p-1"
           >
-            <X className="w-4 h-4 text-amber-700" />
+            <ChevronRight size={20} />
           </button>
         </div>
+
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="p-2 rounded-full bg-pink-500 text-white shadow-lg shadow-pink-100"
+        >
+          {saving ? (
+            <Loader2 size={18} className="animate-spin" />
+          ) : (
+            <Download size={18} />
+          )}
+        </button>
       </div>
 
-      {/* 포스터 영역 (저장용) */}
-      <div className="flex-1 overflow-y-auto flex items-start justify-center py-8 px-4">
+      {/* 포스터 프리뷰 영역 */}
+      <div className="flex-1 overflow-y-auto bg-gray-50 p-6 flex flex-col items-center">
         <div
           ref={posterRef}
-          className="relative"
+          className="w-full max-w-[340px] aspect-[1/1.414] bg-[#FAF8F3] rounded-[40px] shadow-xl p-8 flex flex-col relative"
           style={{
-            width: "420px",
-            aspectRatio: "1 / 1.414",
-            background: "#fcf6f7ff",
-            padding: "40px 30px",
-            borderRadius: "8px",
+            backgroundImage:
+              "radial-gradient(#E5E7EB 0.5px, transparent 0.5px)",
+            backgroundSize: "20px 20px",
           }}
         >
-          {/* 상단 영역 */}
-          <div className="text-center mb-8">
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-            >
-              <p 
-                className="text-[10px] font-semibold uppercase tracking-[0.15em] mb-2"
-                style={{ color: "#A0826D", letterSpacing: "0.15em" }}
-              >
-                HADA
-              </p>
-              <h1 
-                className="text-2xl font-bold mb-2"
-                style={{ color: "#4A3728", letterSpacing: "-0.02em" }}
-              >
-                {selectedMonth.getFullYear()}년 {selectedMonth.getMonth() + 1}월의
-                <br />
-                작은 행복들
-              </h1>
-              
-              {/* 별 반짝임 */}
-              <div className="flex items-center justify-center gap-1.5 mt-3">
-                <span 
-                  className="text-xs opacity-40 animate-pulse"
-                  style={{ animation: "pulse 2s ease-in-out infinite" }}
-                >
-                  {STAR}
+          {/* 포스터 헤더 */}
+          <div className="text-center mb-8 pt-4">
+            <p className="text-[10px] font-black text-amber-600 tracking-[0.3em] uppercase mb-2">
+              My Happiness
+            </p>
+            <h1 className="text-2xl font-black text-gray-800 leading-tight">
+              {selectedMonth.getMonth() + 1}월의
+              <br />
+              소중한 조각들
+            </h1>
+            <div className="flex justify-center gap-1 mt-4">
+              {[...Array(3)].map((_, i) => (
+                <span key={i} className="text-amber-300 text-xs animate-pulse">
+                  ✦
                 </span>
-                <span 
-                  className="text-xs opacity-60 animate-pulse"
-                  style={{ animation: "pulse 2.5s ease-in-out infinite 0.3s" }}
-                >
-                  {STAR}
-                </span>
-                <span 
-                  className="text-xs opacity-40 animate-pulse"
-                  style={{ animation: "pulse 2s ease-in-out infinite 0.6s" }}
-                >
-                  {STAR}
-                </span>
-              </div>
-            </motion.div>
-          </div>
-
-          {/* 중앙 영역: 카드 배치 */}
-          {filteredRecords.length > 0 ? (
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(3, 1fr)",
-                gap: "8px",
-                justifyItems: "center",
-                alignItems: "start",
-                minHeight: "280px",
-                marginBottom: "30px",
-              }}
-            >
-              {filteredRecords.map((record, i) => (
-                <PosterCard
-                  key={record.id}
-                  record={record}
-                  index={i}
-                  color={PASTEL_COLORS[i % PASTEL_COLORS.length]}
-                />
               ))}
             </div>
-          ) : (
-            <div className="h-64 flex items-center justify-center">
-              <p 
-                className="text-sm"
-                style={{ color: "#A0826D" }}
-              >
-                이 달의 기록이 없습니다.
-              </p>
-            </div>
-          )}
+          </div>
 
-          {/* 하단 영역 */}
-          <div className="text-center absolute bottom-8 left-0 right-0">
-            <p 
-              className="text-xs font-semibold uppercase tracking-[0.1em]"
-              style={{ color: "#A0826D", letterSpacing: "0.1em" }}
-            >
-              HADA  –  행복을 기록하다
+          {/* 카드 그리드: 모바일 환경에 맞춰 2열로 배치 */}
+          <div className="grid grid-cols-2 gap-4 flex-1 content-start">
+            {filteredRecords.map((record, i) => (
+              <PosterCard
+                key={record.id}
+                record={record}
+                index={i}
+                color={PASTEL_COLORS[i % PASTEL_COLORS.length]}
+              />
+            ))}
+            {filteredRecords.length === 0 && (
+              <div className="col-span-2 py-20 text-center text-gray-300 text-xs font-bold">
+                기록된 행복이 없어요
+              </div>
+            )}
+          </div>
+
+          {/* 포스터 푸터 */}
+          <div className="text-center pb-4">
+            <p className="text-[9px] font-bold text-gray-400 tracking-widest">
+              HADA DIGITAL ARCHIVE
             </p>
           </div>
         </div>
-      </div>
 
-      <style>{`
-        @keyframes pulse {
-          0%, 100% { opacity: 0.3; }
-          50% { opacity: 0.8; }
-        }
-      `}</style>
+        <p className="mt-6 text-[11px] text-gray-400 font-medium">
+          이미지 저장을 눌러 갤러리에 보관하세요 ✨
+        </p>
+      </div>
     </motion.div>
   );
 }
