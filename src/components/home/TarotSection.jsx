@@ -118,7 +118,7 @@ function TarotDetailModal({ action, onClose, onAdd, added, onNext, onPrev }) {
           </p>
 
           {/* 진행도 바 영역 */}
-          <div>
+          {/* <div>
             <div className="flex items-center justify-between mb-1.5">
               <p className="text-xs font-semibold text-gray-500">오늘 진행도</p>
               <span className="text-xs font-bold text-orange-500 bg-orange-50 px-2 py-0.5 rounded-full">
@@ -131,7 +131,7 @@ function TarotDetailModal({ action, onClose, onAdd, added, onNext, onPrev }) {
                 style={{ width: `65%` }}
               />
             </div>
-          </div>
+          </div> */}
 
           {/* 설명 텍스트 영역 */}
           <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">

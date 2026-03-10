@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Heart } from "lucide-react";
 import { Keyboard } from "@capacitor/keyboard"; // 🔥 추가
 
-const MAX_LENGTH = 50; // 최대 글자 수
+const MAX_LENGTH = 100; // 최대 글자 수
 
 const moods = [
   { score: 1, emoji: "😔" },
@@ -112,7 +112,8 @@ export default function HappinessInput({ onSubmit, isSubmitting }) {
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder="오늘의 행복 기록하기..."
-          className={`bg-gray-50 border rounded-2xl mb-3 resize-none text-sm focus:bg-white transition-all pb-7 pr-3`}
+          // mb-2로 줄여서 카운터와 가깝게 배치
+          className={`bg-gray-50 border rounded-2xl mb-2 resize-none text-sm focus:bg-white transition-all pr-3`}
           rows={3}
           // 🔥 추가된 부분: 포커스 시 스크롤 실행
           onFocus={handleInputFocus}
@@ -126,14 +127,17 @@ export default function HappinessInput({ onSubmit, isSubmitting }) {
             }
           }}
         />
-        {/* 🔥 글자 수 카운터 시각적 피드백 추가 */}
-        <div
-          className={`absolute bottom-[18px] right-3 text-[10px] font-bold pointer-events-none ${
+      </div>
+
+      {/* 2. 🔥 새로운 위치의 글자 수 카운터 (Textarea와 버튼 사이) */}
+      <div className="flex justify-end px-1 mb-3">
+        <span
+          className={`text-[10px] font-bold ${
             isOverLimit ? "text-red-500" : "text-gray-400"
           }`}
         >
           {text.length} / {MAX_LENGTH}
-        </div>
+        </span>
       </div>
 
       <Button

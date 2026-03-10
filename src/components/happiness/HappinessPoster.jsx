@@ -26,8 +26,17 @@ function MaskingTape() {
 }
 
 function PosterCard({ record, index, color }) {
-  // 모바일에서 더 자연스럽게 보이도록 회전각 조절
   const rotation = index % 2 === 0 ? -2 : 2;
+  const textLength = record.text?.length || 0;
+
+  // 🔥 글자 수에 따른 동적 폰트 크기 계산 (최소 7px ~ 최대 11px)
+  const getFontSize = () => {
+    if (textLength < 25) return "11px";
+    if (textLength < 45) return "9.5px";
+    if (textLength < 65) return "8.5px";
+    if (textLength < 85) return "7.5px";
+    return "7px"; // 100자에 가까울 때
+  };
 
   return (
     <motion.div
@@ -45,18 +54,25 @@ function PosterCard({ record, index, color }) {
         <MaskingTape />
 
         <div className="relative z-10 flex flex-col h-full justify-between py-1">
+          {/* 상단 날짜 (공간 절약을 위해 더 작게) */}
           <p
-            className="text-[8px] font-bold text-right opacity-50"
+            className="text-[7px] font-bold text-right opacity-40 mb-1"
             style={{ color: color.text }}
           >
             {record.date?.slice(5)}
           </p>
 
-          <div className="flex flex-col items-center gap-1.5 flex-1 justify-center">
-            <span className="text-xl">{record.emoji || "✨"}</span>
+          {/* 중앙: 이모지 + 텍스트 */}
+          <div className="flex flex-col items-center gap-1 flex-1 justify-center min-h-0">
+            <span className="text-lg mb-0.5">{record.emoji || "✨"}</span>
             <p
-              className="text-[10px] leading-tight text-center font-bold break-keep"
-              style={{ color: color.text }}
+              className="font-bold leading-[1.3] text-center"
+              style={{
+                color: color.text,
+                fontSize: getFontSize(), // 🔥 동적 폰트 크기 적용
+                wordBreak: "break-all", // 영문/숫자 긴 단어 방지
+                overflowWrap: "anywhere", // 모든 상황에서 줄바꿈 강제
+              }}
             >
               {record.text}
             </p>
@@ -72,10 +88,10 @@ export default function HappinessPoster({ records, onClose }) {
   const [saving, setSaving] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(new Date());
 
+  // 🔥 1. 전체 기록이 나오도록 slice 제거
   const filteredRecords = useMemo(() => {
     const monthStr = selectedMonth.toISOString().split("T")[0].slice(0, 7);
-    const filtered = records.filter((r) => r.date?.startsWith(monthStr));
-    return filtered.slice(0, 6); // 모바일에서는 6개가 적당함 (2열 3행)
+    return records.filter((r) => r.date?.startsWith(monthStr));
   }, [records, selectedMonth]);
 
   const monthLabel = `${selectedMonth.getFullYear()}년 ${
@@ -112,54 +128,61 @@ export default function HappinessPoster({ records, onClose }) {
         paddingBottom: "env(safe-area-inset-bottom)",
       }}
     >
-      {/* 상단 컨트롤 바 */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-50">
-        <button onClick={onClose} className="p-2 rounded-full bg-gray-100">
-          <X size={18} />
-        </button>
+      <div className="flex items-center px-4 py-3 border-b border-gray-50 bg-white">
+        {/* 1. 왼쪽 구역 (닫기 버튼) - 너비를 고정합니다 (예: w-10) */}
+        <div className="w-10 flex justify-start">
+          <button
+            onClick={onClose}
+            className="p-2 rounded-full bg-gray-100 active:scale-90 transition-transform"
+          >
+            <X size={18} />
+          </button>
+        </div>
 
-        <div className="flex items-center gap-2">
+        {/* 2. 가운데 구역 (월 선택) - flex-1을 주어 남은 공간을 다 차지하고 내부를 중앙 정렬합니다 */}
+        <div className="flex-1 flex items-center justify-center gap-4">
           <button
             onClick={() =>
               setSelectedMonth(
-                new Date(selectedMonth.setMonth(selectedMonth.getMonth() - 1)),
+                new Date(
+                  selectedMonth.getFullYear(),
+                  selectedMonth.getMonth() - 1,
+                ),
               )
             }
-            className="p-1"
+            className="p-1 text-gray-400 hover:text-gray-900 active:scale-75 transition-transform"
           >
             <ChevronLeft size={20} />
           </button>
-          <span className="text-sm font-black">{monthLabel}</span>
+
+          <span className="text-sm font-black text-gray-800 min-w-[80px] text-center">
+            {monthLabel}
+          </span>
+
           <button
             onClick={() =>
               setSelectedMonth(
-                new Date(selectedMonth.setMonth(selectedMonth.getMonth() + 1)),
+                new Date(
+                  selectedMonth.getFullYear(),
+                  selectedMonth.getMonth() + 1,
+                ),
               )
             }
-            className="p-1"
+            className="p-1 text-gray-400 hover:text-gray-900 active:scale-75 transition-transform"
           >
             <ChevronRight size={20} />
           </button>
         </div>
 
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="p-2 rounded-full bg-pink-500 text-white shadow-lg shadow-pink-100"
-        >
-          {saving ? (
-            <Loader2 size={18} className="animate-spin" />
-          ) : (
-            <Download size={18} />
-          )}
-        </button>
+        {/* 3. 오른쪽 구역 (균형을 맞추기 위한 빈 공간) - 왼쪽과 똑같은 너비를 줍니다 */}
+        <div className="w-10"></div>
       </div>
 
       {/* 포스터 프리뷰 영역 */}
       <div className="flex-1 overflow-y-auto bg-gray-50 p-6 flex flex-col items-center">
         <div
           ref={posterRef}
-          className="w-full max-w-[340px] aspect-[1/1.414] bg-[#FAF8F3] rounded-[40px] shadow-xl p-8 flex flex-col relative"
+          className="w-full max-w-[340px] h-auto bg-[#FAF8F3] rounded-[40px] shadow-xl p-8 pb-12 flex flex-col relative transition-all duration-500 mb-10"
           style={{
             backgroundImage:
               "radial-gradient(#E5E7EB 0.5px, transparent 0.5px)",
@@ -185,8 +208,8 @@ export default function HappinessPoster({ records, onClose }) {
             </div>
           </div>
 
-          {/* 카드 그리드: 모바일 환경에 맞춰 2열로 배치 */}
-          <div className="grid grid-cols-2 gap-4 flex-1 content-start">
+          {/* 🔥 카드 그리드: flex-1을 제거하여 콘텐츠 길이에 따라 부모(흰색 영역)를 늘림 */}
+          <div className="grid grid-cols-2 gap-x-4 gap-y-8 mb-16">
             {filteredRecords.map((record, i) => (
               <PosterCard
                 key={record.id}
@@ -202,17 +225,14 @@ export default function HappinessPoster({ records, onClose }) {
             )}
           </div>
 
-          {/* 포스터 푸터 */}
-          <div className="text-center pb-4">
-            <p className="text-[9px] font-bold text-gray-400 tracking-widest">
+          {/* 포스터 푸터: mt-auto를 사용해 항상 맨 아래 위치하도록 함 */}
+          <div className="text-center mt-auto pt-4">
+            <div className="h-px w-12 bg-amber-200 mx-auto mb-4 opacity-50" />
+            <p className="text-[9px] font-bold text-gray-400 tracking-widest uppercase">
               HADA DIGITAL ARCHIVE
             </p>
           </div>
         </div>
-
-        <p className="mt-6 text-[11px] text-gray-400 font-medium">
-          이미지 저장을 눌러 갤러리에 보관하세요 ✨
-        </p>
       </div>
     </motion.div>
   );

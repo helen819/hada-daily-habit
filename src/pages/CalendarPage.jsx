@@ -43,11 +43,15 @@ export default function CalendarPage() {
   });
 
   const toggleTodoMutation = useMutation({
-    mutationFn: ({ id, completed }) => base44.entities.Todo.update(id, { completed }),
+    mutationFn: ({ id, completed }) =>
+      base44.entities.Todo.update(id, { completed }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["todos"] }),
   });
 
-  const markedDates = useMemo(() => [...new Set(schedules.map((s) => s.date))], [schedules]);
+  const markedDates = useMemo(
+    () => [...new Set(schedules.map((s) => s.date))],
+    [schedules],
+  );
 
   // 날짜별 뱃지 계산: heart(행복기록), rest(할일적음), fire(할일완료), star(일정많음)
   const dateBadges = useMemo(() => {
@@ -73,8 +77,8 @@ export default function CalendarPage() {
     Object.entries(todosByDate).forEach(([date, { total, done }]) => {
       if (!map[date]) map[date] = new Set();
       const ratio = total > 0 ? done / total : 0;
-      if (total >= 2 && ratio >= 0.7) map[date].add("fire");       // 많이 완료
-      else if (total > 0 && ratio <= 0.2) map[date].add("rest");   // 거의 못함
+      if (total >= 2 && ratio >= 0.7) map[date].add("fire"); // 많이 완료
+      else if (total > 0 && ratio <= 0.2) map[date].add("rest"); // 거의 못함
     });
 
     // 일정 많은 날 → star
@@ -92,7 +96,9 @@ export default function CalendarPage() {
 
     // Set → Array
     const result = {};
-    Object.entries(map).forEach(([date, set]) => { result[date] = [...set]; });
+    Object.entries(map).forEach(([date, set]) => {
+      result[date] = [...set];
+    });
     return result;
   }, [happinessRecords, todos, schedules]);
 
@@ -106,6 +112,15 @@ export default function CalendarPage() {
     return map;
   }, [schedules]);
 
+  // 🔥 1. 삭제 Mutation 추가
+  const deleteMutation = useMutation({
+    mutationFn: (id) => base44.entities.ScheduleItem.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["schedules"] });
+      // 만약 팝업에 표시할 일정이 하나도 없게 되면 팝업 닫기 (선택 사항)
+    },
+  });
+
   const CATEGORY_COLORS = {
     work: "bg-blue-400",
     health: "bg-green-400",
@@ -117,9 +132,14 @@ export default function CalendarPage() {
     if (!profile) return;
     const key = `monthlyFortune_${year}_${month + 1}`;
     const cached = sessionStorage.getItem(key);
-    if (cached) { setMonthlyFortune(cached); return; }
+    if (cached) {
+      setMonthlyFortune(cached);
+      return;
+    }
     base44.integrations.Core.InvokeLLM({
-      prompt: `너는 HADA 운세 엔진이다. 사용자 정보를 바탕으로 ${year}년 ${month + 1}월의 월간 운세를 한 문장(30자 이내)으로만 답하라.
+      prompt: `너는 HADA 운세 엔진이다. 사용자 정보를 바탕으로 ${year}년 ${
+        month + 1
+      }월의 월간 운세를 한 문장(30자 이내)으로만 답하라.
 사용자: ${profile.full_name}, 목표: ${profile.goal}
 base_stats: ${JSON.stringify(profile.base_stats)}
 반드시 긍정적이고 간결하게, 이모지 1개 포함.`,
@@ -136,8 +156,9 @@ base_stats: ${JSON.stringify(profile.base_stats)}
   }, [profile, year, month]);
 
   const selectedSchedules = useMemo(
-    () => (selectedDate ? schedules.filter((s) => s.date === selectedDate) : []),
-    [schedules, selectedDate]
+    () =>
+      selectedDate ? schedules.filter((s) => s.date === selectedDate) : [],
+    [schedules, selectedDate],
   );
 
   const addMutation = useMutation({
@@ -146,12 +167,15 @@ base_stats: ${JSON.stringify(profile.base_stats)}
   });
 
   const toggleMutation = useMutation({
-    mutationFn: ({ id, completed }) => base44.entities.ScheduleItem.update(id, { completed }),
+    mutationFn: ({ id, completed }) =>
+      base44.entities.ScheduleItem.update(id, { completed }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["schedules"] }),
   });
 
   const saveMicroAction = async (schedule, microAction) => {
-    await base44.entities.ScheduleItem.update(schedule.id, { micro_action: microAction });
+    await base44.entities.ScheduleItem.update(schedule.id, {
+      micro_action: microAction,
+    });
     queryClient.invalidateQueries({ queryKey: ["schedules"] });
     setActiveSchedule(null);
   };
@@ -159,8 +183,14 @@ base_stats: ${JSON.stringify(profile.base_stats)}
   const handleMonthChange = (delta) => {
     let m = month + delta;
     let y = year;
-    if (m < 0) { m = 11; y -= 1; }
-    if (m > 11) { m = 0; y += 1; }
+    if (m < 0) {
+      m = 11;
+      y -= 1;
+    }
+    if (m > 11) {
+      m = 0;
+      y += 1;
+    }
     setMonth(m);
     setYear(y);
   };
@@ -175,7 +205,9 @@ base_stats: ${JSON.stringify(profile.base_stats)}
     }
   };
 
-  const showPopup = selectedDate && (selectedSchedules.length > 0 || dateBadges?.[selectedDate]?.length > 0);
+  const showPopup =
+    selectedDate &&
+    (selectedSchedules.length > 0 || dateBadges?.[selectedDate]?.length > 0);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white via-purple-50/20 to-white pb-24">
@@ -201,20 +233,34 @@ base_stats: ${JSON.stringify(profile.base_stats)}
           schedules={selectedSchedules}
           badges={dateBadges?.[selectedDate] || []}
           onClose={() => setSelectedDate(null)}
-          onToggle={(s, completed) => toggleMutation.mutate({ id: s.id, completed })}
+          onToggle={(s, completed) =>
+            toggleMutation.mutate({ id: s.id, completed })
+          }
           onMicroAction={(s) => setActiveSchedule(s)}
+          // 🔥 2. 삭제 핸들러 전달
+          onDelete={(id) => {
+            if (window.confirm("이 일정을 삭제하시겠습니까?")) {
+              deleteMutation.mutate(id);
+            }
+          }}
         />
       )}
 
       {/* Header */}
       <div className="px-5 pt-8 pb-4 flex items-start justify-between">
         <div className="flex-1 mr-3">
-          <p className="text-xs font-semibold text-blue-500 uppercase tracking-widest mb-1">HADA</p>
+          <p className="text-xs font-semibold text-blue-500 uppercase tracking-widest mb-1">
+            HADA
+          </p>
           <h1 className="text-2xl font-bold text-gray-900">캘린더</h1>
           {monthlyFortune ? (
-            <p className="text-xs text-blue-600 font-semibold mt-1 leading-relaxed">{monthlyFortune}</p>
+            <p className="text-xs text-blue-600 font-semibold mt-1 leading-relaxed">
+              {monthlyFortune}
+            </p>
           ) : (
-            <p className="text-sm text-gray-500 mt-1">날짜를 누르면 일정을 확인합니다.</p>
+            <p className="text-sm text-gray-500 mt-1">
+              날짜를 누르면 일정을 확인합니다.
+            </p>
           )}
         </div>
         <button
@@ -240,14 +286,22 @@ base_stats: ${JSON.stringify(profile.base_stats)}
         />
 
         {/* 네이티브 광고 - 캘린더 하단 */}
-        <AdSlot type="native" adUnitId="ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX" />
+        <AdSlot
+          type="native"
+          adUnitId="ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX"
+        />
 
         {/* Todo columns */}
         <div className="bg-white rounded-3xl border border-gray-100 p-4 shadow-md">
           <p className="text-sm font-bold text-gray-700 mb-3">할 일 목록</p>
           <TodoColumns
             todos={todos}
-            onToggle={(todo) => toggleTodoMutation.mutate({ id: todo.id, completed: !todo.completed })}
+            onToggle={(todo) =>
+              toggleTodoMutation.mutate({
+                id: todo.id,
+                completed: !todo.completed,
+              })
+            }
           />
         </div>
       </div>

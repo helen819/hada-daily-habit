@@ -18,9 +18,14 @@ export default function Happiness() {
   const [showPoster, setShowPoster] = useState(false);
   const [showFireworks, setShowFireworks] = useState(false);
 
+  // 🔥 1. 전체 기록을 담을 별도의 상태
+  const [fullRecords, setFullRecords] = useState([]);
+  const [isFetchingFull, setIsFetchingFull] = useState(false);
+
+  // 2. 초기 리딩 및 리스트용 (최근 10개만 가볍게 조회)
   const { data: records = [], isLoading } = useQuery({
     queryKey: ["happinessRecords"],
-    queryFn: () => base44.entities.HappinessRecord.list("-created_at", 50),
+    queryFn: () => base44.entities.HappinessRecord.list("-created_at", 10),
   });
 
   const createMutation = useMutation({
@@ -31,6 +36,21 @@ export default function Happiness() {
       setTimeout(() => setShowFireworks(false), 1200);
     },
   });
+
+  // 🔥 3. 행복 보관함 클릭 시 전체 데이터를 가져오는 함수
+  const handleOpenStorage = async () => {
+    setShowAd(true); // 일단 광고 모달 오픈
+    setIsFetchingFull(true);
+    try {
+      // 인자값 없이 호출하여 모든 데이터를 최신순으로 가져옴
+      const allData = await base44.entities.HappinessRecord.list("-created_at");
+      setFullRecords(allData);
+    } catch (error) {
+      console.error("전체 기록 조회 실패:", error);
+    } finally {
+      setIsFetchingFull(false);
+    }
+  };
 
   const generateSummary = async () => {
     if (records.length < 3) return;
@@ -72,7 +92,7 @@ export default function Happiness() {
       <AnimatePresence>
         {showPoster && (
           <HappinessPoster
-            records={records}
+            records={fullRecords}
             onClose={() => setShowPoster(false)}
           />
         )}
@@ -157,13 +177,14 @@ export default function Happiness() {
           <motion.button
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            onClick={() => setShowAd(true)}
+            // onClick={() => setShowAd(true)}
+            onClick={handleOpenStorage}
             className="w-full bg-gradient-to-r from-pink-100 to-rose-100 border border-pink-200 rounded-3xl px-6 py-4 flex flex-col items-center gap-3 hover:shadow-lg transition-shadow"
           >
             <div className="text-5xl">✨</div>
             <div>
               <p className="text-sm font-bold text-pink-700">행복 보관함</p>
-              <p className="text-xs text-pink-600">행복 기록 뽑아 보기</p>
+              <p className="text-xs text-pink-600">행복 기록 모아 보기</p>
             </div>
           </motion.button>
         )}
