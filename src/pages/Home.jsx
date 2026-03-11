@@ -415,6 +415,7 @@ base_stats: ${JSON.stringify(profile.base_stats)}
         {/* Tarot Section - 행운 실천 */}
         <TarotSection
           actions={actions}
+          todos={todos} // 🔥 추가: 할 일 목록 전달
           onAddToTodo={addTodo}
           isLoading={actionsLoading}
           userGoal={profile?.goal}

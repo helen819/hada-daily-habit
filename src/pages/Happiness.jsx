@@ -43,7 +43,7 @@ export default function Happiness() {
     setIsFetchingFull(true);
     try {
       // 인자값 없이 호출하여 모든 데이터를 최신순으로 가져옴
-      const allData = await base44.entities.HappinessRecord.list("-created_at");
+      const allData = await base44.entities.HappinessRecord.list("created_at");
       setFullRecords(allData);
     } catch (error) {
       console.error("전체 기록 조회 실패:", error);

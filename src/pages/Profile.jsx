@@ -193,57 +193,27 @@ export default function Profile() {
 
   const handleReset = async () => {
     setResetting(true);
-    const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+    try {
+      // 1. 로컬 저장소(Preferences) 전체를 한 번에 삭제
+      await base44.storage.clear();
 
-    // 모든 데이터 조회
-    const [
-      allProfiles,
-      allActions,
-      allReadings,
-      allTodos,
-      allHappiness,
-      allCharms,
-      allSchedules,
-    ] = await Promise.all([
-      base44.entities.UserProfile.list(),
-      base44.entities.MicroAction.list(),
-      base44.entities.DailyReading.list(),
-      base44.entities.Todo.list(),
-      base44.entities.HappinessRecord.list(),
-      base44.entities.CharmItem.list(),
-      base44.entities.ScheduleItem.list(),
-    ]);
+      // 2. React Query의 모든 메모리 캐시를 즉시 삭제
+      queryClient.clear();
 
-    // 배치 단위로 삭제 (10개씩, 100ms 간격)
-    const allToDelete = [
-      ...allProfiles.map((r) => ({ entity: "UserProfile", id: r.id })),
-      ...allActions.map((r) => ({ entity: "MicroAction", id: r.id })),
-      ...allReadings.map((r) => ({ entity: "DailyReading", id: r.id })),
-      ...allTodos.map((r) => ({ entity: "Todo", id: r.id })),
-      ...allHappiness.map((r) => ({ entity: "HappinessRecord", id: r.id })),
-      ...allCharms.map((r) => ({ entity: "CharmItem", id: r.id })),
-      ...allSchedules.map((r) => ({ entity: "ScheduleItem", id: r.id })),
-    ];
+      // 3. 약간의 지연 시간을 주어 처리를 확실히 함
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
-    for (let i = 0; i < allToDelete.length; i += 10) {
-      const batch = allToDelete.slice(i, i + 10);
-      await Promise.allSettled(
-        batch.map((item) => {
-          const entity = base44.entities[item.entity];
-          return entity.delete(item.id);
-        }),
-      );
-      if (i + 10 < allToDelete.length) await delay(100);
+      // 4. 온보딩으로 이동 (뒤로가기 방지를 위해 replace: true)
+      navigate("/Onboarding", { replace: true });
+
+      // 5. [강력 추천] 앱을 완전히 새로고침하여 잔여 메모리 데이터 제거
+      window.location.reload();
+    } catch (error) {
+      console.error("초기화 중 오류 발생:", error);
+      alert("초기화에 실패했습니다. 다시 시도해주세요.");
+    } finally {
+      setResetting(false);
     }
-
-    // 🔥 [수정] base44.storage(Preferences) 사용
-    await base44.storage.remove("lastCharmDate");
-    await base44.storage.remove("cachedCharm");
-    await base44.storage.remove("modeCardLastShownDate"); // Home에서 쓰는 키도 함께 삭제
-
-    // 캐시 무효화 및 이동
-    await queryClient.invalidateQueries();
-    navigate("/Onboarding");
   };
 
   if (isLoading) {
@@ -401,15 +371,21 @@ export default function Profile() {
             }`}
           >
             <Package2
-              className={`w-5 h-5 mx-auto mb-1 ${showVault ? "text-white" : "text-purple-500"}`}
+              className={`w-5 h-5 mx-auto mb-1 ${
+                showVault ? "text-white" : "text-purple-500"
+              }`}
             />
             <p
-              className={`text-xl font-bold ${showVault ? "text-white" : "text-gray-900"}`}
+              className={`text-xl font-bold ${
+                showVault ? "text-white" : "text-gray-900"
+              }`}
             >
               {charms.length}
             </p>
             <p
-              className={`text-[10px] font-medium uppercase tracking-wider ${showVault ? "text-white/80" : "text-gray-400"}`}
+              className={`text-[10px] font-medium uppercase tracking-wider ${
+                showVault ? "text-white/80" : "text-gray-400"
+              }`}
             >
               부적 보관함
             </p>

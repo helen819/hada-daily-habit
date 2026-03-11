@@ -55,7 +55,9 @@ async function generateAICharm(profile) {
   });
   const res = await base44.integrations.Core.InvokeLLM({
     prompt: `너는 'HADA' 앱의 실시간 부적 추천 엔진이다.
-[사용자] 이름: ${profile?.full_name}, 생년월일: ${profile?.birth_date}, 목표: ${profile?.goal}
+[사용자] 이름: ${profile?.full_name}, 생년월일: ${profile?.birth_date}, 목표: ${
+      profile?.goal
+    }
 [현재] 날짜: ${dateStr}, 날씨: ${getWeatherMock()}
 규칙: 지금 당장 구할 수 있는 평범한 물건만 추천. 운명학 근거 명시.`,
     response_json_schema: {

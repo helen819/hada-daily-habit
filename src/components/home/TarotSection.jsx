@@ -1,4 +1,10 @@
-import React, { useState, useRef, useCallback, useEffect } from "react";
+import React, {
+  useState,
+  useRef,
+  useCallback,
+  useEffect,
+  useMemo,
+} from "react";
 import AdSlot from "@/components/ads/AdSlot";
 import AdModal from "@/components/shop/AdModal";
 import { motion, AnimatePresence } from "framer-motion";
@@ -170,7 +176,7 @@ function TarotDetailModal({ action, onClose, onAdd, added, onNext, onPrev }) {
   );
 }
 
-function MiniTarotCard({ action, onAddToTodo, onNext, onPrev }) {
+function MiniTarotCard({ action, onAddToTodo, todos, onNext, onPrev }) {
   const [flipped, setFlipped] = useState(false);
   const [added, setAdded] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
@@ -189,11 +195,16 @@ function MiniTarotCard({ action, onAddToTodo, onNext, onPrev }) {
     "from-gray-50 to-gray-50 border-gray-200";
   const iconColor = iconColors[action.stat_focus] || "text-gray-500";
 
+  // 🔥 중요: 현재 할 일 목록에 이 카드의 미션이 이미 있는지 확인합니다.
+  const isAlreadyAdded = useMemo(() => {
+    return todos?.some((todo) => todo.title === action.micro_action);
+  }, [todos, action.micro_action]);
+
   const handleAdd = (e) => {
     e?.stopPropagation();
-    if (!added) {
+    // 🔥 이미 추가된 상태라면 더 이상 실행하지 않음
+    if (!isAlreadyAdded) {
       onAddToTodo(action.micro_action);
-      setAdded(true);
     }
   };
 
@@ -205,7 +216,7 @@ function MiniTarotCard({ action, onAddToTodo, onNext, onPrev }) {
             action={action}
             onClose={() => setShowDetail(false)}
             onAdd={handleAdd}
-            added={added}
+            added={isAlreadyAdded}
             onNext={onNext}
             onPrev={onPrev}
           />
@@ -290,6 +301,7 @@ function MiniTarotCard({ action, onAddToTodo, onNext, onPrev }) {
               </button>
               <button
                 onClick={handleAdd}
+                disabled={isAlreadyAdded} // 🔥 이미 추가된 경우 버튼 비활성화
                 className={`flex items-center justify-center w-6 h-6 rounded-lg transition-all ${
                   added
                     ? "bg-green-100 text-green-600"
@@ -328,7 +340,7 @@ function AdCard() {
 }
 
 // 무한 순환 카드 캐러셀
-function InfiniteCardCarousel({ actions, onAddToTodo }) {
+function InfiniteCardCarousel({ actions, onAddToTodo, todos }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState(0); // -1: left, 1: right
   const [showFullAd, setShowFullAd] = useState(false);
@@ -481,6 +493,7 @@ function InfiniteCardCarousel({ actions, onAddToTodo }) {
                     <MiniTarotCard
                       action={items[idx].action}
                       onAddToTodo={onAddToTodo}
+                      todos={todos} // 🔥 자식에게 전달
                       onNext={goRight}
                       onPrev={goLeft}
                     />
@@ -522,6 +535,7 @@ function InfiniteCardCarousel({ actions, onAddToTodo }) {
 export default function TarotSection({
   actions,
   onAddToTodo,
+  todos,
   isLoading,
   userGoal,
 }) {
@@ -585,7 +599,11 @@ export default function TarotSection({
                 ))}
               </div>
             ) : list.length > 0 ? (
-              <InfiniteCardCarousel actions={list} onAddToTodo={onAddToTodo} />
+              <InfiniteCardCarousel
+                actions={list}
+                onAddToTodo={onAddToTodo}
+                todos={todos}
+              />
             ) : null}
           </motion.div>
         )}

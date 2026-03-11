@@ -85,12 +85,14 @@ function PosterCard({ record, index, color }) {
 
 export default function HappinessPoster({ records, onClose }) {
   const posterRef = useRef(null);
-  const [saving, setSaving] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(new Date());
 
-  // 🔥 1. 전체 기록이 나오도록 slice 제거
+  // 🔥 1. 필터링 로직 수정 (현지 시간 기준 yyyy-MM 추출)
   const filteredRecords = useMemo(() => {
-    const monthStr = selectedMonth.toISOString().split("T")[0].slice(0, 7);
+    const year = selectedMonth.getFullYear();
+    const month = String(selectedMonth.getMonth() + 1).padStart(2, "0");
+    const monthStr = `${year}-${month}`; // 예: "2024-03"
+
     return records.filter((r) => r.date?.startsWith(monthStr));
   }, [records, selectedMonth]);
 
@@ -98,23 +100,18 @@ export default function HappinessPoster({ records, onClose }) {
     selectedMonth.getMonth() + 1
   }월`;
 
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      const html2canvas = (await import("html2canvas")).default;
-      const canvas = await html2canvas(posterRef.current, {
-        backgroundColor: "#FAF8F3",
-        scale: 3, // 저장 화질 개선
-        useCORS: true,
-      });
-      const link = document.createElement("a");
-      link.download = `HADA_행복포스터_${monthLabel}.png`;
-      link.href = canvas.toDataURL("image/png");
-      link.click();
-    } catch (e) {
-      console.error("Save error:", e);
-    }
-    setSaving(false);
+  // 🔥 2. 월 이동 로직 수정 (불변성 유지 및 1일 고정)
+  const handlePrevMonth = () => {
+    setSelectedMonth((prev) => {
+      // 새로운 Date 객체를 만들고 날짜를 1일로 고정하여 롤오버 방지
+      return new Date(prev.getFullYear(), prev.getMonth() - 1, 1);
+    });
+  };
+
+  const handleNextMonth = () => {
+    setSelectedMonth((prev) => {
+      return new Date(prev.getFullYear(), prev.getMonth() + 1, 1);
+    });
   };
 
   return (
@@ -129,27 +126,13 @@ export default function HappinessPoster({ records, onClose }) {
       }}
     >
       <div className="flex items-center px-4 py-3 border-b border-gray-50 bg-white">
-        {/* 1. 왼쪽 구역 (닫기 버튼) - 너비를 고정합니다 (예: w-10) */}
-        <div className="w-10 flex justify-start">
-          <button
-            onClick={onClose}
-            className="p-2 rounded-full bg-gray-100 active:scale-90 transition-transform"
-          >
-            <X size={18} />
-          </button>
-        </div>
+        {/* 1. 왼쪽 구역 (균형을 맞추기 위한 빈 공간)*/}
+        <div className="w-10"></div>
 
         {/* 2. 가운데 구역 (월 선택) - flex-1을 주어 남은 공간을 다 차지하고 내부를 중앙 정렬합니다 */}
         <div className="flex-1 flex items-center justify-center gap-4">
           <button
-            onClick={() =>
-              setSelectedMonth(
-                new Date(
-                  selectedMonth.getFullYear(),
-                  selectedMonth.getMonth() - 1,
-                ),
-              )
-            }
+            onClick={handlePrevMonth}
             className="p-1 text-gray-400 hover:text-gray-900 active:scale-75 transition-transform"
           >
             <ChevronLeft size={20} />
@@ -160,22 +143,22 @@ export default function HappinessPoster({ records, onClose }) {
           </span>
 
           <button
-            onClick={() =>
-              setSelectedMonth(
-                new Date(
-                  selectedMonth.getFullYear(),
-                  selectedMonth.getMonth() + 1,
-                ),
-              )
-            }
+            onClick={handleNextMonth}
             className="p-1 text-gray-400 hover:text-gray-900 active:scale-75 transition-transform"
           >
             <ChevronRight size={20} />
           </button>
         </div>
 
-        {/* 3. 오른쪽 구역 (균형을 맞추기 위한 빈 공간) - 왼쪽과 똑같은 너비를 줍니다 */}
-        <div className="w-10"></div>
+        {/* 3. 닫기 버튼 */}
+        <div className="w-10 flex justify-start">
+          <button
+            onClick={onClose}
+            className="p-2 rounded-full bg-gray-100 active:scale-90 transition-transform"
+          >
+            <X size={18} />
+          </button>
+        </div>
       </div>
 
       {/* 포스터 프리뷰 영역 */}

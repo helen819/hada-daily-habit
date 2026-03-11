@@ -88,6 +88,8 @@ export const base44 = {
     set: async (key, val) => await storageEngine.set(key, val, false),
     remove: async (key) =>
       await Preferences.remove({ key: getGeneralKey(key) }),
+    // 🔥 [추가] 모든 Preferences 데이터 강제 삭제
+    clear: async () => await Preferences.clear(),
   },
   entities: {
     UserProfile: createEntity("UserProfile"),
@@ -128,13 +130,43 @@ export const base44 = {
         // 1초 정도 로딩 효과를 주기 위해 지연시간 추가
         await new Promise((resolve) => setTimeout(resolve, 1000));
 
+        if (
+          prompt.includes("오늘의 운세를 두 문장 이내로 따뜻하게 요약해줘...")
+        ) {
+          return {
+            line1:
+              "(가짜 데이터) 오늘은 주변 사람들과의 조화가 빛나는 날입니다.",
+            line2:
+              "(가짜 데이터) 작은 배려가 예상치 못한 행운의 소식으로 돌아올 거예요.",
+          };
+        }
+
         // 온보딩 분석 요청일 경우 반환할 가짜 데이터
         if (prompt.includes("엔진")) {
           return {
+            name: "(가짜 데이터) 은색 볼펜",
+            description:
+              "(가짜 데이터) 중요한 결정을 내리거나 메모를 할 때 이 펜을 사용하세요. 차가운 금속의 기운이 당신의 판단력을 날카롭게 세워줄 것입니다.",
+            effect: "(가짜 데이터)집중력 향상 및 논리적 사고 강화",
+            source: "(가짜 데이터) 사주 천간 庚(경금) 기운 보완 분석",
+
             header_text:
               "(가짜 데이터) 작은 기쁨들이 모여 당신의 결을 만들고 있어요.",
             encouragement:
               "(가짜 데이터) 일상의 소중함을 발견할 줄 아는 당신은 지금도 충분히 잘하고 있습니다. 타인과 비교할 필요 없어요. 당신만의 속도로 걷는 이 길 자체가 이미 아름다운 기록이니까요.",
+
+            title: "(가짜 데이터)오늘의 분석 결과",
+            summary: "(가짜 데이터) 역동적이고 활기찬 에너지의 흐름",
+            energyLevel: 88,
+            detailed:
+              "(가짜 데이터) 현재 당신의 기운이 목(木)의 성장 에너지와 만나 매우 역동적입니다. 평소 미뤄두었던 과제를 해결하기에 가장 적합한 시기입니다.",
+            actionTips: [
+              "(가짜 데이터) 중요 업무는 오후 2시 전 처리",
+              "(가짜 데이터) 초록색 소품 곁에 두기",
+              "(가짜 데이터) 따뜻한 인사 건네기",
+            ],
+            luckyColor: "#10B981",
+            fortuneSource: "(가짜 데이터) 5대 운명학 통합 분석 데이터",
 
             analysis_data: {
               sasoo: "따뜻한 봄날의 햇살 같은 기운을 타고나셨습니다.",
