@@ -270,20 +270,24 @@ base_stats: ${JSON.stringify(profile.base_stats)}
     queryClient.invalidateQueries({ queryKey: ["dailyReading"] });
   };
 
-  // Complete action
+  // 2. 마이크로 액션(Tarot) 완료 시 XP 부여 (기존 completeAction 보강)
   const completeAction = async (action) => {
+    if (action.completed) return; // 이미 완료된 건 무시
+
     await base44.entities.MicroAction.update(action.id, { completed: true });
 
-    // Add XP
-    const newXp = (profile.xp || 0) + 10;
-    const newLevel = Math.min(10, Math.floor(newXp / 100) + 1);
-    await base44.entities.UserProfile.update(profile.id, {
-      xp: newXp,
-      level: newLevel,
-    });
+    if (profile) {
+      const newXp = (profile.xp || 0) + 10;
+      const newLevel = Math.floor(newXp / 100) + 1;
 
-    queryClient.invalidateQueries({ queryKey: ["microActions"] });
-    queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+      await base44.entities.UserProfile.update(profile.id, {
+        xp: newXp,
+        level: newLevel,
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["microActions"] });
+      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+    }
   };
 
   // Mode toggle
@@ -314,11 +318,29 @@ base_stats: ${JSON.stringify(profile.base_stats)}
     queryClient.invalidateQueries({ queryKey: ["todos"] });
   };
 
+  // 1. 할 일(Todo) 토글 시 XP 부여 로직 추가
   const toggleTodo = async (todo) => {
-    await base44.entities.Todo.update(todo.id, { completed: !todo.completed });
+    const isCompleting = !todo.completed; // 새로 완료되는 상태인지 확인
+
+    // 할 일 상태 업데이트
+    await base44.entities.Todo.update(todo.id, { completed: isCompleting });
+
+    // 🔥 완료 체크 시에만 XP 10 부여
+    if (isCompleting && profile) {
+      const newXp = (profile.xp || 0) + 10;
+      const newLevel = Math.floor(newXp / 100) + 1; // 100점마다 레벨 1 상승
+
+      await base44.entities.UserProfile.update(profile.id, {
+        xp: newXp,
+        level: newLevel,
+      });
+
+      // 유저 프로필 정보 갱신 (상단 레벨바 등에 즉시 반영)
+      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+    }
+
     queryClient.invalidateQueries({ queryKey: ["todos"] });
   };
-
   const convertTodo = async (todo) => {
     setIsConverting(true);
     const res = await base44.integrations.Core.InvokeLLM({

@@ -42,12 +42,28 @@ export default function CalendarPage() {
     queryFn: () => base44.entities.HappinessRecord.list("-date"),
   });
 
+  // CalendarPage.jsx 내부의 toggleTodoMutation 수정
   const toggleTodoMutation = useMutation({
-    mutationFn: ({ id, completed }) =>
-      base44.entities.Todo.update(id, { completed }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["todos"] }),
-  });
+    mutationFn: async ({ id, completed }) => {
+      // 1. 할 일 상태 업데이트
+      const updated = await base44.entities.Todo.update(id, { completed });
 
+      // 2. 🔥 완료 체크 시 XP 부여
+      if (completed && profile) {
+        const newXp = (profile.xp || 0) + 10;
+        const newLevel = Math.floor(newXp / 100) + 1;
+        await base44.entities.UserProfile.update(profile.id, {
+          xp: newXp,
+          level: newLevel,
+        });
+      }
+      return updated;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["todos"] });
+      queryClient.invalidateQueries({ queryKey: ["userProfile"] }); // 🔥 프로필 갱신 필수
+    },
+  });
   const markedDates = useMemo(
     () => [...new Set(schedules.map((s) => s.date))],
     [schedules],

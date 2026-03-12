@@ -4,14 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClientInstance } from "@/lib/query-client";
 import { pagesConfig } from "./pages.config";
-import {
-  HashRouter as Router,
-  Route,
-  Routes,
-  useNavigate,
-  useLocation,
-  Navigate,
-} from "react-router-dom";
+import { HashRouter as Router, Route, Routes } from "react-router-dom";
 import PageNotFound from "./lib/PageNotFound";
 import { AuthProvider } from "@/lib/AuthContext";
 
@@ -26,37 +19,41 @@ const LayoutWrapper = ({ children, currentPageName }) => {
 };
 
 const MainAppContent = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
   const mainPageKey = mainPage ?? Object.keys(Pages)[0];
-  // MainPage를 컴포넌트 자체로 할당 (jsx 엘리먼트가 아닌 컴포넌트 참조)
   const MainPage = Pages[mainPageKey];
-  // 🔥 뒤로가기 로직을 Router 내부인 이곳으로 이동
+
+  // 🔥 클릭 횟수와 시간을 제어하기 위한 Ref
   const lastTimeBackPress = useRef(0);
-  const timePeriodToExit = 2000; // 2초
+  const pressCount = useRef(0); // 클릭 횟수 추적
+  const timePeriod = 2000; // 2초 이내 기준
 
   useEffect(() => {
     const backHandler = CapApp.addListener("backButton", () => {
-      if (
-        location.pathname === "/" ||
-        location.pathname === `/${mainPageKey}`
-      ) {
-        const currentTime = new Date().getTime();
-        if (currentTime - lastTimeBackPress.current < timePeriodToExit) {
-          CapApp.exitApp();
-        } else {
-          // 토스트 메시지나 알림을 띄우면 좋습니다 (Capacitor Toast 플러그인 필요)
-          alert("'뒤로' 버튼을 한 번 더 누르면 종료됩니다.");
-          lastTimeBackPress.current = currentTime;
-        }
+      const currentTime = new Date().getTime();
+
+      // 2초 이내에 다시 누른 경우 횟수 증가, 아니면 1로 초기화
+      if (currentTime - lastTimeBackPress.current < timePeriod) {
+        pressCount.current += 1;
       } else {
-        navigate(-1);
+        pressCount.current = 1;
+      }
+
+      lastTimeBackPress.current = currentTime;
+
+      // 횟수에 따른 동작 제어
+      if (pressCount.current === 2) {
+        // 두 번째 클릭 시 안내
+        alert("'뒤로' 버튼을 한 번 더 누르면 종료됩니다.");
+      } else if (pressCount.current >= 3) {
+        // 세 번째 클릭 시 종료
+        CapApp.exitApp();
       }
     });
+
     return () => {
       backHandler.then((h) => h.remove());
     };
-  }, [location, navigate, mainPageKey]);
+  }, []);
 
   return (
     <Routes>
