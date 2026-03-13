@@ -77,7 +77,7 @@ export default function ModeCard({ data, onDismiss, onSelect }) {
               {data.card_title}
             </h2>
 
-            <p className="text-sm text-gray-500 leading-relaxed break-keep font-medium">
+            <p className="text-sm text-gray-500 leading-relaxed break-keep font-medium mb-10">
               {data.card_body}
             </p>
 
