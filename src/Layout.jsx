@@ -53,6 +53,20 @@ export default function Layout({ children, currentPageName }) {
     });
   }, [hideNav]);
 
+  // 🔥 [추가된 부분] 외부(Home 등)에서 발생한 모드 변경 이벤트 감지
+  useEffect(() => {
+    const handleModeChange = (e) => {
+      if (e.detail) {
+        setCurrentMode(e.detail);
+      }
+    };
+
+    window.addEventListener("modeChanged", handleModeChange);
+    return () => {
+      window.removeEventListener("modeChanged", handleModeChange);
+    };
+  }, []);
+
   // 2. [수정] 테마 토글 로직 (Preferences 사용)
   const toggleTheme = async () => {
     const newDark = !isDark;
@@ -164,11 +178,15 @@ export default function Layout({ children, currentPageName }) {
                     className={`flex flex-col items-center gap-0.5 px-4 py-2 rounded-xl transition-all`}
                   >
                     <Icon
-                      className={`w-5 h-5 ${isActive ? "text-purple-500" : "text-gray-400"}`}
+                      className={`w-5 h-5 ${
+                        isActive ? "text-purple-500" : "text-gray-400"
+                      }`}
                       strokeWidth={1.5}
                     />
                     <span
-                      className={`text-[9px] font-semibold ${isActive ? "text-purple-600" : "text-gray-400"}`}
+                      className={`text-[9px] font-semibold ${
+                        isActive ? "text-purple-600" : "text-gray-400"
+                      }`}
                     >
                       {label}
                     </span>

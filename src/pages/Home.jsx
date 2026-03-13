@@ -70,7 +70,7 @@ export default function Home() {
     }
   }, [profile, actionsLoading, actions]);
 
-  // Show mode card 3 seconds after loading
+  // Home.jsx 수정
   useEffect(() => {
     if (profile && reading?.mode_card) {
       const checkAndShowPopup = async () => {
@@ -78,11 +78,8 @@ export default function Home() {
         const lastShownDate = await base44.storage.get("modeCardLastShownDate");
 
         if (lastShownDate !== todayDate) {
-          const timer = setTimeout(async () => {
-            setShowModeCard(true);
-            await base44.storage.set("modeCardLastShownDate", todayDate);
-          }, 3000);
-          return () => clearTimeout(timer);
+          setShowModeCard(true);
+          await base44.storage.set("modeCardLastShownDate", todayDate);
         }
       };
 
@@ -270,42 +267,12 @@ base_stats: ${JSON.stringify(profile.base_stats)}
     queryClient.invalidateQueries({ queryKey: ["dailyReading"] });
   };
 
-  // 2. 마이크로 액션(Tarot) 완료 시 XP 부여 (기존 completeAction 보강)
-  const completeAction = async (action) => {
-    if (action.completed) return; // 이미 완료된 건 무시
-
-    await base44.entities.MicroAction.update(action.id, { completed: true });
-
-    if (profile) {
-      const newXp = (profile.xp || 0) + 10;
-      const newLevel = Math.floor(newXp / 100) + 1;
-
-      await base44.entities.UserProfile.update(profile.id, {
-        xp: newXp,
-        level: newLevel,
-      });
-
-      queryClient.invalidateQueries({ queryKey: ["microActions"] });
-      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
-    }
-  };
-
-  // Mode toggle
-  const toggleMode = async () => {
-    const newMode = profile.current_mode === "action" ? "restore" : "action";
-    await base44.entities.UserProfile.update(profile.id, {
-      current_mode: newMode,
-    });
-    queryClient.invalidateQueries({ queryKey: ["userProfile"] });
-    // Regenerate sequentially to avoid 502 from parallel LLM calls
-    await generateDailyReading(newMode);
-    await generateActions(newMode);
-  };
-
   const handleModeSelect = async (mode) => {
+    setShowModeCard(false); // 🔥 일단 팝업부터 닫고 처리를 시작합니다.
     await base44.entities.UserProfile.update(profile.id, {
       current_mode: mode,
     });
+    window.dispatchEvent(new CustomEvent("modeChanged", { detail: mode }));
     queryClient.invalidateQueries({ queryKey: ["userProfile"] });
     // Regenerate sequentially to avoid 502 from parallel LLM calls
     await generateDailyReading(mode);
@@ -376,10 +343,12 @@ base_stats: ${JSON.stringify(profile.base_stats)}
   return (
     <div className="min-h-screen bg-gradient-to-b from-white via-purple-50/20 to-white pb-24">
       {/* Mode Card Popup */}
-      {showModeCard && reading?.mode_card && (
+      {showModeCard && (
         <ModeCard
           data={reading.mode_card}
           onDismiss={() => setShowModeCard(false)}
+          onSelect={handleModeSelect}
+          key="mode-card-unique"
         />
       )}
 

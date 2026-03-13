@@ -191,6 +191,11 @@ export default function Onboarding() {
             welcome_title: { type: "string" },
             welcome_subtitle: { type: "string" },
             today_hint: { type: "string" },
+            mode_card: {
+              suggested_mode: { type: "string" },
+              card_title: { type: "string" },
+              card_body: { type: "string" },
+            },
           },
         },
       });
@@ -242,6 +247,7 @@ export default function Onboarding() {
         today_hint: res.today_hint,
         recommended_mode: res.recommended_mode,
         base_stats: res.base_stats,
+        mode_card: res.mode_card,
       });
 
       await queryClient.invalidateQueries({ queryKey: ["userProfile"] });
@@ -473,7 +479,11 @@ export default function Onboarding() {
                   </label>
                   <button
                     onClick={() => setUseTime(!useTime)}
-                    className={`text-[10px] px-2 py-1 rounded-md font-bold transition-colors ${useTime ? "bg-purple-100 text-purple-600" : "bg-gray-100 text-gray-400"}`}
+                    className={`text-[10px] px-2 py-1 rounded-md font-bold transition-colors ${
+                      useTime
+                        ? "bg-purple-100 text-purple-600"
+                        : "bg-gray-100 text-gray-400"
+                    }`}
                   >
                     {useTime ? "입력 중" : "시간 모름"}
                   </button>
