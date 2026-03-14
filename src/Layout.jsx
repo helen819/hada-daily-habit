@@ -104,7 +104,7 @@ export default function Layout({ children, currentPageName }) {
   };
 
   return (
-    <div className="min-h-screen bg-background dark:bg-slate-950">
+    <div className="min-h-screen bg-background">
       <AdModal
         visible={showModeAd}
         onClose={applyModeChange}
@@ -125,15 +125,21 @@ export default function Layout({ children, currentPageName }) {
               onClick={toggleMode}
               className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
                 currentMode === "action"
-                  ? "bg-purple-100 hover:bg-purple-200"
-                  : "bg-green-100 hover:bg-green-200"
+                  ? "bg-purple-100 hover:bg-purple-200 dark:bg-purple-900/40 dark:hover:bg-purple-800/50"
+                  : "bg-green-100 hover:bg-green-200 dark:bg-green-900/40 dark:hover:bg-green-800/50"
               }`}
               aria-label="Toggle mode"
             >
               {currentMode === "action" ? (
-                <Zap className="w-5 h-5 text-purple-600" strokeWidth={1.5} />
+                <Zap
+                  className="w-5 h-5 text-purple-600 dark:text-purple-400"
+                  strokeWidth={1.5}
+                />
               ) : (
-                <Leaf className="w-5 h-5 text-green-600" strokeWidth={1.5} />
+                <Leaf
+                  className="w-5 h-5 text-green-600 dark:text-green-400"
+                  strokeWidth={1.5}
+                />
               )}
             </button>
             {/* Dark Mode Toggle */}
@@ -168,7 +174,7 @@ export default function Layout({ children, currentPageName }) {
             className="fixed left-0 right-0 z-40 p-4"
             style={{ bottom: "env(safe-area-inset-bottom)" }}
           >
-            <div className="max-w-md mx-auto bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-gray-100 dark:border-slate-800 rounded-3xl shadow-2xl flex items-center justify-around py-3 px-2">
+            <div className="max-w-md mx-auto bg-white/95 dark:bg-[#262B3D] backdrop-blur-xl border border-gray-100 dark:border-[#424B63] rounded-3xl shadow-2xl flex items-center justify-around py-3 px-2">
               {navItems.map(({ name, icon: Icon, label }) => {
                 const isActive = currentPageName === name;
                 return (
@@ -179,13 +185,17 @@ export default function Layout({ children, currentPageName }) {
                   >
                     <Icon
                       className={`w-5 h-5 ${
-                        isActive ? "text-purple-500" : "text-gray-400"
+                        isActive
+                          ? "text-purple-500 dark:text-purple-400"
+                          : "text-gray-400 dark:text-gray-500"
                       }`}
                       strokeWidth={1.5}
                     />
                     <span
                       className={`text-[9px] font-semibold ${
-                        isActive ? "text-purple-600" : "text-gray-400"
+                        isActive
+                          ? "text-purple-600 dark:text-purple-400"
+                          : "text-gray-400 dark:text-gray-500"
                       }`}
                     >
                       {label}

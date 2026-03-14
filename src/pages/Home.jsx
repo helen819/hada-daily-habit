@@ -329,7 +329,7 @@ base_stats: ${JSON.stringify(profile.base_stats)}
 
   if (profileLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-white to-purple-50/30">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="w-6 h-6 animate-spin text-purple-400" />
       </div>
     );
@@ -341,7 +341,7 @@ base_stats: ${JSON.stringify(profile.base_stats)}
   const totalActions = actions?.length || 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white via-purple-50/20 to-white pb-24">
+    <div className="min-h-screen bg-background pb-24">
       {/* Mode Card Popup */}
       {showModeCard && (
         <ModeCard
@@ -358,15 +358,15 @@ base_stats: ${JSON.stringify(profile.base_stats)}
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <p className="text-[10px] font-semibold text-purple-500 uppercase tracking-widest mb-1">
+          <p className="text-[10px] font-semibold text-purple-500 dark:text-purple-400 uppercase tracking-widest mb-1">
             HADA
           </p>
-          <h1 className="text-lg font-bold text-gray-900 leading-snug break-keep whitespace-normal">
+          <h1 className="text-lg font-bold text-foreground leading-snug break-keep whitespace-normal">
             {reading?.today_hint
               ? `"${reading.today_hint}"`
               : `안녕하세요, ${profile.full_name}님`}
           </h1>
-          <p className="text-[11px] text-gray-600 mt-1 break-keep whitespace-normal">
+          <p className="text-[11px] text-muted-foreground mt-1 break-keep whitespace-normal">
             {reading?.welcome_subtitle || profile.goal}
           </p>
         </motion.div>
@@ -381,21 +381,24 @@ base_stats: ${JSON.stringify(profile.base_stats)}
             transition={{ delay: 0.2 }}
             whileTap={{ scale: 0.98 }} // [추가] 터치 시 살짝 눌리는 효과
             onClick={() => navigate("/Shop")} // [추가] 상점 탭으로 이동
-            className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-100 rounded-2xl p-4 cursor-pointer hover:shadow-sm transition-shadow" // [수정] cursor-pointer 추가
+            className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-100 rounded-2xl p-4 cursor-pointer hover:shadow-sm transition-shadow
+           dark:from-amber-900/40 dark:to-yellow-900/40 dark:border-amber-700/60"
           >
             <div className="flex items-center justify-between">
               {" "}
               {/* [추가] 화살표 아이콘을 위해 레이아웃 변경 */}
               <div>
-                <p className="text-[10px] font-semibold text-amber-600 uppercase tracking-widest mb-1">
+                <p className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 ...">
                   오늘의 분위기
                 </p>
-                <p className="text-xs text-amber-800 leading-relaxed">
+                <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
                   ✨ {reading.welcome_title}
                 </p>
               </div>
               {/* [선택사항] 이동 가능하다는 힌트 아이콘 */}
-              <span className="text-amber-400 text-lg">›</span>
+              <span className="text-amber-400 dark:text-amber-500 text-lg">
+                ›
+              </span>
             </div>
           </motion.div>
         )}

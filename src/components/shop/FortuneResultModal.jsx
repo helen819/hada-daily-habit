@@ -3,11 +3,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Zap } from "lucide-react";
 
 export default function FortuneResultModal({ result, category, onClose }) {
-  // 🔥 1. 뒷배경 스크롤 방지 및 안드로이드 뒤로가기 대응
   useEffect(() => {
     if (result) {
       document.body.style.overflow = "hidden";
-      document.body.classList.add("modal-open"); // App.jsx에서 정의한 뒤로가기용 클래스
+      document.body.classList.add("modal-open");
     }
     return () => {
       document.body.style.overflow = "unset";
@@ -22,7 +21,7 @@ export default function FortuneResultModal({ result, category, onClose }) {
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-[110] flex items-center justify-center p-5">
-        {/* 2. 배경 어둡게 처리 (독립 레이어로 분리하여 팝업 밝기 유지) */}
+        {/* 배경 */}
         <motion.div
           key="backdrop"
           initial={{ opacity: 0 }}
@@ -32,16 +31,15 @@ export default function FortuneResultModal({ result, category, onClose }) {
           onClick={onClose}
         />
 
-        {/* 3. 모달 본체: flex flex-col과 max-h로 스크롤 구조 잡기 */}
         <motion.div
           key="modal"
           initial={{ scale: 0.85, opacity: 0, y: 30 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.85, opacity: 0, y: 30 }}
           onClick={(e) => e.stopPropagation()}
-          className="relative bg-white rounded-[32px] shadow-2xl overflow-hidden w-full max-w-sm flex flex-col max-h-[85vh] border border-white/20"
+          className="relative bg-white dark:bg-[#2E3447] rounded-[32px] overflow-hidden w-full max-w-sm flex flex-col max-h-[85vh] border border-white/20 dark:border-[#424B63] shadow-2xl"
         >
-          {/* [고정 영역] 헤더 */}
+          {/* 헤더 - luckyColor 배경 유지 */}
           <div
             className="px-6 pt-8 pb-8 text-white relative shrink-0"
             style={{ backgroundColor: result.luckyColor || "#8B5CF6" }}
@@ -65,15 +63,15 @@ export default function FortuneResultModal({ result, category, onClose }) {
             )}
           </div>
 
-          {/* [스크롤 영역] 에너지 레벨 및 상세 내용 */}
-          <div className="flex-1 overflow-y-auto bg-slate-50/50 custom-scrollbar overscroll-contain">
+          {/* 스크롤 영역 */}
+          <div className="flex-1 overflow-y-auto bg-slate-50/50 dark:bg-[#262B3D] overscroll-contain">
             {/* 에너지 레벨 */}
             <div className="px-6 pt-6 mb-6">
-              <div className="bg-white rounded-2xl shadow-md p-4 border border-gray-100">
+              <div className="bg-white dark:bg-[#1A1F2E] rounded-2xl p-4 border border-gray-100 dark:border-[#424B63] shadow-md">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-1.5">
                     <Zap className="w-4 h-4 text-amber-400 fill-amber-400" />
-                    <span className="text-xs font-bold text-gray-600">
+                    <span className="text-xs font-bold text-gray-600 dark:text-slate-200">
                       오늘의 에너지
                     </span>
                   </div>
@@ -84,7 +82,7 @@ export default function FortuneResultModal({ result, category, onClose }) {
                     {energy}%
                   </span>
                 </div>
-                <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                <div className="w-full h-2.5 bg-gray-100 dark:bg-[#2E3447] rounded-full overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${energy}%` }}
@@ -99,7 +97,7 @@ export default function FortuneResultModal({ result, category, onClose }) {
             <div className="px-6 pb-4 space-y-5">
               {/* 상세 해석 */}
               {result.detailed && (
-                <p className="text-[14px] text-gray-600 leading-relaxed break-keep">
+                <p className="text-[14px] text-gray-600 dark:text-slate-300 leading-relaxed break-keep">
                   {result.detailed}
                 </p>
               )}
@@ -107,14 +105,14 @@ export default function FortuneResultModal({ result, category, onClose }) {
               {/* 행동 팁 */}
               {result.actionTips?.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider ml-1">
+                  <p className="text-[11px] font-bold text-gray-400 dark:text-slate-400 uppercase tracking-wider ml-1">
                     오늘의 행동 팁
                   </p>
                   <div className="space-y-2">
                     {result.actionTips.map((tip, i) => (
                       <div
                         key={i}
-                        className="flex items-start gap-2 bg-purple-50/50 rounded-xl px-3 py-2.5"
+                        className="flex items-start gap-2 bg-purple-50/50 dark:bg-purple-800/25 rounded-xl px-3 py-2.5 border border-transparent dark:border-purple-700/30"
                       >
                         <div
                           className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0"
@@ -122,7 +120,7 @@ export default function FortuneResultModal({ result, category, onClose }) {
                             backgroundColor: result.luckyColor || "#8B5CF6",
                           }}
                         />
-                        <p className="text-xs text-gray-700 font-medium leading-snug">
+                        <p className="text-xs text-gray-700 dark:text-slate-200 font-medium leading-snug">
                           {tip}
                         </p>
                       </div>
@@ -133,16 +131,16 @@ export default function FortuneResultModal({ result, category, onClose }) {
 
               {/* 행운 색상 */}
               {result.luckyColor && (
-                <div className="flex items-center gap-3 bg-gray-50 rounded-2xl px-4 py-3 border border-gray-100/50">
+                <div className="flex items-center gap-3 bg-gray-50 dark:bg-[#1A1F2E] rounded-2xl px-4 py-3 border border-gray-100/50 dark:border-[#424B63]">
                   <div
-                    className="w-8 h-8 rounded-xl shadow-sm flex-shrink-0 border-2 border-white"
+                    className="w-8 h-8 rounded-xl flex-shrink-0 border-2 border-white dark:border-[#424B63]"
                     style={{ backgroundColor: result.luckyColor }}
                   />
                   <div>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase">
+                    <p className="text-[10px] font-bold text-gray-400 dark:text-slate-400 uppercase">
                       Lucky Color
                     </p>
-                    <p className="text-xs text-gray-600 font-bold">
+                    <p className="text-xs text-gray-600 dark:text-slate-200 font-bold">
                       오늘의 행운 색상
                     </p>
                   </div>
@@ -151,8 +149,8 @@ export default function FortuneResultModal({ result, category, onClose }) {
             </div>
           </div>
 
-          {/* [고정 영역] 확인 버튼 */}
-          <div className="p-6 shrink-0 bg-white border-t border-gray-50">
+          {/* 푸터 */}
+          <div className="p-6 shrink-0 bg-white dark:bg-[#2E3447] border-t border-gray-50 dark:border-[#424B63]">
             <button
               onClick={onClose}
               className="w-full py-4 rounded-2xl text-white font-bold text-sm shadow-lg active:scale-[0.98] transition-transform"

@@ -5,7 +5,7 @@ export default function ModeToggle({ mode, onToggle }) {
   const isAction = mode === "action";
 
   return (
-    <div className="relative w-full rounded-3xl p-1 bg-gray-100 flex">
+    <div className="relative w-full rounded-3xl p-1 bg-gray-100 dark:bg-[#2E3447] flex border border-transparent dark:border-[#424B63]">
       <motion.div
         className="absolute top-1 bottom-1 rounded-2xl"
         style={{ width: "calc(50% - 4px)" }}
@@ -20,7 +20,11 @@ export default function ModeToggle({ mode, onToggle }) {
         className="relative z-10 flex-1 flex items-center justify-center gap-2 py-2"
       >
         <span className="text-lg">🔥</span>
-        <span className={`text-xs font-semibold ${isAction ? "text-white" : "text-gray-400"}`}>
+        <span
+          className={`text-xs font-semibold ${
+            isAction ? "text-white" : "text-gray-400 dark:text-slate-400"
+          }`}
+        >
           활동
         </span>
       </button>
@@ -29,7 +33,11 @@ export default function ModeToggle({ mode, onToggle }) {
         className="relative z-10 flex-1 flex items-center justify-center gap-2 py-2"
       >
         <span className="text-lg">💧</span>
-        <span className={`text-xs font-semibold ${!isAction ? "text-white" : "text-gray-400"}`}>
+        <span
+          className={`text-xs font-semibold ${
+            !isAction ? "text-white" : "text-gray-400 dark:text-slate-400"
+          }`}
+        >
           휴식
         </span>
       </button>

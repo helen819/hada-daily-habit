@@ -18,13 +18,17 @@ export default function CharmReveal({ charm, onSave, onClose }) {
           initial={{ scale: 0.5, opacity: 0, rotate: -10 }}
           animate={{ scale: 1, opacity: 1, rotate: 0 }}
           transition={{ type: "spring", damping: 15, stiffness: 200 }}
-          className="bg-white rounded-3xl w-80 p-8 shadow-2xl text-center relative"
+          className="bg-white dark:bg-[#2E3447] rounded-3xl w-80 p-8 text-center relative border border-transparent dark:border-[#424B63] shadow-2xl"
         >
-          <button onClick={onClose} className="absolute top-4 right-4 text-gray-300 hover:text-gray-500">
+          {/* 닫기 버튼 */}
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 text-gray-300 dark:text-slate-400 hover:text-gray-500 dark:hover:text-slate-200 transition-colors"
+          >
             <X className="w-5 h-5" />
           </button>
 
-          {/* Particles */}
+          {/* 파티클 */}
           {[...Array(8)].map((_, i) => (
             <motion.div
               key={i}
@@ -40,6 +44,7 @@ export default function CharmReveal({ charm, onSave, onClose }) {
             />
           ))}
 
+          {/* 부적 내용 */}
           <div className="mb-4">
             <motion.div
               animate={{ rotate: [0, -5, 5, -5, 0] }}
@@ -48,24 +53,33 @@ export default function CharmReveal({ charm, onSave, onClose }) {
             >
               {charm.emoji}
             </motion.div>
-            <p className="text-xs font-bold text-purple-400 uppercase tracking-widest mb-2">오늘의 부적</p>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">{charm.name}</h2>
-            <p className="text-sm text-purple-600 font-medium mb-1">{charm.effect}</p>
-            <p className="text-xs text-gray-400">{charm.source}</p>
+            <p className="text-xs font-bold text-purple-400 dark:text-purple-300 uppercase tracking-widest mb-2">
+              오늘의 부적
+            </p>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+              {charm.name}
+            </h2>
+            <p className="text-sm text-purple-600 dark:text-purple-300 font-medium mb-1">
+              {charm.effect}
+            </p>
+            <p className="text-xs text-gray-400 dark:text-slate-400">
+              {charm.source}
+            </p>
           </div>
 
-          <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 mb-5">
-            <p className="text-xs text-amber-700 leading-relaxed">
+          {/* 안내 박스 */}
+          <div className="bg-amber-50 dark:bg-amber-800/25 border border-amber-100 dark:border-amber-600/40 rounded-2xl p-4 mb-5">
+            <p className="text-xs text-amber-700 dark:text-amber-300 leading-relaxed">
               이 물건을 오늘 하루 가까이 두거나, 눈에 잘 띄는 곳에 놓아보세요.
             </p>
           </div>
 
+          {/* 저장 버튼 */}
           <Button
             onClick={onSave}
-            className="w-full rounded-xl h-12 bg-gradient-to-r from-purple-500 to-pink-500 text-sm font-semibold border-0"
+            className="w-full rounded-xl h-12 bg-gradient-to-r from-purple-500 to-pink-500 text-sm font-semibold border-0 hover:from-purple-600 hover:to-pink-600"
           >
-            <Sparkles className="w-4 h-4 mr-2" />
-            내 보관함에 저장
+            <Sparkles className="w-4 h-4 mr-2" />내 보관함에 저장
           </Button>
         </motion.div>
       </motion.div>

@@ -42,13 +42,9 @@ export default function CalendarPage() {
     queryFn: () => base44.entities.HappinessRecord.list("-date"),
   });
 
-  // CalendarPage.jsx 내부의 toggleTodoMutation 수정
   const toggleTodoMutation = useMutation({
     mutationFn: async ({ id, completed }) => {
-      // 1. 할 일 상태 업데이트
       const updated = await base44.entities.Todo.update(id, { completed });
-
-      // 2. 🔥 완료 체크 시 XP 부여
       if (completed && profile) {
         const newXp = (profile.xp || 0) + 10;
         const newLevel = Math.floor(newXp / 100) + 1;
@@ -61,26 +57,22 @@ export default function CalendarPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["todos"] });
-      queryClient.invalidateQueries({ queryKey: ["userProfile"] }); // 🔥 프로필 갱신 필수
+      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
     },
   });
+
   const markedDates = useMemo(
     () => [...new Set(schedules.map((s) => s.date))],
     [schedules],
   );
 
-  // 날짜별 뱃지 계산: heart(행복기록), rest(할일적음), fire(할일완료), star(일정많음)
   const dateBadges = useMemo(() => {
     const map = {};
-
-    // 행복 기록 있는 날 → heart
     happinessRecords.forEach((r) => {
       if (!r.date) return;
       if (!map[r.date]) map[r.date] = new Set();
       map[r.date].add("heart");
     });
-
-    // 날짜별 todo 분석
     const todosByDate = {};
     todos.forEach((t) => {
       const date = t.date || t.created_date?.split("T")[0];
@@ -89,15 +81,12 @@ export default function CalendarPage() {
       todosByDate[date].total++;
       if (t.completed) todosByDate[date].done++;
     });
-
     Object.entries(todosByDate).forEach(([date, { total, done }]) => {
       if (!map[date]) map[date] = new Set();
       const ratio = total > 0 ? done / total : 0;
-      if (total >= 2 && ratio >= 0.7) map[date].add("fire"); // 많이 완료
-      else if (total > 0 && ratio <= 0.2) map[date].add("rest"); // 거의 못함
+      if (total >= 2 && ratio >= 0.7) map[date].add("fire");
+      else if (total > 0 && ratio <= 0.2) map[date].add("rest");
     });
-
-    // 일정 많은 날 → star
     const schedsByDate = {};
     schedules.forEach((s) => {
       if (!schedsByDate[s.date]) schedsByDate[s.date] = 0;
@@ -109,8 +98,6 @@ export default function CalendarPage() {
         map[date].add("star");
       }
     });
-
-    // Set → Array
     const result = {};
     Object.entries(map).forEach(([date, set]) => {
       result[date] = [...set];
@@ -118,7 +105,6 @@ export default function CalendarPage() {
     return result;
   }, [happinessRecords, todos, schedules]);
 
-  // 기존 dot 호환용
   const dateKeywords = useMemo(() => {
     const map = {};
     schedules.forEach((s) => {
@@ -128,13 +114,9 @@ export default function CalendarPage() {
     return map;
   }, [schedules]);
 
-  // 🔥 1. 삭제 Mutation 추가
   const deleteMutation = useMutation({
     mutationFn: (id) => base44.entities.ScheduleItem.delete(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["schedules"] });
-      // 만약 팝업에 표시할 일정이 하나도 없게 되면 팝업 닫기 (선택 사항)
-    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["schedules"] }),
   });
 
   const CATEGORY_COLORS = {
@@ -226,7 +208,7 @@ base_stats: ${JSON.stringify(profile.base_stats)}
     (selectedSchedules.length > 0 || dateBadges?.[selectedDate]?.length > 0);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white via-purple-50/20 to-white pb-24">
+    <div className="min-h-screen bg-background pb-24">
       <AddScheduleModal
         visible={showAdd}
         defaultDate={today}
@@ -253,7 +235,6 @@ base_stats: ${JSON.stringify(profile.base_stats)}
             toggleMutation.mutate({ id: s.id, completed })
           }
           onMicroAction={(s) => setActiveSchedule(s)}
-          // 🔥 2. 삭제 핸들러 전달
           onDelete={(id) => {
             if (window.confirm("이 일정을 삭제하시겠습니까?")) {
               deleteMutation.mutate(id);
@@ -262,33 +243,35 @@ base_stats: ${JSON.stringify(profile.base_stats)}
         />
       )}
 
-      {/* Header */}
+      {/* 헤더 */}
       <div className="px-5 pt-8 pb-4 flex items-start justify-between">
         <div className="flex-1 mr-3">
-          <p className="text-xs font-semibold text-blue-500 uppercase tracking-widest mb-1">
+          <p className="text-xs font-semibold text-blue-500 dark:text-blue-400 uppercase tracking-widest mb-1">
             HADA
           </p>
-          <h1 className="text-2xl font-bold text-gray-900">캘린더</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            캘린더
+          </h1>
           {monthlyFortune ? (
-            <p className="text-xs text-blue-600 font-semibold mt-1 leading-relaxed">
+            <p className="text-xs text-blue-600 dark:text-blue-300 font-semibold mt-1 leading-relaxed">
               {monthlyFortune}
             </p>
           ) : (
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">
               날짜를 누르면 일정을 확인합니다.
             </p>
           )}
         </div>
         <button
           onClick={() => setShowAdd(true)}
-          className="mt-8 w-10 h-10 bg-blue-500 text-white rounded-2xl flex items-center justify-center shadow-lg hover:bg-blue-600 transition-colors flex-shrink-0"
+          className="mt-8 w-10 h-10 bg-blue-500 dark:bg-blue-500 text-white rounded-2xl flex items-center justify-center shadow-lg hover:bg-blue-600 dark:hover:bg-blue-400 transition-colors flex-shrink-0"
         >
           <Plus className="w-5 h-5" />
         </button>
       </div>
 
       <div className="px-5 space-y-5">
-        {/* Mini Calendar */}
+        {/* 캘린더 */}
         <MiniCalendar
           year={year}
           month={month}
@@ -301,15 +284,17 @@ base_stats: ${JSON.stringify(profile.base_stats)}
           onMonthChange={handleMonthChange}
         />
 
-        {/* 네이티브 광고 - 캘린더 하단 */}
+        {/* 광고 */}
         <AdSlot
           type="native"
           adUnitId="ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX"
         />
 
-        {/* Todo columns */}
-        <div className="bg-white rounded-3xl border border-gray-100 p-4 shadow-md">
-          <p className="text-sm font-bold text-gray-700 mb-3">할 일 목록</p>
+        {/* 할 일 목록 */}
+        <div className="bg-white dark:bg-[#2E3447] rounded-3xl border border-gray-100 dark:border-[#424B63] p-4 shadow-md">
+          <p className="text-sm font-bold text-gray-700 dark:text-white mb-3">
+            할 일 목록
+          </p>
           <TodoColumns
             todos={todos}
             onToggle={(todo) =>

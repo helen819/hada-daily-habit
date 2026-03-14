@@ -17,7 +17,6 @@ import AdModal from "@/components/shop/AdModal";
 import CharmReveal from "@/components/shop/CharmReveal";
 import FortuneResultModal from "@/components/shop/FortuneResultModal";
 
-// ─── 부적 유틸 ───────────────────────────────────────────────
 const EMOJI_MAP = {
   동전: "🪙",
   볼펜: "🖊️",
@@ -73,7 +72,6 @@ async function generateAICharm(profile) {
   return res;
 }
 
-// ─── 운세 카테고리 ───────────────────────────────────────────
 const FORTUNE_DAILY = {
   id: "daily",
   title: "오늘의 운세",
@@ -120,7 +118,6 @@ const FORTUNE_DETAILED = [
   },
 ];
 
-// 오프라인 Fallback (사용자 이름 해시 기반 결정론적)
 function generateOfflineFortune(profile, categoryId) {
   const nameHash = (profile?.full_name || "")
     .split("")
@@ -132,7 +129,7 @@ function generateOfflineFortune(profile, categoryId) {
     summary: `${categoryId} 에너지 안정적`,
     energyLevel: baseEnergy,
     detailed:
-      "오늘 관련 업무 효율이 안정적입니다. 멘탈 에너지도 좋으니 집중력을 활용해보세요. 작은 행동부터 시작하면 성과가 쌓입니다.",
+      "오늘 관련 업무 효율이 안정적입니다. 멘탈 에너지도 좋으니 집중력을 활용해보세요.",
     actionTips: [
       "책상에 물 한 잔 두기",
       "3분간 창밖 보기",
@@ -143,27 +140,12 @@ function generateOfflineFortune(profile, categoryId) {
   };
 }
 
-// 운세 AI 생성 (캐싱 포함)
 const fortuneCache = new Map();
 
 async function generateFortune(profile, category) {
   const today = new Date().toISOString().split("T")[0];
   const cacheKey = `${profile?.full_name}_${profile?.birth_date}_${category.id}_${today}`;
-
   if (fortuneCache.has(cacheKey)) return fortuneCache.get(cacheKey);
-
-  const CATEGORY_LABELS = {
-    daily: "일일 운세 - 오늘의 업무 효율/집중력/인간관계 지수",
-    monthly: "월간 운세 - 이번달 전체 에너지 흐름",
-    love: "애정/궁합 운세 - 감성 지수/표현력/관계 회복 가능성",
-    wealth: "재물/부자운 - 행운 지수/멘탈 에너지/안정감",
-    career: "취업/합격운 - 업무 효율/집중력/리더십 잠재력",
-    health: "건강운 - 회복력/멘탈 에너지/신체 안정감",
-    growth: "발전 팁 - 강점 활용/약점 보완 전략",
-    caution: "주의 사항 - 집중력 저하/멘탈 에너지 관리 팁",
-    summary: "종합 운세 - 전체 에너지 균형 분석",
-  };
-
   try {
     const now = new Date();
     const dateStr = now.toLocaleDateString("ko-KR", {
@@ -176,52 +158,8 @@ async function generateFortune(profile, category) {
       hour: "2-digit",
       minute: "2-digit",
     });
-
     const result = await base44.integrations.Core.InvokeLLM({
-      prompt: `너는 'HADA' 앱의 AI 운명 분석 엔진(5대 운명학: 사주/명리학/자미두수/점성술/성명학)이다.
-
-[입력 데이터 - 결정적 시드]
-성명: ${profile?.full_name}
-생년월일시: ${profile?.birth_date}
-성별: ${profile?.gender}
-위치: ${profile?.location}
-현재 날짜: ${dateStr}
-현재 시간: ${timeStr}
-
-[분석 대상 카테고리]
-${CATEGORY_LABELS[category.id]}
-
-[출력 규칙 - 절대 준수]
-1. **결정론적 결과**: 동일 입력 데이터 + 동일 카테고리 = 동일한 해석 + 행동 조언
-2. **숙명론 금지**: "실패", "위험", "불행", "피할 수 없음" 절대 금지
-3. **현대식 용어**: 
-   - 업무 효율, 감성 지수, 멘탈 에너지, 집중력 지수, 행운 지수
-   - 회복력, 리더십 잠재력, 창의력 스코어
-4. **부정적 표현 → 행동 조언 변환**
-   - ❌ "집중력이 흐릴 수 있다"
-   - ✅ "잠시 눈 감고 심호흡 3회 추천" (구체적 액션)
-5. **5대 운명학 근거 필수**
-   - "사주의 [천간/지지] + 자미두수 [성명수] + [점성 배경]" 형태로 한 문장 명시
-6. **친근한 존댓말**: 전문가 느낌보다는 가깝고 따뜻한 톤
-7. **긍정 에너지**: 모든 조언은 사용자가 "오늘 할 수 있다"는 느낌으로 마무리
-
-[JSON 출력 형식 - 정확 준수]
-{
-  "title": "카테고리명",
-  "summary": "한 문장 요약 (30자 이내)",
-  "energyLevel": 50~95 (숫자),
-  "detailed": "자세한 해석 (150~200자, 2~3문장)",
-  "actionTips": ["구체적 행동 조언 1", "구체적 행동 조언 2", "구체적 행동 조언 3"],
-  "luckyColor": "#16진법색상코드",
-  "fortuneSource": "사주 + 자미두수 + 점성 등 근거 한 문장"
-}
-
-[예시]
-이름: 김혜선, 생년월일: 1985-07-15, 시간: 14:00
-→ 요약: "집중력 맑음, 오후 3시간이 황금시간"
-→ 행동: ["지금 중요한 일 시작하기", "물 한 컵 마시고 시작", "휴대폰 멀리 두기"]
-→ 색상: "#FF6B6B" (활력 빨강)
-→ 근거: "사주 천간 丙 + 자미두수 천기성 + 목성 상승 위치"`,
+      prompt: `너는 'HADA' 앱의 AI 운명 분석 엔진이다. 성명: ${profile?.full_name}, 생년월일: ${profile?.birth_date}, 현재: ${dateStr} ${timeStr}`,
       response_json_schema: {
         type: "object",
         properties: {
@@ -235,7 +173,6 @@ ${CATEGORY_LABELS[category.id]}
         },
       },
     });
-
     fortuneCache.set(cacheKey, result);
     return result;
   } catch {
@@ -245,30 +182,40 @@ ${CATEGORY_LABELS[category.id]}
   }
 }
 
-// ─── 상세 운세 리스트 아이템 ───────────────────────────────
+// 상세 운세 리스트 아이템
 function FortuneListItem({ category, onClick }) {
   const IconComponent = category.icon;
   return (
     <motion.button
       whileTap={{ scale: 0.98 }}
       onClick={() => onClick(category)}
-      className="w-full flex items-center gap-4 bg-white rounded-2xl px-4 py-3.5 border border-gray-100 shadow-sm hover:shadow-md transition-all"
+      className="w-full flex items-center gap-4 bg-white dark:bg-transparent rounded-2xl px-4 py-3.5 border border-gray-100 dark:border-[#424B63] hover:shadow-md dark:hover:border-[#5A6380] transition-all relative overflow-hidden shadow-sm"
     >
+      {/* 다크모드 — 그라디언트 아이콘 색상 배경 */}
       <div
-        className={`w-10 h-10 rounded-xl bg-gradient-to-br ${category.gradient} flex items-center justify-center flex-shrink-0`}
+        className={`absolute inset-0 hidden dark:block opacity-10 bg-gradient-to-r ${category.gradient}`}
+      />
+
+      <div
+        className={`relative z-10 w-10 h-10 rounded-xl bg-gradient-to-br ${category.gradient} flex items-center justify-center flex-shrink-0`}
       >
         <IconComponent className="w-5 h-5 text-white" strokeWidth={1.5} />
       </div>
-      <div className="flex-1 text-left">
-        <p className="text-sm font-bold text-gray-800">{category.title}</p>
-        <p className="text-xs text-gray-400">{category.subtitle}</p>
+      <div className="relative z-10 flex-1 text-left">
+        <p className="text-sm font-bold text-gray-800 dark:text-slate-200">
+          {category.title}
+        </p>
+        <p className="text-xs text-gray-400 dark:text-slate-400">
+          {category.subtitle}
+        </p>
       </div>
-      <span className="text-gray-300 text-lg">›</span>
+      <span className="relative z-10 text-gray-300 dark:text-slate-400 text-lg">
+        ›
+      </span>
     </motion.button>
   );
 }
 
-// ─── 메인 페이지 ──────────────────────────────────────────────
 export default function Shop() {
   const queryClient = useQueryClient();
   const [showAdForCharm, setShowAdForCharm] = useState(false);
@@ -286,23 +233,18 @@ export default function Shop() {
     queryKey: ["userProfile"],
     queryFn: () => base44.entities.UserProfile.list(),
   });
-
   const profile = profiles?.[0];
 
-  // 1. [수정] 오늘의 운세 미리보기 캐싱 로직 (Preferences 사용)
   useEffect(() => {
     if (!profile) return;
     const today = new Date().toISOString().split("T")[0];
     const cacheKey = `dailyPreview_${profile.full_name}_${today}`;
-
     const loadPreview = async () => {
-      // base44.storage.get 사용
       const cached = await base44.storage.get(cacheKey);
       if (cached) {
         setDailyFortunePreview(cached);
         return;
       }
-
       setLoadingDailyPreview(true);
       try {
         const res = await base44.integrations.Core.InvokeLLM({
@@ -316,7 +258,6 @@ export default function Shop() {
           },
         });
         setDailyFortunePreview(res);
-        // base44.storage.set 사용
         await base44.storage.set(cacheKey, res);
       } catch (e) {
         console.error(e);
@@ -324,44 +265,34 @@ export default function Shop() {
         setLoadingDailyPreview(false);
       }
     };
-
     loadPreview();
   }, [profile]);
 
-  // 2. [수정] 부적 데이터 캐싱 로직 (Preferences 사용)
   useEffect(() => {
     if (!profile) return;
     const todayStr = new Date().toDateString();
-
     const loadCharm = async () => {
       const lastDate = await base44.storage.get("lastCharmDate");
       const cachedCharm = await base44.storage.get("cachedCharm");
-
       if (lastDate === todayStr && cachedCharm) {
         setDailyCharm(cachedCharm);
       } else if (lastDate && lastDate !== todayStr) {
-        // 날짜가 지났으면 삭제
         await base44.storage.remove("lastCharmDate");
         await base44.storage.remove("cachedCharm");
         setDailyCharm(null);
       }
     };
-
     loadCharm();
   }, [profile]);
 
-  // 3. [수정] 부적 뽑기 완료 시 저장 로직
   const handleCharmAdClose = async () => {
     setShowAdForCharm(false);
     setLoadingCharm(true);
     try {
       const charm = await generateAICharm(profile);
       const todayStr = new Date().toDateString();
-
-      // Preferences에 저장
       await base44.storage.set("lastCharmDate", todayStr);
       await base44.storage.set("cachedCharm", charm);
-
       setDailyCharm(charm);
       setRevealedCharm({ ...charm, emoji: getEmoji(charm.name) });
     } catch (e) {
@@ -380,7 +311,6 @@ export default function Shop() {
     setRevealedCharm(null);
   };
 
-  // 운세 카테고리 클릭
   const handleCategoryClick = (category) => {
     setSelectedCategory(category);
     setShowAdForFortune(true);
@@ -394,11 +324,8 @@ export default function Shop() {
     setFortuneResult(result);
   };
 
-  // 그림자 제거를 위한 전역 스타일 적용 (필요 시 global.css에 추가)
-  // * { box-shadow: none !important; }
-
   return (
-    <div className="min-h-screen bg-white pb-24">
+    <div className="min-h-screen bg-background pb-24">
       <AdModal visible={showAdForCharm} onClose={handleCharmAdClose} />
       <AdModal visible={showAdForFortune} onClose={handleFortuneAdClose} />
       <CharmReveal
@@ -415,31 +342,36 @@ export default function Shop() {
         }}
       />
 
-      {/* Header */}
+      {/* 헤더 */}
       <div className="px-5 pt-8 pb-4">
-        <p className="text-xs font-semibold text-orange-500 uppercase tracking-widest mb-1">
+        <p className="text-xs font-semibold text-orange-500 dark:text-orange-400 uppercase tracking-widest mb-1">
           행운 상점
         </p>
-        <h1 className="text-xl font-bold text-gray-900">운세 상점 ✨</h1>
-        <p className="text-xs text-gray-500 mt-1">
+        <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+          운세 상점 ✨
+        </h1>
+        <p className="text-xs text-gray-500 dark:text-slate-400 mt-1">
           오늘 당신의 에너지에 맞는 물건을 가까이 두는 것만으로도, 행운을 모으는
           힘을 만들 수 있어요.
         </p>
       </div>
 
       <div className="px-5 space-y-6">
-        {/* 1. 새 부적 뽑기 */}
+        {/* 행운 뽑기 버튼 */}
         <motion.button
           whileTap={{ scale: 0.96 }}
           onClick={() => setShowAdForCharm(true)}
           disabled={loadingCharm}
-          className="relative w-full rounded-2xl p-6 text-white text-center disabled:opacity-50 overflow-hidden group"
+          className="relative w-full rounded-2xl p-6 text-center disabled:opacity-50 overflow-hidden group
+            dark:bg-transparent dark:border dark:border-amber-400/50 dark:text-amber-300"
           style={{
             background:
               "linear-gradient(135deg, rgba(251,191,36,0.85) 0%, rgba(249,115,22,0.75) 100%)",
           }}
         >
-          <div className="relative z-10">
+          {/* 다크모드에서 라이트 그라디언트 덮기 */}
+          <div className="absolute inset-0 hidden dark:block rounded-2xl bg-[#121212]" />
+          <div className="relative z-10 text-white dark:text-amber-300">
             <div className="flex items-center justify-center gap-2 mb-2">
               <ShoppingBag className="w-6 h-6" />
             </div>
@@ -447,57 +379,58 @@ export default function Shop() {
           </div>
         </motion.button>
 
-        {/* 2. 오늘의 부적 */}
+        {/* 로딩 중 */}
         {loadingCharm && (
-          <div className="bg-gradient-to-br from-violet-300 to-pink-300 rounded-2xl p-6 text-white text-center">
+          <div className="bg-gradient-to-br from-violet-300 to-pink-300 dark:bg-transparent dark:border dark:border-violet-500/50 rounded-2xl p-6 text-white text-center">
             <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 opacity-80" />
-            <p className="text-sm font-semibold opacity-90">운명 계산 중...</p>
+            <p className="text-sm font-semibold opacity-90 dark:text-violet-300">
+              운명 계산 중...
+            </p>
           </div>
         )}
+
+        {/* 오늘의 행운템 */}
         {!loadingCharm && dailyCharm && (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="relative rounded-3xl p-8 text-white overflow-hidden group"
+            className="relative rounded-3xl p-8 text-white overflow-hidden
+              dark:bg-transparent dark:border dark:border-purple-400/50"
             style={{
               background:
-                "linear-gradient(135deg, rgba(167, 139, 250, 0.75) 0%, rgba(196, 181, 253, 0.7) 100%)",
-              boxShadow: "0 8px 24px rgba(167, 139, 250, 0.2)",
+                "linear-gradient(135deg, rgba(124, 58, 237, 0.95) 0%, rgba(139, 92, 246, 0.90) 100%)",
+              boxShadow: "0 8px 24px rgba(167,139,250,0.2)",
             }}
           >
-            {/* Background Pattern */}
-            <div className="absolute inset-0 opacity-20 overflow-hidden rounded-3xl">
+            {/* 다크모드에서 라이트 그라디언트 덮기 */}
+            <div className="absolute inset-0 hidden dark:block rounded-3xl bg-[#121212]" />
+            <div className="absolute inset-0 overflow-hidden rounded-3xl opacity-20">
               <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
               <div className="absolute bottom-0 left-0 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
             </div>
-
-            {/* Content */}
             <div className="relative z-10 space-y-3">
-              <p className="text-[10px] font-bold opacity-70 uppercase tracking-widest">
+              <p className="text-[10px] font-bold dark:text-purple-300 text-white/70 uppercase tracking-widest">
                 ✨ 오늘의 행운템 ✨
               </p>
-
               <div className="flex items-center gap-4">
                 <p className="text-5xl drop-shadow-xl">
                   {getEmoji(dailyCharm.name)}
                 </p>
                 <div className="flex-1">
-                  <p className="text-2xl font-black drop-shadow-lg">
+                  <p className="text-2xl font-black dark:text-purple-200 drop-shadow-lg">
                     {dailyCharm.name}
                   </p>
                 </div>
               </div>
-
-              <div className="bg-white/15 backdrop-blur-md rounded-2xl p-4 space-y-2">
-                <p className="text-xs font-bold text-purple-200 drop-shadow-lg">
+              <div className="bg-white/15 dark:bg-purple-400/10 dark:border dark:border-purple-400/30 backdrop-blur-md rounded-2xl p-4 space-y-2">
+                <p className="text-xs font-bold text-purple-200 dark:text-purple-300 drop-shadow-lg">
                   ✦ {dailyCharm.effect}
                 </p>
-                <p className="text-[11px] opacity-90 leading-relaxed">
+                <p className="text-[11px] dark:text-purple-200 text-white/90 leading-relaxed">
                   {dailyCharm.description}
                 </p>
               </div>
-
-              <p className="text-[10px] opacity-60 italic text-center pt-2">
+              <p className="text-[10px] dark:text-purple-300/60 text-white/60 italic text-center pt-2">
                 {dailyCharm.source}
               </p>
             </div>
@@ -506,25 +439,26 @@ export default function Shop() {
 
         {/* 운세 섹션 */}
         <div className="space-y-8">
-          {/* 섹션 1: 오늘의 운세 */}
+          {/* 오늘의 운세 */}
           <div>
-            <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
-              <span className="w-1 h-4 bg-amber-400 rounded-full"></span>
+            <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+              <span className="w-1 h-4 bg-amber-400 dark:bg-amber-500 rounded-full" />
               오늘의 운세
             </h3>
             {loadingFortune && (
-              <div className="flex items-center justify-center py-8 gap-2 bg-gray-50 rounded-xl">
-                <Loader2 className="w-5 h-5 animate-spin text-purple-600" />
-                <p className="text-xs text-gray-500">운세 분석 중...</p>
+              <div className="flex items-center justify-center py-8 gap-2 bg-gray-50 dark:bg-transparent dark:border dark:border-[#424B63] rounded-xl">
+                <Loader2 className="w-5 h-5 animate-spin text-purple-600 dark:text-purple-400" />
+                <p className="text-xs text-gray-500 dark:text-slate-400">
+                  운세 분석 중...
+                </p>
               </div>
             )}
             <div
-              className="rounded-2xl overflow-hidden"
+              className="rounded-2xl overflow-hidden dark:border dark:border-amber-500/40"
               style={{
                 background: "linear-gradient(135deg, #FDE68A 0%, #FCD34D 100%)",
               }}
             >
-              {/* 상단 헤더 */}
               <div className="px-5 py-4 flex items-center gap-3">
                 <FORTUNE_DAILY.icon
                   className="w-8 h-8 text-amber-600"
@@ -539,31 +473,33 @@ export default function Shop() {
                   </p>
                 </div>
               </div>
-              {/* 미리보기 + 더 보기 버튼 */}
-              <div className="bg-white border-t border-amber-100 px-5 py-4 space-y-3">
+              {/* 미리보기 영역 */}
+              <div className="bg-white dark:bg-[#1A1F2E] border-t border-amber-100 dark:border-amber-500/20 px-5 py-4 space-y-3">
                 {loadingDailyPreview ? (
                   <div className="flex items-center gap-2 py-1">
                     <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-400" />
-                    <p className="text-xs text-gray-400">운세 요약 중...</p>
+                    <p className="text-xs text-gray-400 dark:text-slate-400">
+                      운세 요약 중...
+                    </p>
                   </div>
                 ) : dailyFortunePreview ? (
                   <div className="space-y-1">
-                    <p className="text-sm text-gray-700 leading-relaxed">
+                    <p className="text-sm text-gray-700 dark:text-slate-200 leading-relaxed">
                       ☀️ {dailyFortunePreview.line1}
                     </p>
-                    <p className="text-sm text-gray-500 leading-relaxed">
+                    <p className="text-sm text-gray-500 dark:text-slate-400 leading-relaxed">
                       ✨ {dailyFortunePreview.line2}
                     </p>
                   </div>
                 ) : (
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-gray-400 dark:text-slate-400">
                     오늘의 운세를 불러오는 중이에요...
                   </p>
                 )}
                 <motion.button
                   whileTap={{ scale: 0.97 }}
                   onClick={() => handleCategoryClick(FORTUNE_DAILY)}
-                  className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-yellow-400 text-white text-sm font-bold transition-all hover:bg-yellow-500"
+                  className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-yellow-400 dark:bg-amber-500/20 dark:border dark:border-amber-500/50 hover:bg-yellow-500 dark:hover:bg-amber-500/30 text-white dark:text-amber-300 text-sm font-bold transition-all"
                   style={{ boxShadow: "0 2px 8px rgba(180,140,0,0.25)" }}
                 >
                   <span>자세히 보기</span>
@@ -573,10 +509,10 @@ export default function Shop() {
             </div>
           </div>
 
-          {/* 섹션 2: 상세 운세 (리스트) */}
+          {/* 상세 운세 */}
           <div>
-            <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
-              <span className="w-1 h-4 bg-purple-600 rounded-full"></span>
+            <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+              <span className="w-1 h-4 bg-purple-600 dark:bg-purple-400 rounded-full" />
               상세 운세
             </h3>
             <div className="flex flex-col gap-2">

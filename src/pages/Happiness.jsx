@@ -17,12 +17,9 @@ export default function Happiness() {
   const [showAd, setShowAd] = useState(false);
   const [showPoster, setShowPoster] = useState(false);
   const [showFireworks, setShowFireworks] = useState(false);
-
-  // 🔥 1. 전체 기록을 담을 별도의 상태
   const [fullRecords, setFullRecords] = useState([]);
   const [isFetchingFull, setIsFetchingFull] = useState(false);
 
-  // 2. 초기 리딩 및 리스트용 (최근 10개만 가볍게 조회)
   const { data: records = [], isLoading } = useQuery({
     queryKey: ["happinessRecords"],
     queryFn: () => base44.entities.HappinessRecord.list("-created_at", 10),
@@ -37,12 +34,10 @@ export default function Happiness() {
     },
   });
 
-  // 🔥 3. 행복 보관함 클릭 시 전체 데이터를 가져오는 함수
   const handleOpenStorage = async () => {
-    setShowAd(true); // 일단 광고 모달 오픈
+    setShowAd(true);
     setIsFetchingFull(true);
     try {
-      // 인자값 없이 호출하여 모든 데이터를 최신순으로 가져옴
       const allData = await base44.entities.HappinessRecord.list("created_at");
       setFullRecords(allData);
     } catch (error) {
@@ -73,12 +68,9 @@ export default function Happiness() {
   };
 
   React.useEffect(() => {
-    if (records.length >= 3 && !summary) {
-      generateSummary();
-    }
-  }, [records, summary]); // 의존성 배열에 summary 추가
+    if (records.length >= 3 && !summary) generateSummary();
+  }, [records, summary]);
 
-  // 🔥 2. 화면에 렌더링하기 직전에 한 번 더 최신순으로 정렬 (안전장치)
   const latestRecords = useMemo(() => {
     return [...records]
       .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
@@ -86,9 +78,9 @@ export default function Happiness() {
   }, [records]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white via-pink-50/20 to-white pb-24">
+    <div className="min-h-screen bg-background pb-24">
       <FireworksEffect visible={showFireworks} />
-      {/* Poster */}
+
       <AnimatePresence>
         {showPoster && (
           <HappinessPoster
@@ -98,7 +90,6 @@ export default function Happiness() {
         )}
       </AnimatePresence>
 
-      {/* Ad Modal */}
       <AdModal
         visible={showAd}
         onClose={() => {
@@ -107,7 +98,7 @@ export default function Happiness() {
         }}
       />
 
-      {/* 배너 광고 - 헤더 위 */}
+      {/* 배너 광고 */}
       <div className="px-5 pt-5">
         <AdSlot
           type="banner"
@@ -115,76 +106,84 @@ export default function Happiness() {
         />
       </div>
 
+      {/* 헤더 */}
       <div className="px-5 pt-4 pb-4">
-        <div>
-          <p className="text-xs font-semibold text-pink-500 uppercase tracking-widest mb-1">
-            행복 기록
-          </p>
-          <h1 className="text-2xl font-bold text-gray-900">마음의 기록 💕</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            매일 모으는 나만의 행복 기록
-          </p>
-        </div>
+        <p className="text-xs font-semibold text-pink-500 dark:text-pink-400 uppercase tracking-widest mb-1">
+          행복 기록
+        </p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          마음의 기록 💕
+        </h1>
+        <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">
+          매일 모으는 나만의 행복 기록
+        </p>
       </div>
 
       <div className="px-5 space-y-5">
-        {/* Summary */}
+        {/* 요약 카드 */}
         {summary && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white border border-gray-100 rounded-3xl p-5 shadow-md"
+            className="bg-white dark:bg-[#2E3447] border border-gray-100 dark:border-[#424B63] rounded-3xl p-5 shadow-md"
           >
             <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 rounded-lg bg-pink-100 flex items-center justify-center">
-                <Sparkles className="w-4 h-4 text-pink-500" />
+              <div className="w-8 h-8 rounded-lg bg-pink-100 dark:bg-pink-800/50 flex items-center justify-center">
+                <Sparkles className="w-4 h-4 text-pink-500 dark:text-pink-300" />
               </div>
-              <p className="text-xs font-bold text-pink-500 uppercase tracking-wider">
+              <p className="text-xs font-bold text-pink-500 dark:text-pink-300 uppercase tracking-wider">
                 요약
               </p>
             </div>
-            <p className="text-sm font-medium text-gray-800 mb-1">
+            <p className="text-sm font-medium text-gray-800 dark:text-white mb-1">
               {summary.header_text}
             </p>
-            <p className="text-xs text-gray-500">{summary.encouragement}</p>
+            <p className="text-xs text-gray-500 dark:text-slate-400">
+              {summary.encouragement}
+            </p>
           </motion.div>
         )}
+
+        {/* 요약 로딩 */}
         {summaryLoading && (
           <div className="flex items-center justify-center py-4">
-            <Loader2 className="w-4 h-4 animate-spin text-pink-400 mr-2" />
-            <span className="text-sm text-gray-400">요약 생성 중...</span>
+            <Loader2 className="w-4 h-4 animate-spin text-pink-400 dark:text-pink-300 mr-2" />
+            <span className="text-sm text-gray-400 dark:text-slate-400">
+              요약 생성 중...
+            </span>
           </div>
         )}
-
-        {/* Input */}
+        {/* 입력 */}
         <HappinessInput
           onSubmit={(data) => createMutation.mutate(data)}
           isSubmitting={createMutation.isPending}
         />
 
-        {/* 저장된 행복 카드 목록 (최근 3개) */}
+        {/* 최근 카드 목록 */}
         {records.length > 0 && (
           <div className="space-y-3">
-            {/* 정렬된 배열을 사용하여 렌더링 */}
             {latestRecords.map((record, i) => (
               <HappinessCard key={record.id} record={record} index={i} />
             ))}
           </div>
         )}
 
-        {/* 행복 뽑아 보기 */}
+        {/* 행복 보관함 버튼 */}
         {records.length > 0 && (
           <motion.button
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            // onClick={() => setShowAd(true)}
             onClick={handleOpenStorage}
-            className="w-full bg-gradient-to-r from-pink-100 to-rose-100 border border-pink-200 rounded-3xl px-6 py-4 flex flex-col items-center gap-3 hover:shadow-lg transition-shadow"
+            className="w-full bg-gradient-to-r from-pink-100 to-rose-100 dark:from-pink-950/40 dark:to-rose-950/40 border border-pink-200 dark:border-pink-900/50 rounded-3xl px-6 py-4 flex flex-col items-center gap-3 hover:shadow-lg dark:hover:shadow-none transition-shadow"
           >
             <div className="text-5xl">✨</div>
             <div>
-              <p className="text-sm font-bold text-pink-700">행복 보관함</p>
-              <p className="text-xs text-pink-600">행복 기록 모아 보기</p>
+              <p className="text-sm font-bold text-pink-700 dark:text-pink-400">
+                행복 보관함
+              </p>
+              <p className="text-xs text-pink-600 dark:text-pink-500">
+                행복 기록 모아 보기
+              </p>
             </div>
           </motion.button>
         )}
