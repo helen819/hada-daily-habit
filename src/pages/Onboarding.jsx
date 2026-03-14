@@ -38,26 +38,6 @@ export default function Onboarding() {
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true); // 🔥 추가 — 프로필 확인 중 상태
 
-  // 이미 프로필이 있으면 홈으로 리다이렉트
-  useEffect(() => {
-    base44.entities.UserProfile.list().then((profiles) => {
-      if (profiles && profiles.length > 0) {
-        navigate("/Home", { replace: true });
-      } else {
-        setChecking(false); // 🔥 프로필 없을 때만 온보딩 표시
-      }
-    });
-  }, [navigate]);
-
-  // 🔥 프로필 확인 중에는 아무것도 렌더링하지 않음
-  if (checking) {
-    return (
-      <div className="min-h-screen bg-backgroun flex items-center justify-center">
-        <Loader2 className="w-6 h-6 animate-spin text-purple-400 dark:text-purple-300" />
-      </div>
-    );
-  }
-
   const [form, setForm] = useState({
     full_name: "",
     birth_date: format(new Date(2000, 0, 1), "yyyy-MM-dd"),
@@ -102,6 +82,26 @@ export default function Onboarding() {
     (step === 1 && form.birth_date) ||
     step === 2 || // 🔥 위치 단계는 입력 여부 상관없이 항상 활성화
     (step === 3 && form.goal);
+
+  // 이미 프로필이 있으면 홈으로 리다이렉트
+  useEffect(() => {
+    base44.entities.UserProfile.list().then((profiles) => {
+      if (profiles && profiles.length > 0) {
+        navigate("/Home", { replace: true });
+      } else {
+        setChecking(false); // 🔥 프로필 없을 때만 온보딩 표시
+      }
+    });
+  }, [navigate]);
+
+  // 🔥 프로필 확인 중에는 아무것도 렌더링하지 않음
+  if (checking) {
+    return (
+      <div className="min-h-screen bg-backgroun flex items-center justify-center">
+        <Loader2 className="w-6 h-6 animate-spin text-purple-400 dark:text-purple-300" />
+      </div>
+    );
+  }
 
   const handleSubmit = async () => {
     setLoading(true);
