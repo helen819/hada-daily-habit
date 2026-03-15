@@ -243,8 +243,6 @@ base_stats: ${JSON.stringify(profile.base_stats)}
               suggested_mode: { type: "string" },
               card_title: { type: "string" },
               card_body: { type: "string" },
-              cta_primary: { type: "string" },
-              cta_secondary: { type: "string" },
             },
           },
         },

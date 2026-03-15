@@ -74,7 +74,19 @@ export default function ModeCard({ data, onDismiss, onSelect }) {
 
             {/* 본문 */}
             <p className="text-sm text-gray-500 dark:text-slate-300 leading-relaxed break-keep font-medium mb-10">
-              {data.card_body}
+              {data.card_body}{" "}
+              <span
+                className={`font-bold ${
+                  data.suggested_mode === "action"
+                    ? "text-purple-500 dark:text-purple-300"
+                    : "text-green-500 dark:text-green-300"
+                }`}
+              >
+                {data.suggested_mode === "action"
+                  ? "'활동 모드'"
+                  : "'휴식 모드'"}
+              </span>
+              를 추천합니다.
             </p>
 
             {/* 선택 버튼 */}
