@@ -1,8 +1,41 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Zap } from "lucide-react";
 
+// 다크모드 실시간 감지 훅
+function useIsDark() {
+  const [isDark, setIsDark] = useState(() =>
+    document.documentElement.classList.contains("dark"),
+  );
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDark(document.documentElement.classList.contains("dark"));
+    });
+    observer.observe(document.documentElement, { attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, []);
+  return isDark;
+}
+
+const HEADER_COLORS = {
+  daily: { light: "#F59E0B", dark: "#D97706" },
+  summary: { light: "#A855F7", dark: "#9333EA" },
+  love: { light: "#E879A0", dark: "#C4547A" },
+  wealth: { light: "#D4A017", dark: "#B8860B" },
+  career: { light: "#4338CA", dark: "#A5B4FC" },
+  health: { light: "#14B8A6", dark: "#2DD4BF" },
+};
+
 export default function FortuneResultModal({ result, category, onClose }) {
+  const isDark = useIsDark(); // 🔥 추가
+
+  // 헤더 색상 계산
+  const headerColor = category?.id
+    ? isDark
+      ? HEADER_COLORS[category.id]?.dark
+      : HEADER_COLORS[category.id]?.light
+    : "#8B5CF6";
+
   useEffect(() => {
     if (result) {
       document.body.style.overflow = "hidden";
@@ -42,7 +75,7 @@ export default function FortuneResultModal({ result, category, onClose }) {
           {/* 헤더 - luckyColor 배경 유지 */}
           <div
             className="px-6 pt-8 pb-8 text-white relative shrink-0"
-            style={{ backgroundColor: result.luckyColor || "#8B5CF6" }}
+            style={{ backgroundColor: headerColor }}
           >
             <button
               onClick={onClose}
@@ -77,7 +110,7 @@ export default function FortuneResultModal({ result, category, onClose }) {
                   </div>
                   <span
                     className="text-sm font-black"
-                    style={{ color: result.luckyColor || "#8B5CF6" }}
+                    style={{ color: headerColor }}
                   >
                     {energy}%
                   </span>
@@ -88,7 +121,7 @@ export default function FortuneResultModal({ result, category, onClose }) {
                     animate={{ width: `${energy}%` }}
                     transition={{ duration: 0.8, ease: "easeOut" }}
                     className="h-full rounded-full"
-                    style={{ backgroundColor: result.luckyColor || "#8B5CF6" }}
+                    style={{ backgroundColor: headerColor }}
                   />
                 </div>
               </div>
@@ -112,12 +145,12 @@ export default function FortuneResultModal({ result, category, onClose }) {
                     {result.actionTips.map((tip, i) => (
                       <div
                         key={i}
-                        className="flex items-start gap-2 bg-purple-50/50 dark:bg-purple-800/25 rounded-xl px-3 py-2.5 border border-transparent dark:border-purple-700/30"
+                        className="flex items-start gap-2 bg-gray-100 dark:bg-[#2E3447] rounded-xl px-3 py-2.5 border border-transparent dark:border-purple-700/30"
                       >
                         <div
                           className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0"
                           style={{
-                            backgroundColor: result.luckyColor || "#8B5CF6",
+                            backgroundColor: headerColor,
                           }}
                         />
                         <p className="text-xs text-gray-700 dark:text-slate-200 font-medium leading-snug">
@@ -130,7 +163,7 @@ export default function FortuneResultModal({ result, category, onClose }) {
               )}
 
               {/* 행운 색상 */}
-              {result.luckyColor && (
+              {category?.id === "daily" && result.aiLuckyColor && (
                 <div className="flex items-center gap-3 bg-gray-50 dark:bg-[#1A1F2E] rounded-2xl px-4 py-3 border border-gray-100/50 dark:border-[#424B63]">
                   <div
                     className="w-8 h-8 rounded-xl flex-shrink-0 border-2 border-white dark:border-[#424B63]"
@@ -154,7 +187,7 @@ export default function FortuneResultModal({ result, category, onClose }) {
             <button
               onClick={onClose}
               className="w-full py-4 rounded-2xl text-white font-bold text-sm shadow-lg active:scale-[0.98] transition-transform"
-              style={{ backgroundColor: result.luckyColor || "#8B5CF6" }}
+              style={{ backgroundColor: headerColor }}
             >
               확인
             </button>

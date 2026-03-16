@@ -64,11 +64,11 @@ export default function Home() {
   });
 
   // Generate actions if none exist today
-  useEffect(() => {
-    if (profile && !actionsLoading && actions && actions.length === 0) {
-      generateActions();
-    }
-  }, [profile, actionsLoading, actions]);
+  // useEffect(() => {
+  //   if (profile && !actionsLoading && actions && actions.length === 0) {
+  //     generateActions();
+  //   }
+  // }, [profile, actionsLoading, actions]);
 
   // Home.jsx 수정
   useEffect(() => {
@@ -89,11 +89,12 @@ export default function Home() {
 
   // Listen for mode change from layout
   useEffect(() => {
-    const handler = (e) => {
+    const handler = async (e) => {
       if (profile) {
         queryClient.invalidateQueries({ queryKey: ["userProfile"] });
-        generateDailyReading(e.detail);
-        generateActions(e.detail);
+        await generateDailyReading(e.detail);
+        await new Promise((r) => setTimeout(r, 1500));
+        await generateActions(e.detail);
       }
     };
     window.addEventListener("modeChanged", handler);
@@ -185,11 +186,11 @@ user_level: ${profile.level || 1}
   };
 
   // Generate daily reading + advice if none exist
-  useEffect(() => {
-    if (profile && readings && readings.length === 0) {
-      generateDailyReading();
-    }
-  }, [profile, readings]);
+  // useEffect(() => {
+  //   if (profile && readings && readings.length === 0) {
+  //     generateDailyReading();
+  //   }
+  // }, [profile, readings]);
 
   const generateDailyReading = async (modeOverride) => {
     const currentMode = modeOverride || profile?.current_mode || "action";
@@ -264,6 +265,25 @@ base_stats: ${JSON.stringify(profile.base_stats)}
 
     queryClient.invalidateQueries({ queryKey: ["dailyReading"] });
   };
+
+  // ✅ 이걸로 교체
+  useEffect(() => {
+    if (!profile) return;
+    if (readings === undefined) return;
+    if (actions === undefined) return;
+
+    const initToday = async () => {
+      if (readings.length === 0) {
+        await generateDailyReading();
+      }
+      if (!actionsLoading && actions.length === 0) {
+        await new Promise((r) => setTimeout(r, 1500));
+        await generateActions();
+      }
+    };
+
+    initToday();
+  }, [profile, readings, actions, actionsLoading]);
 
   const handleModeSelect = async (mode) => {
     setShowModeCard(false); // 🔥 일단 팝업부터 닫고 처리를 시작합니다.

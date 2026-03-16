@@ -146,6 +146,16 @@ async function generateFortune(profile, category) {
   const today = new Date().toISOString().split("T")[0];
   const cacheKey = `${profile?.full_name}_${profile?.birth_date}_${category.id}_${today}`;
   if (fortuneCache.has(cacheKey)) return fortuneCache.get(cacheKey);
+  // 카테고리별 분석 항목 정의
+  const CATEGORY_FOCUS = {
+    daily: "오늘 하루 전체 에너지 흐름, 업무/대인관계/건강 종합",
+    summary: "이번 달 전체 운세 종합 분석",
+    love: "감성 지수, 연애운, 관계 회복 가능성, 표현력",
+    wealth: "금전운, 재물 흐름, 투자 적합도, 절약 에너지",
+    career: "취업운, 업무 효율, 집중력, 리더십 잠재력",
+    health: "신체 회복력, 멘탈 에너지, 수면 질, 활력 지수",
+  };
+
   try {
     const now = new Date();
     const dateStr = now.toLocaleDateString("ko-KR", {
@@ -159,7 +169,22 @@ async function generateFortune(profile, category) {
       minute: "2-digit",
     });
     const result = await base44.integrations.Core.InvokeLLM({
-      prompt: `너는 'HADA' 앱의 AI 운명 분석 엔진이다. 성명: ${profile?.full_name}, 생년월일: ${profile?.birth_date}, 현재: ${dateStr} ${timeStr}`,
+      prompt: `너는 'HADA' 앱의 AI 운명 분석 엔진이다.
+성명: ${profile?.full_name}, 생년월일: ${profile?.birth_date}
+현재: ${dateStr} ${timeStr}
+
+[분석 카테고리] ${category.title}
+[분석 항목] ${CATEGORY_FOCUS[category.id] || "종합 운세"}
+
+위 카테고리에 집중하여 분석하라. 다른 카테고리 내용은 포함하지 마라.
+actionTips는 반드시 ${category.title}와 직접 관련된 행동만 3가지 제시하라.
+title은 반드시 한 줄로만 작성하라. 줄바꿈 금지.
+summary는 반드시 한 줄로만 작성하라. 줄바꿈 금지.
+${
+  category.id === "daily"
+    ? "luckyColor: 오늘 사용자의 행운 색상을 #RRGGBB 16진수로 반환하라."
+    : ""
+}`,
       response_json_schema: {
         type: "object",
         properties: {
@@ -168,15 +193,28 @@ async function generateFortune(profile, category) {
           energyLevel: { type: "number" },
           detailed: { type: "string" },
           actionTips: { type: "array", items: { type: "string" } },
-          luckyColor: { type: "string" },
           fortuneSource: { type: "string" },
+          // daily 때만 AI가 luckyColor 반환
+          luckyColor: { type: "string" },
         },
       },
     });
-    fortuneCache.set(cacheKey, result);
-    return result;
+
+    const finalResult = {
+      ...result,
+      // daily일 때 AI가 반환한 행운 색상은 별도 필드로 보존
+      aiLuckyColor:
+        category.id === "daily" && result.luckyColor
+          ? result.luckyColor
+          : undefined,
+    };
+
+    fortuneCache.set(cacheKey, finalResult);
+    return finalResult;
   } catch {
-    const fallback = generateOfflineFortune(profile, category.id);
+    const fallback = {
+      ...generateOfflineFortune(profile, category.id),
+    };
     fortuneCache.set(cacheKey, fallback);
     return fallback;
   }
@@ -285,11 +323,23 @@ export default function Shop() {
     loadCharm();
   }, [profile]);
 
+  // 광고 시작 + AI 요청 동시 실행을 위한 ref
+  const charmPromiseRef = React.useRef(null);
+  const fortunePromiseRef = React.useRef(null);
+
+  // 부적 뽑기 — 광고 열면서 동시에 AI 요청
+  const handleCharmClick = () => {
+    setShowAdForCharm(true);
+    setLoadingCharm(true);
+    // 광고 보는 동안 백그라운드에서 AI 요청 시작
+    charmPromiseRef.current = generateAICharm(profile);
+  };
+
   const handleCharmAdClose = async () => {
     setShowAdForCharm(false);
-    setLoadingCharm(true);
+
     try {
-      const charm = await generateAICharm(profile);
+      const charm = await charmPromiseRef.current;
       const todayStr = new Date().toDateString();
       await base44.storage.set("lastCharmDate", todayStr);
       await base44.storage.set("cachedCharm", charm);
@@ -299,6 +349,7 @@ export default function Shop() {
       console.error(e);
     } finally {
       setLoadingCharm(false);
+      charmPromiseRef.current = null;
     }
   };
 
@@ -314,14 +365,28 @@ export default function Shop() {
   const handleCategoryClick = (category) => {
     setSelectedCategory(category);
     setShowAdForFortune(true);
+    setLoadingFortune(true);
+
+    // 캐시 무효화
+    const today = new Date().toISOString().split("T")[0];
+    const cacheKey = `${profile?.full_name}_${profile?.birth_date}_${category.id}_${today}`;
+    fortuneCache.delete(cacheKey);
+
+    // 광고 보는 동안 백그라운드에서 AI 요청 시작
+    fortunePromiseRef.current = generateFortune(profile, category);
   };
 
   const handleFortuneAdClose = async () => {
     setShowAdForFortune(false);
-    setLoadingFortune(true);
-    const result = await generateFortune(profile, selectedCategory);
-    setLoadingFortune(false);
-    setFortuneResult(result);
+    try {
+      const result = await fortunePromiseRef.current;
+      setFortuneResult(result);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingFortune(false);
+      fortunePromiseRef.current = null;
+    }
   };
 
   return (
@@ -360,7 +425,7 @@ export default function Shop() {
         {/* 행운 뽑기 버튼 */}
         <motion.button
           whileTap={{ scale: 0.96 }}
-          onClick={() => setShowAdForCharm(true)}
+          onClick={() => handleCharmClick()}
           disabled={loadingCharm}
           className="relative w-full rounded-2xl p-6 text-center disabled:opacity-50 overflow-hidden group
             dark:bg-transparent dark:border dark:border-amber-400/50 dark:text-amber-300"
