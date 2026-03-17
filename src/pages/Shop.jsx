@@ -44,6 +44,30 @@ const WEATHER_MOCK = ["맑음", "흐림", "비", "눈", "바람"];
 const getWeatherMock = () =>
   WEATHER_MOCK[new Date().getHours() % WEATHER_MOCK.length];
 
+// ─── 날짜 유틸 ────────────────────────────────────────────────
+/** 이번 주 월요일 날짜 (YYYY-MM-DD) */
+function getThisMonday() {
+  const d = new Date();
+  const day = d.getDay(); // 0=일, 1=월 ...
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  return d.toISOString().split("T")[0];
+}
+/** 이번 달 1일 (YYYY-MM-DD) */
+function getThisMonthFirst() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
+}
+/** 올해 1월 1일 (YYYY-MM-DD) */
+function getThisYearFirst() {
+  return `${new Date().getFullYear()}-01-01`;
+}
+/** 오늘 날짜 (YYYY-MM-DD) */
+function getToday() {
+  return new Date().toISOString().split("T")[0];
+}
+
+// ─── AI 부적 생성 ─────────────────────────────────────────────
 async function generateAICharm(profile) {
   const now = new Date();
   const dateStr = now.toLocaleDateString("ko-KR", {
@@ -72,6 +96,7 @@ async function generateAICharm(profile) {
   return res;
 }
 
+// ─── 운세 상수 ────────────────────────────────────────────────
 const FORTUNE_DAILY = {
   id: "daily",
   title: "오늘의 운세",
@@ -85,7 +110,7 @@ const FORTUNE_DETAILED = [
     id: "summary",
     title: "종합운세",
     icon: Wand2,
-    subtitle: "전체 분석",
+    subtitle: "주간·월간·연간",
     gradient: "from-violet-300 to-purple-300",
   },
   {
@@ -118,109 +143,208 @@ const FORTUNE_DETAILED = [
   },
 ];
 
-function generateOfflineFortune(profile, categoryId) {
-  const nameHash = (profile?.full_name || "")
-    .split("")
-    .reduce((a, c) => a + c.charCodeAt(0), 0);
-  const baseEnergy = Math.floor((nameHash % 50) + 50);
-  const colors = ["#FBBF24", "#10B981", "#3B82F6", "#8B5CF6", "#EC4899"];
-  return {
-    title: categoryId,
-    summary: `${categoryId} 에너지 안정적`,
-    energyLevel: baseEnergy,
-    detailed:
-      "오늘 관련 업무 효율이 안정적입니다. 멘탈 에너지도 좋으니 집중력을 활용해보세요.",
-    actionTips: [
-      "책상에 물 한 잔 두기",
-      "3분간 창밖 보기",
-      "깊게 숨 5회 들이쉬기",
-    ],
-    luckyColor: colors[nameHash % colors.length],
-    fortuneSource: "사용자 사주 기반 오프라인 분석",
-  };
+// ─── 캐시 키 생성 ─────────────────────────────────────────────
+function buildCacheKey(profile, categoryId) {
+  const base = `${profile?.full_name}_${profile?.birth_date}`;
+  if (categoryId === "summary") {
+    // 주간(월요일)/월간(1일)/연간(1월1일) 중 가장 최근 기준점을 키에 포함
+    return `fortune_${base}_summary_w${getThisMonday()}_m${getThisMonthFirst()}_y${getThisYearFirst()}`;
+  }
+  return `fortune_${base}_${categoryId}_${getToday()}`;
 }
 
-const fortuneCache = new Map();
+// ─── in-memory 캐시 (세션 중 중복 AI 호출 방지) ──────────────
+const fortuneMemCache = new Map();
 
+// ─── 운세 생성 (summary / 나머지 분리) ───────────────────────
 async function generateFortune(profile, category) {
-  const today = new Date().toISOString().split("T")[0];
-  const cacheKey = `${profile?.full_name}_${profile?.birth_date}_${category.id}_${today}`;
-  if (fortuneCache.has(cacheKey)) return fortuneCache.get(cacheKey);
-  // 카테고리별 분석 항목 정의
-  const CATEGORY_FOCUS = {
-    daily: "오늘 하루 전체 에너지 흐름, 업무/대인관계/건강 종합",
-    summary: "이번 달 전체 운세 종합 분석",
-    love: "감성 지수, 연애운, 관계 회복 가능성, 표현력",
-    wealth: "금전운, 재물 흐름, 투자 적합도, 절약 에너지",
-    career: "취업운, 업무 효율, 집중력, 리더십 잠재력",
-    health: "신체 회복력, 멘탈 에너지, 수면 질, 활력 지수",
-  };
+  const storageKey = buildCacheKey(profile, category.id);
 
-  try {
-    const now = new Date();
-    const dateStr = now.toLocaleDateString("ko-KR", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      weekday: "long",
-    });
-    const timeStr = now.toLocaleTimeString("ko-KR", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-    const result = await base44.integrations.Core.InvokeLLM({
-      prompt: `너는 'HADA' 앱의 AI 운명 분석 엔진이다.
+  // 1) 메모리 캐시
+  if (fortuneMemCache.has(storageKey)) return fortuneMemCache.get(storageKey);
+
+  // 2) 영구 저장소 캐시
+  const stored = await base44.storage.get(storageKey);
+  if (stored) {
+    fortuneMemCache.set(storageKey, stored);
+    return stored;
+  }
+
+  // 3) AI 호출
+  const now = new Date();
+  const dateStr = now.toLocaleDateString("ko-KR", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    weekday: "long",
+  });
+  const timeStr = now.toLocaleTimeString("ko-KR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  let result;
+
+  if (category.id === "summary") {
+    // ── summary: 주간/월간/연간 운세 ──
+    const weekStart = getThisMonday();
+    const monthStart = getThisMonthFirst();
+    const yearStart = getThisYearFirst();
+
+    try {
+      result = await base44.integrations.Core.InvokeLLM({
+        prompt: `너는 'HADA' 앱의 AI 운명 분석 엔진이다.
+성명: ${profile?.full_name}, 생년월일: ${profile?.birth_date}
+현재: ${dateStr} ${timeStr}
+
+[분석 카테고리] 종합운세 — 주간·월간·연간 분석
+아래 세 기간에 대해 각각 운세를 분석하라.
+- 주간: ${weekStart} 주간 (이번 주 월요일 기준)
+- 월간: ${monthStart} 월간 (이번 달 1일 기준)
+- 연간: ${yearStart} 연간 (올해 1월 1일 기준)
+
+summary는 전체를 아우르는 한 줄 요약이다. 줄바꿈 금지.
+weekly.summary, monthly.summary, yearly.summary는 각 기간 핵심을 한 줄로 요약하라. 줄바꿈 금지.
+weekly.actionTips, monthly.actionTips, yearly.actionTips는 각 기간 관련 행동 팁 2가지씩 제시하라.`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            summary: { type: "string" },
+            detailed: { type: "string" },
+            weekly: {
+              type: "object",
+              properties: {
+                summary: { type: "string" },
+                actionTips: { type: "array", items: { type: "string" } },
+              },
+            },
+            monthly: {
+              type: "object",
+              properties: {
+                summary: { type: "string" },
+                actionTips: { type: "array", items: { type: "string" } },
+              },
+            },
+            yearly: {
+              type: "object",
+              properties: {
+                summary: { type: "string" },
+                actionTips: { type: "array", items: { type: "string" } },
+              },
+            },
+            fortuneSource: { type: "string" },
+          },
+        },
+      });
+    } catch {
+      result = {
+        summary: "(가짜 데이터)이번 주·달·해를 아우르는 흐름을 분석했어요.",
+        detailed: "(가짜 데이터)전반적으로 안정적인 에너지가 흐르고 있습니다.",
+        weekly: {
+          summary: "(가짜 데이터)이번 주는 새로운 시작에 좋은 기운이 흐릅니다.",
+          actionTips: [
+            "(가짜 데이터)중요한 약속은 수요일 전에 잡기",
+            "(가짜 데이터)매일 10분 독서하기",
+          ],
+        },
+        monthly: {
+          summary: "(가짜 데이터)이번 달은 관계 회복과 재정 정리에 집중하세요.",
+          actionTips: [
+            "(가짜 데이터)불필요한 지출 점검하기",
+            "(가짜 데이터)가까운 사람과 대화 늘리기",
+          ],
+        },
+        yearly: {
+          summary: "(가짜 데이터)올해는 변화보다 내실을 다지는 해입니다.",
+          actionTips: [
+            "(가짜 데이터)장기 목표를 글로 써보기",
+            "(가짜 데이터)건강 검진 예약하기",
+          ],
+        },
+        fortuneSource: "(가짜 데이터)오프라인 기본 분석 데이터",
+      };
+    }
+  } else {
+    // ── daily / love / wealth / career / health: 오늘 기준 ──
+    const CATEGORY_FOCUS = {
+      daily: "오늘 하루 전체 에너지 흐름, 업무/대인관계/건강 종합",
+      love: "감성 지수, 연애운, 관계 회복 가능성, 표현력",
+      wealth: "금전운, 재물 흐름, 투자 적합도, 절약 에너지",
+      career: "취업운, 업무 효율, 집중력, 리더십 잠재력",
+      health: "신체 회복력, 멘탈 에너지, 수면 질, 활력 지수",
+    };
+
+    try {
+      const raw = await base44.integrations.Core.InvokeLLM({
+        prompt: `너는 'HADA' 앱의 AI 운명 분석 엔진이다.
 성명: ${profile?.full_name}, 생년월일: ${profile?.birth_date}
 현재: ${dateStr} ${timeStr}
 
 [분석 카테고리] ${category.title}
 [분석 항목] ${CATEGORY_FOCUS[category.id] || "종합 운세"}
 
-위 카테고리에 집중하여 분석하라. 다른 카테고리 내용은 포함하지 마라.
+위 카테고리에 집중하여 오늘(${getToday()}) 기준으로 분석하라. 다른 카테고리 내용은 포함하지 마라.
 actionTips는 반드시 ${category.title}와 직접 관련된 행동만 3가지 제시하라.
-title은 반드시 한 줄로만 작성하라. 줄바꿈 금지.
-summary는 반드시 한 줄로만 작성하라. 줄바꿈 금지.
+title은 반드시 한 줄. 줄바꿈 금지.
+summary는 반드시 한 줄. 줄바꿈 금지.
 ${
   category.id === "daily"
     ? "luckyColor: 오늘 사용자의 행운 색상을 #RRGGBB 16진수로 반환하라."
     : ""
 }`,
-      response_json_schema: {
-        type: "object",
-        properties: {
-          title: { type: "string" },
-          summary: { type: "string" },
-          energyLevel: { type: "number" },
-          detailed: { type: "string" },
-          actionTips: { type: "array", items: { type: "string" } },
-          fortuneSource: { type: "string" },
-          // daily 때만 AI가 luckyColor 반환
-          luckyColor: { type: "string" },
+        response_json_schema: {
+          type: "object",
+          properties: {
+            title: { type: "string" },
+            summary: { type: "string" },
+            energyLevel: { type: "number" },
+            detailed: { type: "string" },
+            actionTips: { type: "array", items: { type: "string" } },
+            fortuneSource: { type: "string" },
+            luckyColor: { type: "string" },
+          },
         },
-      },
-    });
+      });
 
-    const finalResult = {
-      ...result,
-      // daily일 때 AI가 반환한 행운 색상은 별도 필드로 보존
-      aiLuckyColor:
-        category.id === "daily" && result.luckyColor
-          ? result.luckyColor
-          : undefined,
-    };
-
-    fortuneCache.set(cacheKey, finalResult);
-    return finalResult;
-  } catch {
-    const fallback = {
-      ...generateOfflineFortune(profile, category.id),
-    };
-    fortuneCache.set(cacheKey, fallback);
-    return fallback;
+      result = {
+        ...raw,
+        aiLuckyColor:
+          category.id === "daily" && raw.luckyColor
+            ? raw.luckyColor
+            : undefined,
+      };
+    } catch {
+      // fallback
+      const fallbackColors = {
+        daily: "#F59E0B",
+        love: "#E879A0",
+        wealth: "#D4A017",
+        career: "#4338CA",
+        health: "#14B8A6",
+      };
+      result = {
+        summary: `${category.title} 에너지 안정적`,
+        energyLevel: 70,
+        detailed: `(가짜 데이터) 오늘 ${category.title} 관련 에너지가 안정적입니다. 집중력을 활용해 하루를 잘 마무리해보세요.`,
+        actionTips: [
+          "(가짜 데이터) 잠깐 스트레칭하기",
+          "(가짜 데이터) 물 한 잔 마시기",
+          "(가짜 데이터) 깊게 숨 고르기",
+        ],
+        fortuneSource: "(가짜 데이터)오프라인 기본 분석 데이터",
+        aiLuckyColor:
+          category.id === "daily" ? fallbackColors.daily : undefined,
+      };
+    }
   }
+
+  // 4) 저장 후 반환
+  await base44.storage.set(storageKey, result);
+  fortuneMemCache.set(storageKey, result);
+  return result;
 }
 
-// 상세 운세 리스트 아이템
+// ─── 상세 운세 리스트 아이템 ──────────────────────────────────
 function FortuneListItem({ category, onClick }) {
   const IconComponent = category.icon;
   return (
@@ -229,11 +353,9 @@ function FortuneListItem({ category, onClick }) {
       onClick={() => onClick(category)}
       className="w-full flex items-center gap-4 bg-white dark:bg-transparent rounded-2xl px-4 py-3.5 border border-gray-100 dark:border-[#424B63] hover:shadow-md dark:hover:border-[#5A6380] transition-all relative overflow-hidden shadow-sm"
     >
-      {/* 다크모드 — 그라디언트 아이콘 색상 배경 */}
       <div
         className={`absolute inset-0 hidden dark:block opacity-10 bg-gradient-to-r ${category.gradient}`}
       />
-
       <div
         className={`relative z-10 w-10 h-10 rounded-xl bg-gradient-to-br ${category.gradient} flex items-center justify-center flex-shrink-0`}
       >
@@ -254,6 +376,7 @@ function FortuneListItem({ category, onClick }) {
   );
 }
 
+// ─── 메인 컴포넌트 ────────────────────────────────────────────
 export default function Shop() {
   const queryClient = useQueryClient();
   const [showAdForCharm, setShowAdForCharm] = useState(false);
@@ -273,9 +396,10 @@ export default function Shop() {
   });
   const profile = profiles?.[0];
 
+  // ── 오늘의 운세 미리보기 로드 ──
   useEffect(() => {
     if (!profile) return;
-    const today = new Date().toISOString().split("T")[0];
+    const today = getToday();
     const cacheKey = `dailyPreview_${profile.full_name}_${today}`;
     const loadPreview = async () => {
       const cached = await base44.storage.get(cacheKey);
@@ -286,7 +410,7 @@ export default function Shop() {
       setLoadingDailyPreview(true);
       try {
         const res = await base44.integrations.Core.InvokeLLM({
-          prompt: `사용자 ${profile.full_name}(${profile.birth_date})의 ${today} 오늘의 운세를 두 문장 이내로 따뜻하게 요약해줘...`,
+          prompt: `사용자 ${profile.full_name}(${profile.birth_date})의 ${today} 오늘의 운세를 두 문장 이내로 따뜻하게 요약해줘. line1과 line2는 각각 한 문장씩, 줄바꿈 없이.`,
           response_json_schema: {
             type: "object",
             properties: {
@@ -299,6 +423,10 @@ export default function Shop() {
         await base44.storage.set(cacheKey, res);
       } catch (e) {
         console.error(e);
+        setDailyFortunePreview({
+          line1: "(가짜 데이터) 오늘도 당신의 에너지가 빛나고 있어요.",
+          line2: "(가짜 데이터) 작은 것에서 큰 행운이 시작됩니다.",
+        });
       } finally {
         setLoadingDailyPreview(false);
       }
@@ -306,6 +434,7 @@ export default function Shop() {
     loadPreview();
   }, [profile]);
 
+  // ── 오늘의 부적 캐시 로드 ──
   useEffect(() => {
     if (!profile) return;
     const todayStr = new Date().toDateString();
@@ -323,21 +452,18 @@ export default function Shop() {
     loadCharm();
   }, [profile]);
 
-  // 광고 시작 + AI 요청 동시 실행을 위한 ref
   const charmPromiseRef = React.useRef(null);
   const fortunePromiseRef = React.useRef(null);
 
-  // 부적 뽑기 — 광고 열면서 동시에 AI 요청
+  // ── 부적 뽑기 ──
   const handleCharmClick = () => {
     setShowAdForCharm(true);
     setLoadingCharm(true);
-    // 광고 보는 동안 백그라운드에서 AI 요청 시작
     charmPromiseRef.current = generateAICharm(profile);
   };
 
   const handleCharmAdClose = async () => {
     setShowAdForCharm(false);
-
     try {
       const charm = await charmPromiseRef.current;
       const todayStr = new Date().toDateString();
@@ -356,23 +482,18 @@ export default function Shop() {
   const handleSaveCharm = async () => {
     await base44.entities.CharmItem.create({
       ...revealedCharm,
-      obtained_date: new Date().toISOString().split("T")[0],
+      obtained_date: getToday(),
     });
     queryClient.invalidateQueries({ queryKey: ["charms"] });
     setRevealedCharm(null);
   };
 
+  // ── 운세 카테고리 클릭 ──
   const handleCategoryClick = (category) => {
     setSelectedCategory(category);
     setShowAdForFortune(true);
     setLoadingFortune(true);
-
-    // 캐시 무효화
-    const today = new Date().toISOString().split("T")[0];
-    const cacheKey = `${profile?.full_name}_${profile?.birth_date}_${category.id}_${today}`;
-    fortuneCache.delete(cacheKey);
-
-    // 광고 보는 동안 백그라운드에서 AI 요청 시작
+    // 광고 보는 동안 백그라운드에서 AI 요청 (캐시 우선)
     fortunePromiseRef.current = generateFortune(profile, category);
   };
 
@@ -434,7 +555,6 @@ export default function Shop() {
               "linear-gradient(135deg, rgba(251,191,36,0.85) 0%, rgba(249,115,22,0.75) 100%)",
           }}
         >
-          {/* 다크모드에서 라이트 그라디언트 덮기 */}
           <div className="absolute inset-0 hidden dark:block rounded-2xl bg-[#121212]" />
           <div className="relative z-10 text-white dark:text-amber-300">
             <div className="flex items-center justify-center gap-2 mb-2">
@@ -467,7 +587,6 @@ export default function Shop() {
               boxShadow: "0 8px 24px rgba(167,139,250,0.2)",
             }}
           >
-            {/* 다크모드에서 라이트 그라디언트 덮기 */}
             <div className="absolute inset-0 hidden dark:block rounded-3xl bg-[#121212]" />
             <div className="absolute inset-0 overflow-hidden rounded-3xl opacity-20">
               <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
@@ -510,7 +629,7 @@ export default function Shop() {
               <span className="w-1 h-4 bg-amber-400 dark:bg-amber-500 rounded-full" />
               오늘의 운세
             </h3>
-            {loadingFortune && (
+            {loadingFortune && selectedCategory?.id === "daily" && (
               <div className="flex items-center justify-center py-8 gap-2 bg-gray-50 dark:bg-transparent dark:border dark:border-[#424B63] rounded-xl">
                 <Loader2 className="w-5 h-5 animate-spin text-purple-600 dark:text-purple-400" />
                 <p className="text-xs text-gray-500 dark:text-slate-400">
