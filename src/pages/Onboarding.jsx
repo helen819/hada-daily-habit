@@ -37,6 +37,12 @@ export default function Onboarding() {
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true); // 🔥 추가 — 프로필 확인 중 상태
+  // 1. 🔥 버튼 활성화를 위한 엄격한 체크 (완성된 한글만: 홍길동)
+  const isStrictKorean = (name) => /^[가-힣]+$/.test(name);
+
+  // 2. 🔥 경고 문구 노출을 위한 유연한 체크 (자음, 모음 포함: 안ㄴ)
+  // 이 정규식은 자음(ㄱ-ㅎ)과 모음(ㅏ-ㅣ)이 단독으로 있어도 한글로 간주합니다.
+  const isLooseHangul = (name) => /^[가-힣ㄱ-ㅎㅏ-ㅣ]+$/.test(name);
 
   const [form, setForm] = useState({
     full_name: "",
@@ -77,8 +83,9 @@ export default function Onboarding() {
   }, [timeState, useTime]);
 
   const update = (key, val) => setForm((p) => ({ ...p, [key]: val }));
+
   const canNext =
-    (step === 0 && form.full_name && form.gender) ||
+    (step === 0 && isStrictKorean(form.full_name) && form.gender) ||
     (step === 1 && form.birth_date) ||
     step === 2 || // 🔥 위치 단계는 입력 여부 상관없이 항상 활성화
     (step === 3 && form.goal);
@@ -299,9 +306,18 @@ export default function Onboarding() {
                 <Input
                   value={form.full_name}
                   onChange={(e) => update("full_name", e.target.value)}
-                  placeholder="홍길동"
-                  className="rounded-xl h-12 bg-gray-50 border-gray-200 text-base"
+                  placeholder="홍길동 (한글만 입력 가능)"
+                  className={`rounded-xl h-12 bg-gray-50 border-gray-200 text-base transition-colors ${
+                    form.full_name && !isLooseHangul(form.full_name)
+                      ? "border-red-300 focus:border-red-400"
+                      : "focus:border-purple-400"
+                  }`}
                 />
+                {form.full_name && !isLooseHangul(form.full_name) && (
+                  <p className="text-xs text-red-400 mt-1 ml-1">
+                    성함은 한글로만 입력해주세요 (공백/숫자 제외)
+                  </p>
+                )}
               </div>
               <div>
                 <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">
