@@ -113,26 +113,40 @@ export default function Onboarding() {
   const handleSubmit = async () => {
     setLoading(true);
 
-    // Generate comprehensive analysis via LLM
-    const prompt = `너는 'HADA' 앱의 온보딩 종합 분석 엔진이다.
-사용자 기본 정보:
-- 성명: ${form.full_name}
-- 생년월일: ${form.birth_date}
-- 출생시간: ${form.birth_time || "미입력"}
-- 성별: ${form.gender}
-- 위치: ${form.location || "미입력"}
-
-아래 6가지 학문을 종합 분석하되, 전문 용어는 절대 드러내지 마라:
-1. 사주 (사계절/십간십이지/오행)
-2. 명리학 (음양오행)
-3. 자미두수 (12궁위 운세)
-4. 점성술의 명식/명반 (행성 배치)
-5. 서양 점성술 (태양/달/상승점)
-6. 성명학 (획수/글자 의미)
-
-결과를 반드시 JSON으로만 답하라.`;
-
     try {
+      // ── 1단계: 사용자가 입력한 기초 정보로 프로필 우선 생성 ──
+      // AI 분석 전이므로 onboarding_complete는 false로 둡니다.
+      const newProfile = await base44.entities.UserProfile.create({
+        full_name: form.full_name,
+        birth_date: form.birth_date,
+        birth_time: form.birth_time || "미입력",
+        gender: form.gender,
+        // 🔥 위도/경도를 고정 숫자로 추가 저장
+        latitude: 37.5665,
+        longitude: 126.978,
+        location: form.location || "미입력",
+        hanja_name: "",
+        goal: form.goal,
+        level: 1,
+        xp: 0,
+        onboarding_complete: false, // 아직 분석 중
+      });
+
+      console.log("기초 프로필 생성 완료 (ID):", newProfile.id);
+
+      // Generate comprehensive analysis via LLM
+      const prompt = `너는 'HADA' 앱의 온보딩 종합 분석 엔진이다.
+
+                      아래 6가지 학문을 종합 분석하되, 전문 용어는 절대 드러내지 마라:
+                      1. 사주 (사계절/십간십이지/오행)
+                      2. 명리학 (음양오행)
+                      3. 자미두수 (12궁위 운세)
+                      4. 점성술의 명식/명반 (행성 배치)
+                      5. 서양 점성술 (태양/달/상승점)
+                      6. 성명학 (획수/글자 의미)
+
+                      결과를 반드시 JSON으로만 답하라.`;
+
       const res = await base44.integrations.Core.InvokeLLM({
         prompt,
         response_json_schema: {
@@ -240,21 +254,13 @@ export default function Onboarding() {
           }
         : null;
 
-      // Save profile
-      await base44.entities.UserProfile.create({
-        full_name: form.full_name,
-        birth_date: form.birth_date,
-        birth_time: form.birth_time,
-        gender: form.gender,
-        location: form.location,
-        goal: form.goal,
-        level: 1,
-        xp: 0,
+      // ── 3단계: AI 분석 결과로 프로필 업데이트 (Update) ──
+      await base44.entities.UserProfile.update(newProfile.id, {
         current_mode: res.recommended_mode || "action",
         base_stats: res.base_stats,
         traits: { ...res.traits, fortune_stats },
         analysis_data: res.analysis_data,
-        onboarding_complete: true,
+        onboarding_complete: true, // 분석 완료됨
       });
 
       // Save daily reading
