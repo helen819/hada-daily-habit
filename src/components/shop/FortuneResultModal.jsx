@@ -18,12 +18,12 @@ function useIsDark() {
 }
 
 const HEADER_COLORS = {
-  daily: { light: "#F59E0B", dark: "#D97706" },
-  summary: { light: "#A855F7", dark: "#9333EA" },
-  love: { light: "#E879A0", dark: "#C4547A" },
-  wealth: { light: "#D4A017", dark: "#B8860B" },
-  career: { light: "#4338CA", dark: "#A5B4FC" },
-  health: { light: "#14B8A6", dark: "#2DD4BF" },
+  daily: { light: "#FAAA98", dark: "#F08D83" },
+  summary: { light: "#C5B7FA", dark: "#A087F2" },
+  love: { light: "#F5A9B8", dark: "#EF84A4" },
+  wealth: { light: "#F0CE65", dark: "#F0B135" },
+  career: { light: "#A0C6FF", dark: "#6EA3F1" },
+  health: { light: "#AAE1CA", dark: "#5ABFA8" },
 };
 
 // 카테고리별 에너지 레이블
@@ -54,7 +54,9 @@ function SummaryPeriodSection({ title, emoji, data, headerColor }) {
                 className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0"
                 style={{ backgroundColor: headerColor }}
               />
-              <p className="text-xs text-gray-600 dark:text-slate-300 leading-snug">{tip}</p>
+              <p className="text-xs text-gray-600 dark:text-slate-300 leading-snug">
+                {tip}
+              </p>
             </div>
           ))}
         </div>
@@ -136,7 +138,6 @@ export default function FortuneResultModal({ result, category, onClose }) {
 
           {/* 스크롤 영역 */}
           <div className="flex-1 overflow-y-auto bg-slate-50/50 dark:bg-[#262B3D] overscroll-contain">
-
             {/* summary: 주간/월간/연간 섹션 */}
             {isSummary ? (
               <div className="px-6 py-6 space-y-4">

@@ -555,7 +555,20 @@ export default function Onboarding() {
                       }
                       className="h-14 bg-white border border-purple-100 rounded-2xl text-center font-bold text-gray-800 shadow-sm appearance-none"
                     >
-                      {["00", "10", "20", "30", "40", "50"].map((m) => (
+                      {[
+                        "00",
+                        "05",
+                        "10",
+                        "15",
+                        "20",
+                        "25",
+                        "30",
+                        "35",
+                        "40",
+                        "45",
+                        "50",
+                        "55",
+                      ].map((m) => (
                         <option key={m} value={m}>
                           {m}분
                         </option>

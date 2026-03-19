@@ -77,7 +77,7 @@ async function generateAICharm(profile) {
     weekday: "long",
   });
   const res = await base44.integrations.Core.InvokeLLM({
-    prompt: `너는 'HADA' 앱의 실시간 부적 추천 엔진이다.
+    prompt: `너는 'HADA' 앱의 실시간 행운 추천 엔진이다.
 [사용자] 이름: ${profile?.full_name}, 생년월일: ${profile?.birth_date}, 목표: ${
       profile?.goal
     }
@@ -390,11 +390,34 @@ export default function Shop() {
   const [dailyFortunePreview, setDailyFortunePreview] = useState(null);
   const [loadingDailyPreview, setLoadingDailyPreview] = useState(false);
 
+  // 🔥 [추가] 뽑기 횟수 상태
+  const [charmPickCount, setCharmPickCount] = useState(0);
+  const MAX_PICK_LIMIT = 5;
+
   const { data: profiles } = useQuery({
     queryKey: ["userProfile"],
     queryFn: () => base44.entities.UserProfile.list(),
   });
   const profile = profiles?.[0];
+
+  // ── [추가] 오늘 남은 횟수 로드 및 초기화 로직 ──
+  useEffect(() => {
+    const loadPickCount = async () => {
+      const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD
+      const lastDate = await base44.storage.get("lastPickDate");
+      const savedCount = await base44.storage.get("pickCount");
+
+      if (lastDate === today) {
+        setCharmPickCount(Number(savedCount) || 0);
+      } else {
+        // 날짜가 바뀌었으면 카운트 초기화
+        await base44.storage.set("lastPickDate", today);
+        await base44.storage.set("pickCount", 0);
+        setCharmPickCount(0);
+      }
+    };
+    loadPickCount();
+  }, []);
 
   // ── 오늘의 운세 미리보기 로드 ──
   useEffect(() => {
@@ -457,6 +480,13 @@ export default function Shop() {
 
   // ── 부적 뽑기 ──
   const handleCharmClick = () => {
+    // 🔥 횟수 제한 체크
+    if (charmPickCount >= MAX_PICK_LIMIT) {
+      alert(
+        "오늘은 이미 5번의 행운을 모두 뽑으셨습니다. 내일 다시 찾아와주세요! ✨",
+      );
+      return;
+    }
     setShowAdForCharm(true);
     setLoadingCharm(true);
     charmPromiseRef.current = generateAICharm(profile);
@@ -467,8 +497,17 @@ export default function Shop() {
     try {
       const charm = await charmPromiseRef.current;
       const todayStr = new Date().toDateString();
+      const todayDate = new Date().toLocaleDateString("en-CA");
+
       await base44.storage.set("lastCharmDate", todayStr);
       await base44.storage.set("cachedCharm", charm);
+
+      // 2. 🔥 [중요] 뽑기 횟수 증가 및 저장
+      const newCount = charmPickCount + 1;
+      setCharmPickCount(newCount);
+      await base44.storage.set("pickCount", newCount);
+      await base44.storage.set("lastPickDate", todayDate);
+
       setDailyCharm(charm);
       setRevealedCharm({ ...charm, emoji: getEmoji(charm.name) });
     } catch (e) {
@@ -543,26 +582,58 @@ export default function Shop() {
       </div>
 
       <div className="px-5 space-y-6">
-        {/* 행운 뽑기 버튼 */}
-        <motion.button
-          whileTap={{ scale: 0.96 }}
-          onClick={() => handleCharmClick()}
-          disabled={loadingCharm}
-          className="relative w-full rounded-2xl p-6 text-center disabled:opacity-50 overflow-hidden group
-            dark:bg-transparent dark:border dark:border-amber-400/50 dark:text-amber-300"
-          style={{
-            background:
-              "linear-gradient(135deg, rgba(251,191,36,0.85) 0%, rgba(249,115,22,0.75) 100%)",
-          }}
-        >
-          <div className="absolute inset-0 hidden dark:block rounded-2xl bg-[#121212]" />
-          <div className="relative z-10 text-white dark:text-amber-300">
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <ShoppingBag className="w-6 h-6" />
+        {/* 🔥 수정된 행운 뽑기 버튼 */}
+        <div className="space-y-2">
+          <motion.button
+            whileTap={charmPickCount < MAX_PICK_LIMIT ? { scale: 0.96 } : {}}
+            onClick={() => handleCharmClick()}
+            disabled={loadingCharm || charmPickCount >= MAX_PICK_LIMIT}
+            className={`relative w-full rounded-2xl p-6 text-center overflow-hidden group
+              ${
+                charmPickCount >= MAX_PICK_LIMIT
+                  ? "bg-gray-200 dark:bg-gray-800 cursor-not-allowed"
+                  : "dark:bg-transparent dark:border dark:border-amber-400/50"
+              }`}
+            style={
+              charmPickCount < MAX_PICK_LIMIT
+                ? {
+                    background:
+                      "linear-gradient(135deg, rgba(251,191,36,0.85) 0%, rgba(249,115,22,0.75) 100%)",
+                  }
+                : {}
+            }
+          >
+            <div className="absolute inset-0 hidden dark:block rounded-2xl bg-[#121212] opacity-50" />
+            <div
+              className={`relative z-10 ${
+                charmPickCount >= MAX_PICK_LIMIT
+                  ? "text-gray-400"
+                  : "text-white dark:text-amber-300"
+              }`}
+            >
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <ShoppingBag className="w-6 h-6" />
+              </div>
+              <p className="text-base font-bold mb-1">
+                {charmPickCount >= MAX_PICK_LIMIT
+                  ? "내일 다시 뽑아주세요"
+                  : "행운 뽑기"}
+              </p>
+              {/* 🔥 횟수 표시 UI */}
+              <p className="text-[11px] font-medium opacity-80">
+                오늘 남은 횟수: {MAX_PICK_LIMIT - charmPickCount} /{" "}
+                {MAX_PICK_LIMIT}
+              </p>
             </div>
-            <p className="text-base font-bold mb-1">행운 뽑기</p>
-          </div>
-        </motion.button>
+          </motion.button>
+
+          {/* 횟수가 꽉 찼을 때 안내 문구 */}
+          {charmPickCount >= MAX_PICK_LIMIT && (
+            <p className="text-[10px] text-center text-orange-400 font-medium animate-pulse">
+              모든 행운을 다 소진했습니다! 내일 또 만나요 🌙
+            </p>
+          )}
+        </div>
 
         {/* 로딩 중 */}
         {loadingCharm && (
@@ -594,7 +665,7 @@ export default function Shop() {
             </div>
             <div className="relative z-10 space-y-3">
               <p className="text-[10px] font-bold dark:text-purple-300 text-white/70 uppercase tracking-widest">
-                ✨ 오늘의 행운템 ✨
+                ✨ 오늘의 행운 ✨
               </p>
               <div className="flex items-center gap-4">
                 <p className="text-5xl drop-shadow-xl">

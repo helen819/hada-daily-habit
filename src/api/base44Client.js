@@ -79,6 +79,71 @@ const createEntity = (name) => ({
   },
 });
 
+// ══════════════════════════════════════════════════════════════════
+// 변경 1: HADA 공통 시스템 프롬프트
+// ──────────────────────────────────────────────────────────────────
+// 모든 InvokeLLM 호출 시 사용자 프롬프트 앞에 자동으로 붙음.
+// 각 페이지(Home, Shop 등)의 프롬프트에서 아래 규칙을 개별 기재할 필요 없음.
+const HADA_SYSTEM_PROMPT = `[HADA 앱 공통 규칙 — 모든 응답에 반드시 적용]
+1. 부정·공포 표현 절대 금지: "나쁨" "흉" "위험" "조심" "망함" "실패" → "조율이 필요한 에너지" "내실을 다지기 좋은 시기" 등으로 치환.
+2. 전문 용어 절대 금지: 상관·편인·관살·충·형·파·해 → 쉬운 현대어로만 작성.
+3. 말투: 부드러운 존댓말 (~하세요, ~해보세요, ~예요).
+4. 각 필드는 지시된 글자수 이내. 초과 시 요약.
+5. 비교·경쟁 유발 금지: "남보다 뛰어난" "1등" 등 비교 표현 금지.
+6. 모든 약점·부족한 부분은 반드시 "구체적 행동 조언"으로 전환.`;
+
+// ══════════════════════════════════════════════════════════════════
+// 변경 2: 프롬프트 유형 감지 + 유형별 생성 설정
+// ──────────────────────────────────────────────────────────────────
+// 기존: 모든 호출 temperature 0.7 / maxOutputTokens 8192 고정.
+// 개선: 짧은 응답(미리보기·한 줄)은 maxOutputTokens를 줄여 속도·비용 절감.
+//       창의성이 필요한 운세는 temperature를 높임.
+function detectPromptType(prompt) {
+  if (prompt.includes("두 문장 이내로 따뜻하게 요약해줘"))
+    return "fortune_preview";
+  if (prompt.includes("주간·월간·연간")) return "fortune_summary";
+  if (
+    prompt.includes("월간 운세") ||
+    (prompt.includes("월간") && prompt.length < 400)
+  )
+    return "monthly_fortune";
+  if (
+    prompt.includes("분석 카테고리") ||
+    prompt.includes("오늘 하루 전체") ||
+    prompt.includes("energyLevel")
+  )
+    return "fortune_detail";
+  if (prompt.includes("지금 당장 구할 수 있는")) return "charm";
+  if (
+    prompt.includes("마이크로 액션 1단계로 바꾸") ||
+    prompt.includes("micro_step")
+  )
+    return "convert_todo";
+  if (prompt.includes("마이크로 액션 생성") || prompt.includes("stat_focus"))
+    return "micro_action";
+  if (prompt.includes("일일 리딩") || prompt.includes("today_hint"))
+    return "daily_reading";
+  if (prompt.includes("온보딩") || prompt.includes("6가지 학문"))
+    return "onboarding";
+  return "general";
+}
+
+const GENERATION_CONFIGS = {
+  fortune_preview: { temperature: 0.8, maxOutputTokens: 256 },
+  monthly_fortune: { temperature: 0.8, maxOutputTokens: 256 },
+  fortune_summary: { temperature: 0.7, maxOutputTokens: 4096 },
+  fortune_detail: { temperature: 0.75, maxOutputTokens: 2048 },
+  charm: { temperature: 0.85, maxOutputTokens: 512 },
+  convert_todo: { temperature: 0.5, maxOutputTokens: 512 },
+  micro_action: { temperature: 0.7, maxOutputTokens: 2048 },
+  daily_reading: { temperature: 0.6, maxOutputTokens: 2048 },
+  onboarding: { temperature: 0.5, maxOutputTokens: 8192 },
+  general: { temperature: 0.7, maxOutputTokens: 8192 },
+};
+
+// ══════════════════════════════════════════════════════════════════
+// getFallbackData: 원본 그대로 유지
+// ══════════════════════════════════════════════════════════════════
 const getFallbackData = (prompt) => {
   // ── 오늘의 운세 미리보기 ──
   if (prompt.includes("두 문장 이내로 따뜻하게 요약해줘")) {
@@ -306,13 +371,18 @@ export const base44 = {
       InvokeLLM: async function ({ prompt, response_json_schema }) {
         if (!GEMINI_API_KEY) throw new Error("API Key 미설정");
 
+        // 변경 2: 유형 감지 → 설정 선택
+        const promptType = detectPromptType(prompt);
+        const genConfig =
+          GENERATION_CONFIGS[promptType] || GENERATION_CONFIGS.general;
+
         try {
-          const fullPrompt = `${prompt}\n\n결과는 반드시 다음 JSON 형식을 따라야 합니다: ${JSON.stringify(
-            response_json_schema,
-          )}\n\n반드시 순수한 JSON만 반환하고, 마크다운 코드블록이나 다른 텍스트는 포함하지 마세요.`;
+          // 변경 1: 공통 규칙 prepend
+          // 변경 3: JSON 스키마를 텍스트로 붙이던 방식 제거
+          const fullPrompt = `${HADA_SYSTEM_PROMPT}\n\n${prompt}\n\n반드시 순수한 JSON만 반환하고, 마크다운 코드블록이나 다른 텍스트는 포함하지 마세요.`;
 
           const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
+            `generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -320,8 +390,9 @@ export const base44 = {
                 contents: [{ parts: [{ text: fullPrompt }] }],
                 generationConfig: {
                   response_mime_type: "application/json",
-                  temperature: 0.7,
-                  maxOutputTokens: 8192,
+                  responseSchema: response_json_schema, // 변경 3: 파라미터로 분리 전달
+                  temperature: genConfig.temperature, // 변경 2
+                  maxOutputTokens: genConfig.maxOutputTokens, // 변경 2
                 },
               }),
             },

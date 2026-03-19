@@ -5,7 +5,7 @@ import { X } from "lucide-react";
 export default function AdModal({
   visible,
   onClose,
-  closeLabel = "닫고 부적 받기 ✨",
+  closeLabel = "닫고 행운 받기 ✨",
 }) {
   const [countdown, setCountdown] = useState(5);
 

@@ -61,7 +61,7 @@ export default function CharmReveal({ charm, onSave, onClose }) {
 
           {/* 스크롤 가능한 내용 영역 */}
           <div className="overflow-y-auto flex-1 p-8 text-center">
-            {/* 부적 내용 */}
+            {/* 행운 내용 */}
             <div className="mb-4">
               <motion.div
                 animate={{ rotate: [0, -5, 5, -5, 0] }}
@@ -71,7 +71,7 @@ export default function CharmReveal({ charm, onSave, onClose }) {
                 {charm.emoji}
               </motion.div>
               <p className="text-xs font-bold text-purple-400 dark:text-purple-300 uppercase tracking-widest mb-2">
-                오늘의 부적
+                오늘의 행운
               </p>
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
                 {charm.name}

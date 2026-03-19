@@ -46,16 +46,16 @@ function CharmVault({ charms, onDelete }) {
   return (
     <div className="space-y-3">
       <h3 className="text-sm font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
-        부적 보관함 ({charms.length})
+        행운 보관함 ({charms.length})
       </h3>
       {charms.length === 0 ? (
         <div className="text-center py-10">
           <Package2 className="w-8 h-8 text-gray-200 dark:text-slate-600 mx-auto mb-3" />
           <p className="text-sm text-gray-400 dark:text-slate-400">
-            모은 부적이 없습니다.
+            모은 행운이 없습니다.
           </p>
           <p className="text-xs text-gray-300 dark:text-slate-600 mt-1">
-            상점에서 첫 부적을 획득해보세요.
+            상점에서 첫 행운을 획득해보세요.
           </p>
         </div>
       ) : (
@@ -119,7 +119,7 @@ function ResetConfirmModal({ onConfirm, onCancel }) {
             정말 초기화할까요?
           </h2>
           <p className="text-sm text-gray-500 dark:text-slate-300 leading-relaxed">
-            모든 데이터(프로필, 일정, 할 일, 부적, 기록 등)가
+            모든 데이터(프로필, 일정, 할 일, 행운, 기록 등)가
             <br />
             <span className="font-bold text-red-500 dark:text-red-400 whitespace-nowrap">
               영구적으로 삭제
@@ -397,12 +397,12 @@ export default function Profile() {
                   : "text-gray-400 dark:text-slate-400"
               }`}
             >
-              부적 보관함
+              행운 보관함
             </p>
           </button>
         </div>
 
-        {/* 부적 보관함 */}
+        {/* 행운 보관함 */}
         <AnimatePresence>
           {showVault && (
             <motion.div
