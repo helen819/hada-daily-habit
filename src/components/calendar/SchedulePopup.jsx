@@ -43,7 +43,6 @@ export default function SchedulePopup({
   badges,
   onClose,
   onToggle,
-  onMicroAction,
   onDelete,
 }) {
   useEffect(() => {
@@ -187,12 +186,9 @@ export default function SchedulePopup({
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
-                  <button
-                    onClick={() => onMicroAction(s)}
-                    className="p-2 rounded-xl bg-purple-50 dark:bg-purple-800/40 hover:bg-purple-100 dark:hover:bg-purple-700/50 text-purple-500 dark:text-purple-300 transition-colors"
-                  >
+                  {/* <button className="p-2 rounded-xl bg-purple-50 dark:bg-purple-800/40 hover:bg-purple-100 dark:hover:bg-purple-700/50 text-purple-500 dark:text-purple-300 transition-colors">
                     <Sparkles className="w-4 h-4" />
-                  </button>
+                  </button> */}
                 </div>
               </div>
             ))}

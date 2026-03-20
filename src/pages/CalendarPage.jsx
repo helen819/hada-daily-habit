@@ -5,21 +5,19 @@ import { Plus } from "lucide-react";
 
 import MiniCalendar from "@/components/calendar/MiniCalendar";
 import AddScheduleModal from "@/components/calendar/AddScheduleModal";
-import MicroActionSheet from "@/components/calendar/MicroActionSheet";
 import TodoColumns from "@/components/calendar/TodoColumns";
 import AdSlot from "@/components/ads/AdSlot";
 import SchedulePopup from "@/components/calendar/SchedulePopup";
 
 export default function CalendarPage() {
   const queryClient = useQueryClient();
-  const today = new Date().toISOString().split("T")[0];
+  // 🔥 오늘 날짜를 한국 시간 기준으로 획득 (밤 12시 리셋)
+  const today = new Date().toLocaleDateString("en-CA");
 
   const [year, setYear] = useState(new Date().getFullYear());
   const [month, setMonth] = useState(new Date().getMonth());
   const [selectedDate, setSelectedDate] = useState(null);
   const [showAdd, setShowAdd] = useState(false);
-  const [activeSchedule, setActiveSchedule] = useState(null);
-  const [monthlyFortune, setMonthlyFortune] = useState(null);
 
   const { data: profiles } = useQuery({
     queryKey: ["userProfile"],
@@ -126,34 +124,6 @@ export default function CalendarPage() {
     social: "bg-pink-400",
   };
 
-  useEffect(() => {
-    if (!profile) return;
-    const key = `monthlyFortune_${year}_${month + 1}`;
-    const cached = sessionStorage.getItem(key);
-    if (cached) {
-      setMonthlyFortune(cached);
-      return;
-    }
-    // 삭제
-    base44.integrations.Core.InvokeLLM({
-      prompt: `너는 HADA 운세 엔진이다. 사용자 정보를 바탕으로 ${year}년 ${
-        month + 1
-      }월의 월간 운세를 한 문장(30자 이내)으로만 답하라.
-사용자: ${profile.full_name}, 목표: ${profile.goal}
-base_stats: ${JSON.stringify(profile.base_stats)}
-반드시 긍정적이고 간결하게, 이모지 1개 포함.`,
-      response_json_schema: {
-        type: "object",
-        properties: { fortune: { type: "string" } },
-      },
-    }).then((res) => {
-      if (res?.fortune) {
-        setMonthlyFortune(res.fortune);
-        sessionStorage.setItem(key, res.fortune);
-      }
-    });
-  }, [profile, year, month]);
-
   const selectedSchedules = useMemo(
     () =>
       selectedDate ? schedules.filter((s) => s.date === selectedDate) : [],
@@ -170,14 +140,6 @@ base_stats: ${JSON.stringify(profile.base_stats)}
       base44.entities.ScheduleItem.update(id, { completed }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["schedules"] }),
   });
-
-  const saveMicroAction = async (schedule, microAction) => {
-    await base44.entities.ScheduleItem.update(schedule.id, {
-      micro_action: microAction,
-    });
-    queryClient.invalidateQueries({ queryKey: ["schedules"] });
-    setActiveSchedule(null);
-  };
 
   const handleMonthChange = (delta) => {
     let m = month + delta;
@@ -217,15 +179,6 @@ base_stats: ${JSON.stringify(profile.base_stats)}
         onAdd={(data) => addMutation.mutate(data)}
       />
 
-      {activeSchedule && (
-        <MicroActionSheet
-          schedule={activeSchedule}
-          profile={profile}
-          onClose={() => setActiveSchedule(null)}
-          onSave={saveMicroAction}
-        />
-      )}
-
       {showPopup && (
         <SchedulePopup
           date={selectedDate}
@@ -235,7 +188,6 @@ base_stats: ${JSON.stringify(profile.base_stats)}
           onToggle={(s, completed) =>
             toggleMutation.mutate({ id: s.id, completed })
           }
-          onMicroAction={(s) => setActiveSchedule(s)}
           onDelete={(id) => {
             if (window.confirm("이 일정을 삭제하시겠습니까?")) {
               deleteMutation.mutate(id);
@@ -253,15 +205,9 @@ base_stats: ${JSON.stringify(profile.base_stats)}
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
             캘린더
           </h1>
-          {monthlyFortune ? (
-            <p className="text-xs text-blue-600 dark:text-blue-300 font-semibold mt-1 leading-relaxed">
-              {monthlyFortune}
-            </p>
-          ) : (
-            <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">
-              날짜를 누르면 일정을 확인합니다.
-            </p>
-          )}
+          <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">
+            날짜를 누르면 일정을 확인합니다.
+          </p>
         </div>
         <button
           onClick={() => setShowAdd(true)}
