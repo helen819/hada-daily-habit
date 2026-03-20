@@ -7,6 +7,28 @@ import { createPageUrl } from "@/utils";
 import AdModal from "@/components/shop/AdModal";
 import { Keyboard } from "@capacitor/keyboard";
 
+const CATEGORY_LABELS = {
+  work: {
+    label: "업무",
+    color: "bg-blue-100 text-blue-700 dark:bg-blue-800/50 dark:text-blue-200",
+  },
+  personal: {
+    label: "개인",
+    color:
+      "bg-purple-100 text-purple-700 dark:bg-purple-800/50 dark:text-purple-200",
+  },
+  hobby: {
+    label: "취미",
+    color:
+      "bg-green-100 text-green-700 dark:bg-green-800/50 dark:text-green-200",
+  },
+
+  other: {
+    label: "기타",
+    color: "bg-gray-100 text-gray-700 dark:bg-slate-600 dark:text-slate-200",
+  },
+};
+
 function ProgressTask({ todo, onToggle }) {
   return (
     <div className="flex items-center py-3 px-2 hover:bg-gray-50 dark:hover:bg-[#363D54] transition-colors">
@@ -28,7 +50,46 @@ function ProgressTask({ todo, onToggle }) {
   );
 }
 
-export default function TodoList({ todos, onAdd, onToggle }) {
+function ScheduleTask({ schedule, onToggle }) {
+  const cat = CATEGORY_LABELS[schedule.category] || CATEGORY_LABELS.personal;
+  return (
+    <div className="flex items-center py-3 px-2 hover:bg-gray-50 dark:hover:bg-[#363D54] transition-colors">
+      <button
+        onClick={() => onToggle(schedule)}
+        className="w-6 h-6 rounded-full border-2 border-blue-300 dark:border-blue-500 mr-4 bg-white dark:bg-[#1A1F2E] flex items-center justify-center shrink-0 hover:border-blue-500 dark:hover:border-blue-400 transition-colors"
+      >
+        {schedule.completed && (
+          <Check
+            className="w-4 h-4 text-blue-500 dark:text-blue-300"
+            strokeWidth={1.5}
+          />
+        )}
+      </button>
+      <span
+        className={`flex-1 text-[13px] font-medium leading-snug ${
+          schedule.completed
+            ? "line-through text-gray-400 dark:text-slate-500"
+            : "text-gray-800 dark:text-slate-200"
+        }`}
+      >
+        {schedule.title}
+      </span>
+      <span
+        className={`text-[9px] px-1.5 py-0.5 rounded-full ml-2 shrink-0 ${cat.color}`}
+      >
+        {cat.label}
+      </span>
+    </div>
+  );
+}
+
+export default function TodoList({
+  todos,
+  schedules = [],
+  onAdd,
+  onToggle,
+  onToggleSchedule,
+}) {
   const [newTodo, setNewTodo] = useState("");
   const [showAd, setShowAd] = useState(false);
   const addCountRef = useRef(0);
@@ -75,6 +136,16 @@ export default function TodoList({ todos, onAdd, onToggle }) {
 
   const allTodos = todos || [];
   const activeTodos = allTodos.filter((t) => !t.completed);
+  const activeSchedules = schedules
+    .filter((s) => !s.completed)
+    .sort((a, b) => (a.time || "99:99").localeCompare(b.time || "99:99"));
+
+  const totalCount = allTodos.length + schedules.length;
+  const completedCount =
+    allTodos.filter((t) => t.completed).length +
+    schedules.filter((s) => s.completed).length;
+
+  const isEmpty = activeTodos.length === 0 && activeSchedules.length === 0;
 
   return (
     <>
@@ -94,8 +165,7 @@ export default function TodoList({ todos, onAdd, onToggle }) {
           </h3>
           <div className="flex items-center gap-2">
             <span className="text-[11px] font-semibold text-purple-600 dark:text-purple-300">
-              {(todos || []).filter((t) => t.completed).length}/
-              {(todos || []).length}
+              {completedCount}/{totalCount}
             </span>
             <Link
               to={createPageUrl("CalendarPage")}
@@ -140,12 +210,12 @@ export default function TodoList({ todos, onAdd, onToggle }) {
           </motion.div>
         </AnimatePresence>
 
-        {/* 할 일 목록 */}
-        <div className="space-y-3">
+        {/* 목록 */}
+        <div className="divide-y divide-gray-50 dark:divide-[#363D54]">
           <AnimatePresence>
             {activeTodos.map((todo) => (
               <motion.div
-                key={todo.id}
+                key={`todo-${todo.id}`}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, x: -24, height: 0 }}
@@ -156,7 +226,32 @@ export default function TodoList({ todos, onAdd, onToggle }) {
             ))}
           </AnimatePresence>
 
-          {activeTodos.length === 0 && (
+          {/* 스케줄 섹션 */}
+          {activeSchedules.length > 0 && (
+            <>
+              <p className="text-[10px] font-semibold text-blue-400 uppercase tracking-widest pt-3 pb-1 px-2">
+                오늘 일정
+              </p>
+              <AnimatePresence>
+                {activeSchedules.map((schedule) => (
+                  <motion.div
+                    key={`schedule-${schedule.id}`}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, x: -24, height: 0 }}
+                    transition={{ duration: 0.25 }}
+                  >
+                    <ScheduleTask
+                      schedule={schedule}
+                      onToggle={onToggleSchedule}
+                    />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </>
+          )}
+
+          {isEmpty && (
             <p className="text-center text-[11px] text-gray-400 dark:text-slate-500 py-4">
               완료할 할 일이 없습니다 🎉
             </p>

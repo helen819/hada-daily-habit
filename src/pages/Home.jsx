@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
@@ -16,8 +16,6 @@ export default function Home() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [showModeCard, setShowModeCard] = useState(false);
-
-  // 홈 콘텐츠 전체가 준비될 때까지 로딩 표시
   const [isInitializing, setIsInitializing] = useState(true);
 
   const today = getKSTDateString();
@@ -50,10 +48,22 @@ export default function Home() {
   });
 
   const { data: todos = [] } = useQuery({
-    queryKey: ["todos"],
-    queryFn: () => base44.entities.Todo.filter({ completed: false }),
+    queryKey: ["todos", today],
+    queryFn: () => base44.entities.Todo.filter({ date: today }),
     enabled: !!profile,
   });
+
+  // 오늘 스케줄
+  const { data: allSchedules = [] } = useQuery({
+    queryKey: ["schedules"],
+    queryFn: () => base44.entities.ScheduleItem.list("-date"),
+    enabled: !!profile,
+  });
+
+  const todaySchedules = useMemo(
+    () => allSchedules.filter((s) => s.date === today),
+    [allSchedules, today],
+  );
 
   // 모드 카드 팝업 체크
   useEffect(() => {
@@ -247,14 +257,19 @@ user_level: ${profile.level || 1}
       advice_title: res.advice_title,
       advice_body: res.advice_body,
       recommended_mode: res.mode_card?.suggested_mode || profile.current_mode,
-      base_stats: res.base_stats, // ← LLM이 매일 새로 계산한 오늘의 에너지
+      base_stats: res.base_stats,
       mode_card: res.mode_card,
     });
 
+    // 추가
+    await base44.entities.UserProfile.update(profile.id, {
+      base_stats: res.base_stats,
+    });
+    queryClient.invalidateQueries({ queryKey: ["userProfile"] });
     queryClient.invalidateQueries({ queryKey: ["dailyReading"] });
   };
 
-  // 홈 초기화: reading/actions 없으면 생성 → 완료되면 로딩 해제
+  // 홈 초기화
   useEffect(() => {
     if (!profile) return;
     if (readings === undefined) return;
@@ -291,13 +306,12 @@ user_level: ${profile.level || 1}
 
   const addTodo = async (title) => {
     await base44.entities.Todo.create({ title, completed: false, date: today });
-    queryClient.invalidateQueries({ queryKey: ["todos"] });
+    queryClient.invalidateQueries({ queryKey: ["todos", today] });
   };
 
   const toggleTodo = async (todo) => {
     const isCompleting = !todo.completed;
     await base44.entities.Todo.update(todo.id, { completed: isCompleting });
-
     if (isCompleting && profile) {
       const newXp = (profile.xp || 0) + 10;
       const newLevel = Math.floor(newXp / 100) + 1;
@@ -307,10 +321,16 @@ user_level: ${profile.level || 1}
       });
       queryClient.invalidateQueries({ queryKey: ["userProfile"] });
     }
-    queryClient.invalidateQueries({ queryKey: ["todos"] });
+    queryClient.invalidateQueries({ queryKey: ["todos", today] });
   };
 
-  // 프로필 로딩 중
+  const toggleSchedule = async (schedule) => {
+    await base44.entities.ScheduleItem.update(schedule.id, {
+      completed: !schedule.completed,
+    });
+    queryClient.invalidateQueries({ queryKey: ["schedules"] });
+  };
+
   if (profileLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -321,7 +341,6 @@ user_level: ${profile.level || 1}
 
   if (!profile) return null;
 
-  // 홈 콘텐츠 초기화 중 (reading/actions 생성 중)
   if (isInitializing) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4">
@@ -391,7 +410,6 @@ user_level: ${profile.level || 1}
           </motion.div>
         )}
 
-        {/* 오늘의 에너지 — DailyReading의 base_stats 우선 사용 */}
         <EnergyStats stats={reading?.base_stats || profile.base_stats} />
 
         <TarotSection
@@ -401,7 +419,13 @@ user_level: ${profile.level || 1}
           isLoading={actionsLoading}
         />
 
-        <TodoList todos={todos} onAdd={addTodo} onToggle={toggleTodo} />
+        <TodoList
+          todos={todos}
+          schedules={todaySchedules}
+          onAdd={addTodo}
+          onToggle={toggleTodo}
+          onToggleSchedule={toggleSchedule}
+        />
       </div>
     </div>
   );

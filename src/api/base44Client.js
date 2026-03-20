@@ -204,7 +204,6 @@ const getFallbackData = (prompt) => {
                     "(가짜 데이터) 상반기 안에 건강 검진 예약하기",
                 ],
             },
-            fortuneSource: "(가짜 데이터) 5대 운명학 통합 분석 데이터",
         };
     }
 
@@ -229,7 +228,6 @@ const getFallbackData = (prompt) => {
                 "(가짜 데이터) 3분간 창밖 바라보기",
                 "(가짜 데이터) 깊게 숨 5회 들이쉬기",
             ],
-            fortuneSource: "(가짜 데이터) 5대 운명학 통합 분석 데이터",
             ...(isDaily ? { luckyColor: "#F59E0B", aiLuckyColor: "#F59E0B" } : {}),
         };
     }
@@ -258,7 +256,6 @@ const getFallbackData = (prompt) => {
                 "(가짜 데이터) 따뜻한 인사 건네기",
             ],
             luckyColor: "#10B981",
-            fortuneSource: "(가짜 데이터) 5대 운명학 통합 분석 데이터",
             analysis_data: {
                 sasoo: "(가짜 데이터) 따뜻한 봄날의 햇살 같은 기운을 타고나셨습니다.",
                 myungri: "(가짜 데이터) 목(木)의 기운이 강하여 성장이 빠르고 유연합니다.",
@@ -269,11 +266,11 @@ const getFallbackData = (prompt) => {
                 overall_insight: "(가짜 데이터) 전반적으로 에너지가 넘치며 새로운 시작에 최적화된 기운입니다.",
             },
             base_stats: {
-                work_efficiency: 85,
-                creativity: 92,
-                communication: 78,
-                focus: 80,
-                fortune: 88,
+                work_efficiency: 100,
+                creativity: 100,
+                communication: 100,
+                focus: 100,
+                fortune: 100,
             },
             traits: {
                 strengths: [

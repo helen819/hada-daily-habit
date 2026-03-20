@@ -12,7 +12,6 @@ import { getKSTDateString } from "@/utils/date";
 
 export default function CalendarPage() {
   const queryClient = useQueryClient();
-  // 🔥 오늘 날짜를 한국 시간 기준으로 획득 (밤 12시 리셋)
   const today = getKSTDateString();
 
   const [year, setYear] = useState(new Date().getFullYear());
@@ -47,10 +46,7 @@ export default function CalendarPage() {
       if (completed && profile) {
         const newXp = (profile.xp || 0) + 10;
         const newLevel = Math.floor(newXp / 100) + 1;
-        await base44.entities.UserProfile.update(profile.id, {
-          xp: newXp,
-          level: newLevel,
-        });
+        await base44.entities.UserProfile.update(profile.id, { xp: newXp, level: newLevel });
       }
       return updated;
     },
@@ -58,6 +54,12 @@ export default function CalendarPage() {
       queryClient.invalidateQueries({ queryKey: ["todos"] });
       queryClient.invalidateQueries({ queryKey: ["userProfile"] });
     },
+  });
+
+  const toggleScheduleMutation = useMutation({
+    mutationFn: ({ id, completed }) =>
+      base44.entities.ScheduleItem.update(id, { completed }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["schedules"] }),
   });
 
   const markedDates = useMemo(
@@ -126,8 +128,7 @@ export default function CalendarPage() {
   };
 
   const selectedSchedules = useMemo(
-    () =>
-      selectedDate ? schedules.filter((s) => s.date === selectedDate) : [],
+    () => selectedDate ? schedules.filter((s) => s.date === selectedDate) : [],
     [schedules, selectedDate],
   );
 
@@ -145,14 +146,8 @@ export default function CalendarPage() {
   const handleMonthChange = (delta) => {
     let m = month + delta;
     let y = year;
-    if (m < 0) {
-      m = 11;
-      y -= 1;
-    }
-    if (m > 11) {
-      m = 0;
-      y += 1;
-    }
+    if (m < 0) { m = 11; y -= 1; }
+    if (m > 11) { m = 0; y += 1; }
     setMonth(m);
     setYear(y);
   };
@@ -171,6 +166,22 @@ export default function CalendarPage() {
     selectedDate &&
     (selectedSchedules.length > 0 || dateBadges?.[selectedDate]?.length > 0);
 
+  // 할 일 목록: 선택된 날짜 기준, 없으면 오늘
+  const displayDate = selectedDate || today;
+
+  const displayTodos = useMemo(
+    () => todos.filter((t) => {
+      const date = t.date || t.created_date?.split("T")[0];
+      return date === displayDate;
+    }),
+    [todos, displayDate],
+  );
+
+  const displaySchedules = useMemo(
+    () => schedules.filter((s) => s.date === displayDate),
+    [schedules, displayDate],
+  );
+
   return (
     <div className="min-h-screen bg-background pb-24">
       <AddScheduleModal
@@ -186,9 +197,7 @@ export default function CalendarPage() {
           schedules={selectedSchedules}
           badges={dateBadges?.[selectedDate] || []}
           onClose={() => setSelectedDate(null)}
-          onToggle={(s, completed) =>
-            toggleMutation.mutate({ id: s.id, completed })
-          }
+          onToggle={(s, completed) => toggleMutation.mutate({ id: s.id, completed })}
           onDelete={(id) => {
             if (window.confirm("이 일정을 삭제하시겠습니까?")) {
               deleteMutation.mutate(id);
@@ -203,9 +212,7 @@ export default function CalendarPage() {
           <p className="text-xs font-semibold text-blue-500 dark:text-blue-400 uppercase tracking-widest mb-1">
             HADA
           </p>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            캘린더
-          </h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">캘린더</h1>
           <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">
             날짜를 누르면 일정을 확인합니다.
           </p>
@@ -233,23 +240,23 @@ export default function CalendarPage() {
         />
 
         {/* 광고 */}
-        <AdSlot
-          type="native"
-          adUnitId="ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX"
-        />
+        <AdSlot type="native" adUnitId="ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX" />
 
-        {/* 할 일 목록 */}
+        {/* 할 일 + 일정 목록 */}
         <div className="bg-white dark:bg-[#2E3447] rounded-3xl border border-gray-100 dark:border-[#424B63] p-4 shadow-md">
           <p className="text-sm font-bold text-gray-700 dark:text-white mb-3">
-            할 일 목록
+            {selectedDate && selectedDate !== today
+              ? `${selectedDate.slice(5).replace("-", "월 ")}일 할 일`
+              : "오늘 할 일"}
           </p>
           <TodoColumns
-            todos={todos}
+            todos={displayTodos}
+            schedules={displaySchedules}
             onToggle={(todo) =>
-              toggleTodoMutation.mutate({
-                id: todo.id,
-                completed: !todo.completed,
-              })
+              toggleTodoMutation.mutate({ id: todo.id, completed: !todo.completed })
+            }
+            onToggleSchedule={(schedule) =>
+              toggleScheduleMutation.mutate({ id: schedule.id, completed: !schedule.completed })
             }
           />
         </div>

@@ -422,7 +422,7 @@ export default function Profile() {
         {/* Radar */}
         <div className="bg-white dark:bg-[#2E3447] rounded-3xl border border-gray-100 dark:border-[#424B63] p-6 shqadow-md">
           <h3 className="text-sm font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-3">
-            기본 에너지
+            오늘의 에너지
           </h3>
           <StatsRadar stats={profile.base_stats} />
         </div>

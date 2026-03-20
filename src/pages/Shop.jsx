@@ -232,37 +232,11 @@ async function generateFortune(profile, category) {
                 actionTips: { type: "array", items: { type: "string" } },
               },
             },
-            fortuneSource: { type: "string" },
           },
         },
       });
     } catch {
-      result = {
-        summary: "(가짜 데이터)이번 주·달·해를 아우르는 흐름을 분석했어요.",
-        detailed: "(가짜 데이터)전반적으로 안정적인 에너지가 흐르고 있습니다.",
-        weekly: {
-          summary: "(가짜 데이터)이번 주는 새로운 시작에 좋은 기운이 흐릅니다.",
-          actionTips: [
-            "(가짜 데이터)중요한 약속은 수요일 전에 잡기",
-            "(가짜 데이터)매일 10분 독서하기",
-          ],
-        },
-        monthly: {
-          summary: "(가짜 데이터)이번 달은 관계 회복과 재정 정리에 집중하세요.",
-          actionTips: [
-            "(가짜 데이터)불필요한 지출 점검하기",
-            "(가짜 데이터)가까운 사람과 대화 늘리기",
-          ],
-        },
-        yearly: {
-          summary: "(가짜 데이터)올해는 변화보다 내실을 다지는 해입니다.",
-          actionTips: [
-            "(가짜 데이터)장기 목표를 글로 써보기",
-            "(가짜 데이터)건강 검진 예약하기",
-          ],
-        },
-        fortuneSource: "(가짜 데이터)오프라인 기본 분석 데이터",
-      };
+      // AI 호출 실패시 아무것도 띄우지 말기
     }
   } else {
     // ── daily / love / wealth / career / health: 오늘 기준 ──
@@ -301,7 +275,6 @@ async function generateFortune(profile, category) {
             energyLevel: { type: "number" },
             detailed: { type: "string" },
             actionTips: { type: "array", items: { type: "string" } },
-            fortuneSource: { type: "string" },
             luckyColor: { type: "string" },
           },
         },
@@ -315,27 +288,7 @@ async function generateFortune(profile, category) {
             : undefined,
       };
     } catch {
-      // fallback
-      const fallbackColors = {
-        daily: "#F59E0B",
-        love: "#E879A0",
-        wealth: "#D4A017",
-        career: "#4338CA",
-        health: "#14B8A6",
-      };
-      result = {
-        summary: `${category.title} 에너지 안정적`,
-        energyLevel: 70,
-        detailed: `(가짜 데이터) 오늘 ${category.title} 관련 에너지가 안정적입니다. 집중력을 활용해 하루를 잘 마무리해보세요.`,
-        actionTips: [
-          "(가짜 데이터) 잠깐 스트레칭하기",
-          "(가짜 데이터) 물 한 잔 마시기",
-          "(가짜 데이터) 깊게 숨 고르기",
-        ],
-        fortuneSource: "(가짜 데이터)오프라인 기본 분석 데이터",
-        aiLuckyColor:
-          category.id === "daily" ? fallbackColors.daily : undefined,
-      };
+      // AI 호출 실패시 아무것도 띄우지 말기}
     }
   }
 

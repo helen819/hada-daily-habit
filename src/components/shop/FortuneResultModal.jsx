@@ -129,11 +129,9 @@ export default function FortuneResultModal({ result, category, onClose }) {
             <h2 className="text-xl font-black leading-snug mb-2">
               {result.summary}
             </h2>
-            {result.fortuneSource && (
-              <p className="text-[10px] opacity-60 leading-tight">
-                {result.fortuneSource}
-              </p>
-            )}
+            <p className="text-[10px] opacity-60 leading-tight">
+              HADA 분석 데이터
+            </p>
           </div>
 
           {/* 스크롤 영역 */}

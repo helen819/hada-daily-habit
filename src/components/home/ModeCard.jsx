@@ -84,7 +84,7 @@ export default function ModeCard({ data, onDismiss, onSelect }) {
               >
                 {data.suggested_mode === "action"
                   ? "'활동 모드'"
-                  : "'휴식 모드'"}
+                  : "'회복 모드'"}
               </span>
               를 추천합니다.
             </p>

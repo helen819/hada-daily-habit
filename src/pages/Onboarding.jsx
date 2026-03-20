@@ -38,6 +38,7 @@ export default function Onboarding() {
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
+  const [calendarOpen, setCalendarOpen] = useState(false);
 
   const isStrictKorean = (name) => /^[가-힣]+$/.test(name);
   const isLooseHangul = (name) => /^[가-힣ㄱ-ㅎㅏ-ㅣ]+$/.test(name);
@@ -105,10 +106,7 @@ export default function Onboarding() {
 
   const handleSubmit = async () => {
     setLoading(true);
-
     try {
-      // 프로필만 저장 — LLM 분석 없음
-      // base_stats, welcome_title 등은 홈화면 진입 시 generateDailyReading()에서 생성됨
       await base44.entities.UserProfile.create({
         full_name: form.full_name,
         birth_date: form.birth_date,
@@ -124,7 +122,6 @@ export default function Onboarding() {
         current_mode: "action",
         onboarding_complete: true,
       });
-
       await queryClient.invalidateQueries({ queryKey: ["userProfile"] });
       navigate("/Home", { replace: true });
     } catch (error) {
@@ -198,7 +195,7 @@ export default function Onboarding() {
                 <label className="text-[11px] font-bold text-purple-400 ml-1 uppercase">
                   생년월일
                 </label>
-                <Popover>
+                <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
@@ -308,6 +305,14 @@ export default function Onboarding() {
                             "flex justify-center relative items-center h-0",
                         }}
                       />
+
+                      {/* 선택 완료 버튼 */}
+                      <Button
+                        onClick={() => setCalendarOpen(false)}
+                        className="w-full h-12 mt-4 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-2xl shadow-lg"
+                      >
+                        선택 완료
+                      </Button>
                     </div>
                   </PopoverContent>
                 </Popover>
@@ -369,18 +374,8 @@ export default function Onboarding() {
                       className="h-14 bg-white border border-purple-100 rounded-2xl text-center font-bold text-gray-800 shadow-sm appearance-none"
                     >
                       {[
-                        "00",
-                        "05",
-                        "10",
-                        "15",
-                        "20",
-                        "25",
-                        "30",
-                        "35",
-                        "40",
-                        "45",
-                        "50",
-                        "55",
+                        "00", "05", "10", "15", "20", "25",
+                        "30", "35", "40", "45", "50", "55",
                       ].map((m) => (
                         <option key={m} value={m}>
                           {m}분
