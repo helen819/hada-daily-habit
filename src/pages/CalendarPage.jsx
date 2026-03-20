@@ -134,6 +134,7 @@ export default function CalendarPage() {
       setMonthlyFortune(cached);
       return;
     }
+    // 삭제
     base44.integrations.Core.InvokeLLM({
       prompt: `너는 HADA 운세 엔진이다. 사용자 정보를 바탕으로 ${year}년 ${
         month + 1

@@ -15,6 +15,7 @@ export default function MicroActionSheet({
   const generate = async () => {
     if (!schedule) return;
     setLoading(true);
+    // 삭제
     const res = await base44.integrations.Core.InvokeLLM({
       prompt: `너는 HADA 앱의 운명학 마이크로 액션 엔진이다.
       

@@ -15,12 +15,19 @@ import AdviceBanner from "@/components/home/AdviceBanner";
 import ModeCard from "@/components/home/ModeCard";
 import TodoList from "@/components/home/TodoList";
 
+// KST 기준 오늘 날짜 반환 (YYYY-MM-DD)
+const getKSTDateString = () => {
+  const now = new Date();
+  const kst = new Date(now.getTime() + 9 * 60 * 60 * 1000); // UTC+9
+  return kst.toISOString().split("T")[0];
+};
+
 export default function Home() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [showModeCard, setShowModeCard] = useState(false);
   const [isConverting, setIsConverting] = useState(false);
-  const today = new Date().toISOString().split("T")[0];
+  const today = getKSTDateString();
 
   // Check onboarding
   const { data: profiles, isLoading: profileLoading } = useQuery({
@@ -74,7 +81,7 @@ export default function Home() {
   useEffect(() => {
     if (profile && reading?.mode_card) {
       const checkAndShowPopup = async () => {
-        const todayDate = new Date().toISOString().split("T")[0];
+        const todayDate = getKSTDateString();
         const lastShownDate = await base44.storage.get("modeCardLastShownDate");
 
         if (lastShownDate !== todayDate) {
@@ -328,6 +335,7 @@ base_stats: ${JSON.stringify(profile.base_stats)}
   };
   const convertTodo = async (todo) => {
     setIsConverting(true);
+    // 삭제
     const res = await base44.integrations.Core.InvokeLLM({
       prompt: `너는 사용자가 적은 큰 할 일을 당장 실행할 수 있는 마이크로 액션 1단계로 바꾸는 엔진이다.
 할 일: ${todo.title}

@@ -76,6 +76,7 @@ async function generateAICharm(profile) {
     day: "numeric",
     weekday: "long",
   });
+  // 계산기 사용
   const res = await base44.integrations.Core.InvokeLLM({
     prompt: `너는 'HADA' 앱의 실시간 행운 추천 엔진이다.
 [사용자] 이름: ${profile?.full_name}, 생년월일: ${profile?.birth_date}, 목표: ${
