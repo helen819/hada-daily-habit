@@ -37,12 +37,9 @@ export default function Onboarding() {
   const [step, setStep] = useState(0);
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
-  const [checking, setChecking] = useState(true); // 🔥 추가 — 프로필 확인 중 상태
-  // 1. 🔥 버튼 활성화를 위한 엄격한 체크 (완성된 한글만: 홍길동)
-  const isStrictKorean = (name) => /^[가-힣]+$/.test(name);
+  const [checking, setChecking] = useState(true);
 
-  // 2. 🔥 경고 문구 노출을 위한 유연한 체크 (자음, 모음 포함: 안ㄴ)
-  // 이 정규식은 자음(ㄱ-ㅎ)과 모음(ㅏ-ㅣ)이 단독으로 있어도 한글로 간주합니다.
+  const isStrictKorean = (name) => /^[가-힣]+$/.test(name);
   const isLooseHangul = (name) => /^[가-힣ㄱ-ㅎㅏ-ㅣ]+$/.test(name);
 
   const [form, setForm] = useState({
@@ -54,9 +51,8 @@ export default function Onboarding() {
     goal: "",
   });
 
-  // --- 날짜/시간 관리를 위한 상태 ---
-  const [date, setDate] = useState(new Date(2000, 0, 1)); // 기본값 1995년 1월 1일
-  const [currentMonth, setCurrentMonth] = useState(new Date(2000, 0, 1)); // 달력 화면 위치
+  const [date, setDate] = useState(new Date(2000, 0, 1));
+  const [currentMonth, setCurrentMonth] = useState(new Date(2000, 0, 1));
   const [useTime, setUseTime] = useState(false);
   const [timeState, setTimeState] = useState({
     ampm: "오전",
@@ -64,14 +60,12 @@ export default function Onboarding() {
     minute: "00",
   });
 
-  // 날짜 선택 시 form 업데이트
   useEffect(() => {
     if (date) {
       update("birth_date", format(date, "yyyy-MM-dd"));
     }
   }, [date]);
 
-  // 시간 상태 변경 시 form.birth_time 업데이트
   useEffect(() => {
     if (useTime) {
       let h = parseInt(timeState.hour);
@@ -79,7 +73,7 @@ export default function Onboarding() {
       if (timeState.ampm === "오전" && h === 12) h = 0;
       update("birth_time", `${String(h).padStart(2, "0")}:${timeState.minute}`);
     } else {
-      update("birth_time", ""); // 시간 모름일 경우 빈 값
+      update("birth_time", "");
     }
   }, [timeState, useTime]);
 
@@ -88,24 +82,22 @@ export default function Onboarding() {
   const canNext =
     (step === 0 && isStrictKorean(form.full_name) && form.gender) ||
     (step === 1 && form.birth_date) ||
-    step === 2 || // 🔥 위치 단계는 입력 여부 상관없이 항상 활성화
+    step === 2 ||
     (step === 3 && form.goal);
 
-  // 이미 프로필이 있으면 홈으로 리다이렉트
   useEffect(() => {
     base44.entities.UserProfile.list().then((profiles) => {
       if (profiles && profiles.length > 0) {
         navigate("/Home", { replace: true });
       } else {
-        setChecking(false); // 🔥 프로필 없을 때만 온보딩 표시
+        setChecking(false);
       }
     });
   }, [navigate]);
 
-  // 🔥 프로필 확인 중에는 아무것도 렌더링하지 않음
   if (checking) {
     return (
-      <div className="min-h-screen bg-backgroun flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="w-6 h-6 animate-spin text-purple-400 dark:text-purple-300" />
       </div>
     );
@@ -115,14 +107,13 @@ export default function Onboarding() {
     setLoading(true);
 
     try {
-      // ── 1단계: 사용자가 입력한 기초 정보로 프로필 우선 생성 ──
-      // AI 분석 전이므로 onboarding_complete는 false로 둡니다.
-      const newProfile = await base44.entities.UserProfile.create({
+      // 프로필만 저장 — LLM 분석 없음
+      // base_stats, welcome_title 등은 홈화면 진입 시 generateDailyReading()에서 생성됨
+      await base44.entities.UserProfile.create({
         full_name: form.full_name,
         birth_date: form.birth_date,
         birth_time: form.birth_time || "미입력",
         gender: form.gender,
-        // 🔥 위도/경도를 고정 숫자로 추가 저장
         latitude: 37.5665,
         longitude: 126.978,
         location: form.location || "미입력",
@@ -130,155 +121,11 @@ export default function Onboarding() {
         goal: form.goal,
         level: 1,
         xp: 0,
-        onboarding_complete: false, // 아직 분석 중
-      });
-
-      console.log("기초 프로필 생성 완료 (ID):", newProfile.id);
-
-      // Generate comprehensive analysis via LLM
-      const prompt = `너는 'HADA' 앱의 온보딩 종합 분석 엔진이다.
-
-                      아래 6가지 학문을 종합 분석하되, 전문 용어는 절대 드러내지 마라:
-                      1. 사주 (사계절/십간십이지/오행)
-                      2. 명리학 (음양오행)
-                      3. 자미두수 (12궁위 운세)
-                      4. 점성술의 명식/명반 (행성 배치)
-                      5. 서양 점성술 (태양/달/상승점)
-                      6. 성명학 (획수/글자 의미)
-
-                      결과를 반드시 JSON으로만 답하라.`;
-
-      const res = await base44.integrations.Core.InvokeLLM({
-        prompt,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            analysis_data: {
-              type: "object",
-              properties: {
-                sasoo: { type: "string", description: "사주 분석" },
-                myungri: { type: "string", description: "명리학 분석" },
-                jamidusoo: { type: "string", description: "자미두수 분석" },
-                astrology_명식: {
-                  type: "string",
-                  description: "점성술 명식 분석",
-                },
-                western_astrology: {
-                  type: "string",
-                  description: "서양 점성술 분석",
-                },
-                seongmyung: { type: "string", description: "성명학 분석" },
-                overall_insight: { type: "string", description: "종합 통찰" },
-              },
-            },
-            base_stats: {
-              type: "object",
-              properties: {
-                work_efficiency: { type: "number" },
-                creativity: { type: "number" },
-                communication: { type: "number" },
-                focus: { type: "number" },
-                fortune: { type: "number" },
-              },
-            },
-            traits: {
-              type: "object",
-              properties: {
-                strengths: { type: "array", items: { type: "string" } },
-                weaknesses: { type: "array", items: { type: "string" } },
-                potentials: { type: "array", items: { type: "string" } },
-              },
-            },
-            fortune_stats: {
-              type: "object",
-              properties: {
-                strengths: {
-                  type: "array",
-                  items: {
-                    type: "object",
-                    properties: {
-                      name: { type: "string" },
-                      value: { type: "number" },
-                    },
-                  },
-                },
-                weakness: {
-                  type: "object",
-                  properties: {
-                    name: { type: "string" },
-                    value: { type: "number" },
-                  },
-                },
-                potentials: {
-                  type: "array",
-                  items: {
-                    type: "object",
-                    properties: {
-                      name: { type: "string" },
-                      value: { type: "number" },
-                    },
-                  },
-                },
-              },
-            },
-            recommended_mode: { type: "string" },
-            welcome_title: { type: "string" },
-            welcome_subtitle: { type: "string" },
-            today_hint: { type: "string" },
-            mode_card: {
-              suggested_mode: { type: "string" },
-              card_title: { type: "string" },
-              card_body: { type: "string" },
-            },
-          },
-        },
-      });
-
-      // Build fortune_stats map from LLM output
-      const fortune_stats = res.fortune_stats
-        ? {
-            strengths: Object.fromEntries(
-              (res.fortune_stats.strengths || []).map((s) => [s.name, s.value]),
-            ),
-            weakness: res.fortune_stats.weakness
-              ? {
-                  [res.fortune_stats.weakness.name]:
-                    res.fortune_stats.weakness.value,
-                }
-              : {},
-            potentials: Object.fromEntries(
-              (res.fortune_stats.potentials || []).map((p) => [
-                p.name,
-                p.value,
-              ]),
-            ),
-          }
-        : null;
-
-      // ── 3단계: AI 분석 결과로 프로필 업데이트 (Update) ──
-      await base44.entities.UserProfile.update(newProfile.id, {
-        current_mode: res.recommended_mode || "action",
-        base_stats: res.base_stats,
-        traits: { ...res.traits, fortune_stats },
-        analysis_data: res.analysis_data,
-        onboarding_complete: true, // 분석 완료됨
-      });
-
-      // Save daily reading
-      const today = getKSTDateString();
-      await base44.entities.DailyReading.create({
-        date: today,
-        welcome_title: res.welcome_title,
-        welcome_subtitle: res.welcome_subtitle,
-        today_hint: res.today_hint,
-        recommended_mode: res.recommended_mode,
-        base_stats: res.base_stats,
-        mode_card: res.mode_card,
+        current_mode: "action",
+        onboarding_complete: true,
       });
 
       await queryClient.invalidateQueries({ queryKey: ["userProfile"] });
-      await queryClient.invalidateQueries({ queryKey: ["dailyReading"] });
-
       navigate("/Home", { replace: true });
     } catch (error) {
       console.error("오류 발생:", error);
@@ -292,7 +139,6 @@ export default function Onboarding() {
       className="min-h-screen bg-gradient-to-b from-white via-purple-50/30 to-white"
       style={{
         paddingTop: "env(safe-area-inset-top)",
-        // 버튼 영역의 높이(12 + 48 + 24 = 약 84px) 만큼 바닥 여백 확보
         paddingBottom: "calc(env(safe-area-inset-bottom) + 100px)",
       }}
     >
@@ -348,7 +194,6 @@ export default function Onboarding() {
             subtitle="시간까지 입력하면 더 정확해요."
           >
             <div className="space-y-6">
-              {/* --- 커스텀 캘린더 섹션 --- */}
               <div className="space-y-2">
                 <label className="text-[11px] font-bold text-purple-400 ml-1 uppercase">
                   생년월일
@@ -372,7 +217,6 @@ export default function Onboarding() {
                     align="center"
                   >
                     <div className="p-4 bg-white">
-                      {/* 헤더 부분 (기존과 동일) */}
                       <div className="flex items-center justify-between mb-4 px-1">
                         <Button
                           variant="ghost"
@@ -436,60 +280,22 @@ export default function Onboarding() {
                         </Button>
                       </div>
 
-                      {/* 🔥 수정된 스타일 정의 🔥 */}
                       <style>{`
-      /* 1. 상단 'n월 YYYY' 텍스트 완전 제거 */
-      .rdp-vhidden, .rdp-caption_label, .rdp-caption { 
-        display: none !important; 
-      }
-      
-      /* 2. 달력 본체 가로 꽉 채우기 및 중앙 정렬 */
-      .rdp {
-        margin: 0 !important;
-        width: 100% !important;
-      }
-      .rdp-months {
-        justify-content: center !important;
-        width: 100% !important;
-      }
-      .rdp-month {
-        width: 100% !important;
-      }
-      .rdp-table {
-        width: 100% !important;
-        max-width: none !important;
-      }
-      
-      /* 3. 각 날짜 셀 크기 균등 배분 */
-      .rdp-cell {
-        text-align: center !important;
-        padding: 0 !important;
-      }
-      .rdp-day {
-        width: 40px !important;
-        height: 40px !important;
-        margin: auto !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-      }
-
-      /* 4. 선택된 날짜 보라색 배경 */
-      .rdp-day_selected { 
-        background-color: #a855f7 !important; 
-        color: white !important; 
-        border-radius: 12px !important; 
-      }
+      .rdp-vhidden, .rdp-caption_label, .rdp-caption { display: none !important; }
+      .rdp { margin: 0 !important; width: 100% !important; }
+      .rdp-months { justify-content: center !important; width: 100% !important; }
+      .rdp-month { width: 100% !important; }
+      .rdp-table { width: 100% !important; max-width: none !important; }
+      .rdp-cell { text-align: center !important; padding: 0 !important; }
+      .rdp-day { width: 40px !important; height: 40px !important; margin: auto !important; display: flex !important; align-items: center !important; justify-content: center !important; }
+      .rdp-day_selected { background-color: #a855f7 !important; color: white !important; border-radius: 12px !important; }
     `}</style>
 
                       <Calendar
                         mode="single"
                         selected={date}
                         onSelect={(newDate) => {
-                          if (newDate) {
-                            // 선택된 날짜가 있을 때만 상태를 업데이트함 (null이면 무시)
-                            setDate(newDate);
-                          }
+                          if (newDate) setDate(newDate);
                         }}
                         month={currentMonth}
                         onMonthChange={setCurrentMonth}
@@ -499,14 +305,14 @@ export default function Onboarding() {
                         classNames={{
                           caption_label: "hidden",
                           caption:
-                            "flex justify-center relative items-center h-0", // 높이를 0으로 만들어 공간 제거
+                            "flex justify-center relative items-center h-0",
                         }}
                       />
                     </div>
                   </PopoverContent>
                 </Popover>
               </div>
-              {/* 시간 입력 (3개 블록 가득 찬 스타일) */}
+
               <div className="space-y-2">
                 <div className="flex justify-between items-center ml-1">
                   <label className="text-[11px] font-bold text-purple-400 uppercase">
@@ -635,12 +441,7 @@ export default function Onboarding() {
       {/* Navigation */}
       <div
         className="fixed bottom-0 left-0 right-0 p-6 z-50"
-        style={{
-          /*1. env(...) 만큼 마진을 주어 시스템 바를 완전히 피합니다. 
-       2. 하단에 배경색이 겹치지 않게 bg-gradient를 제거하거나 투명하게 조절합니다.
-    */
-          marginBottom: "env(safe-area-inset-bottom)",
-        }}
+        style={{ marginBottom: "env(safe-area-inset-bottom)" }}
       >
         <div className="flex gap-3 max-w-md mx-auto">
           {step > 0 && (
@@ -669,7 +470,7 @@ export default function Onboarding() {
               {loading ? (
                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
               ) : null}
-              {loading ? "분석 중..." : "시작하기 ✨"}
+              {loading ? "저장 중..." : "시작하기 ✨"}
             </Button>
           )}
         </div>

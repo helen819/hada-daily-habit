@@ -16,9 +16,12 @@ export default function Home() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [showModeCard, setShowModeCard] = useState(false);
+
+  // 홈 콘텐츠 전체가 준비될 때까지 로딩 표시
+  const [isInitializing, setIsInitializing] = useState(true);
+
   const today = getKSTDateString();
 
-  // Check onboarding
   const { data: profiles, isLoading: profileLoading } = useQuery({
     queryKey: ["userProfile"],
     queryFn: () => base44.entities.UserProfile.list(),
@@ -26,17 +29,12 @@ export default function Home() {
 
   const profile = profiles?.[0];
 
-  // Redirect to onboarding if needed
   useEffect(() => {
-    if (!profile || profile.length === 0) {
-      console.log("프로필이 없거나 온보딩 미완료 - 이동함");
+    if (!profileLoading && !profile) {
       navigate("/Onboarding", { replace: true });
-    } else {
-      console.log("프로필 확인됨:", profiles[0].full_name);
     }
-  }, [profileLoading, profiles, navigate]);
+  }, [profileLoading, profile, navigate]);
 
-  // Fetch daily reading
   const { data: readings } = useQuery({
     queryKey: ["dailyReading", today],
     queryFn: () => base44.entities.DailyReading.filter({ date: today }),
@@ -45,45 +43,43 @@ export default function Home() {
 
   const reading = readings?.[0];
 
-  // Fetch micro actions
   const { data: actions, isLoading: actionsLoading } = useQuery({
     queryKey: ["microActions", today],
     queryFn: () => base44.entities.MicroAction.filter({ date: today }),
     enabled: !!profile,
   });
 
-  // Fetch todos
   const { data: todos = [] } = useQuery({
     queryKey: ["todos"],
     queryFn: () => base44.entities.Todo.filter({ completed: false }),
     enabled: !!profile,
   });
 
-  // Home.jsx 수정
+  // 모드 카드 팝업 체크
   useEffect(() => {
     if (profile && reading?.mode_card) {
       const checkAndShowPopup = async () => {
         const todayDate = getKSTDateString();
         const lastShownDate = await base44.storage.get("modeCardLastShownDate");
-
         if (lastShownDate !== todayDate) {
           setShowModeCard(true);
           await base44.storage.set("modeCardLastShownDate", todayDate);
         }
       };
-
       checkAndShowPopup();
     }
   }, [profile, reading]);
 
-  // Listen for mode change from layout
+  // 모드 변경 이벤트 리스너
   useEffect(() => {
     const handler = async (e) => {
       if (profile) {
+        setIsInitializing(true);
         queryClient.invalidateQueries({ queryKey: ["userProfile"] });
         await generateDailyReading(e.detail);
         await new Promise((r) => setTimeout(r, 1500));
         await generateActions(e.detail);
+        setIsInitializing(false);
       }
     };
     window.addEventListener("modeChanged", handler);
@@ -201,14 +197,14 @@ user_level: ${profile.level || 1}
 
 톤앤매너 키워드: ${config.tone_keywords.join(", ")}
 목표 영역: ${config.goal_focus.join(", ")}
-
-사용자: ${profile.full_name}, 목표: ${profile.goal}
-base_stats: ${JSON.stringify(profile.base_stats)}
-시간대: ${timeSlot}, 모드: ${currentMode}
+목표: ${
+        profile.goal
+      }, 시간대: ${timeSlot}, 모드: ${currentMode}, 오늘 날짜: ${today}
 
 [작성 규칙]
-1. today_hint: 헤더에 들어갈 인사말. **17자 이내**로 짧고 강렬하게 작성. (예: "빛내기 좋은 하루입니다!")
-2. welcome_title: 오늘의 분위기. **20자 이내** 키워드형 문구.
+1. today_hint: 헤더에 들어갈 인사말. 17자 이내로 짧고 강렬하게 작성.
+2. welcome_title: 오늘의 분위기. 20자 이내 키워드형 문구.
+3. base_stats: 오늘 날짜(${today})와 사용자의 생년월일, 목표, 모드를 종합하여 오늘 하루의 에너지 수치를 0~100 사이 숫자로 계산하라. 매일 다른 값이 나와야 한다.
 
 아래 JSON 스키마로만 답하라. 전문 용어 금지. 부드러운 존댓말.`,
       response_json_schema: {
@@ -220,6 +216,16 @@ base_stats: ${JSON.stringify(profile.base_stats)}
           summary_text: { type: "string" },
           advice_title: { type: "string" },
           advice_body: { type: "string" },
+          base_stats: {
+            type: "object",
+            properties: {
+              work_efficiency: { type: "number" },
+              creativity: { type: "number" },
+              communication: { type: "number" },
+              focus: { type: "number" },
+              fortune: { type: "number" },
+            },
+          },
           mode_card: {
             type: "object",
             properties: {
@@ -241,26 +247,31 @@ base_stats: ${JSON.stringify(profile.base_stats)}
       advice_title: res.advice_title,
       advice_body: res.advice_body,
       recommended_mode: res.mode_card?.suggested_mode || profile.current_mode,
-      base_stats: profile.base_stats,
+      base_stats: res.base_stats, // ← LLM이 매일 새로 계산한 오늘의 에너지
       mode_card: res.mode_card,
     });
 
     queryClient.invalidateQueries({ queryKey: ["dailyReading"] });
   };
 
-  // ✅ 이걸로 교체
+  // 홈 초기화: reading/actions 없으면 생성 → 완료되면 로딩 해제
   useEffect(() => {
     if (!profile) return;
     if (readings === undefined) return;
     if (actions === undefined) return;
 
     const initToday = async () => {
-      if (readings.length === 0) {
-        await generateDailyReading();
-      }
-      if (!actionsLoading && actions.length === 0) {
-        await new Promise((r) => setTimeout(r, 1500));
-        await generateActions();
+      setIsInitializing(true);
+      try {
+        if (readings.length === 0) {
+          await generateDailyReading();
+        }
+        if (!actionsLoading && actions.length === 0) {
+          await new Promise((r) => setTimeout(r, 1500));
+          await generateActions();
+        }
+      } finally {
+        setIsInitializing(false);
       }
     };
 
@@ -268,47 +279,38 @@ base_stats: ${JSON.stringify(profile.base_stats)}
   }, [profile, readings, actions, actionsLoading]);
 
   const handleModeSelect = async (mode) => {
-    setShowModeCard(false); // 🔥 일단 팝업부터 닫고 처리를 시작합니다.
+    setShowModeCard(false);
     await base44.entities.UserProfile.update(profile.id, {
       current_mode: mode,
     });
     window.dispatchEvent(new CustomEvent("modeChanged", { detail: mode }));
     queryClient.invalidateQueries({ queryKey: ["userProfile"] });
-    // Regenerate sequentially to avoid 502 from parallel LLM calls
     await generateDailyReading(mode);
     await generateActions(mode);
   };
 
-  // Todo handlers
   const addTodo = async (title) => {
     await base44.entities.Todo.create({ title, completed: false, date: today });
     queryClient.invalidateQueries({ queryKey: ["todos"] });
   };
 
-  // 1. 할 일(Todo) 토글 시 XP 부여 로직 추가
   const toggleTodo = async (todo) => {
-    const isCompleting = !todo.completed; // 새로 완료되는 상태인지 확인
-
-    // 할 일 상태 업데이트
+    const isCompleting = !todo.completed;
     await base44.entities.Todo.update(todo.id, { completed: isCompleting });
 
-    // 🔥 완료 체크 시에만 XP 10 부여
     if (isCompleting && profile) {
       const newXp = (profile.xp || 0) + 10;
-      const newLevel = Math.floor(newXp / 100) + 1; // 100점마다 레벨 1 상승
-
+      const newLevel = Math.floor(newXp / 100) + 1;
       await base44.entities.UserProfile.update(profile.id, {
         xp: newXp,
         level: newLevel,
       });
-
-      // 유저 프로필 정보 갱신 (상단 레벨바 등에 즉시 반영)
       queryClient.invalidateQueries({ queryKey: ["userProfile"] });
     }
-
     queryClient.invalidateQueries({ queryKey: ["todos"] });
   };
 
+  // 프로필 로딩 중
   if (profileLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -319,9 +321,20 @@ base_stats: ${JSON.stringify(profile.base_stats)}
 
   if (!profile) return null;
 
+  // 홈 콘텐츠 초기화 중 (reading/actions 생성 중)
+  if (isInitializing) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4">
+        <Loader2 className="w-8 h-8 animate-spin text-purple-400" />
+        <p className="text-sm text-muted-foreground">
+          오늘의 에너지를 분석하고 있어요...
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background pb-24">
-      {/* Mode Card Popup */}
       {showModeCard && (
         <ModeCard
           data={reading.mode_card}
@@ -352,29 +365,25 @@ base_stats: ${JSON.stringify(profile.base_stats)}
       </div>
 
       <div className="px-5 space-y-5">
-        {/* Today Mood/Atmosphere */}
         {reading?.welcome_title && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
-            whileTap={{ scale: 0.98 }} // [추가] 터치 시 살짝 눌리는 효과
-            onClick={() => navigate("/Shop")} // [추가] 상점 탭으로 이동
+            whileTap={{ scale: 0.98 }}
+            onClick={() => navigate("/Shop")}
             className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-100 rounded-2xl p-4 cursor-pointer hover:shadow-sm transition-shadow
-           dark:from-amber-900/40 dark:to-yellow-900/40 dark:border-amber-700/60"
+             dark:from-amber-900/40 dark:to-yellow-900/40 dark:border-amber-700/60"
           >
             <div className="flex items-center justify-between">
-              {" "}
-              {/* [추가] 화살표 아이콘을 위해 레이아웃 변경 */}
               <div>
-                <p className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 ...">
+                <p className="text-[10px] font-semibold text-amber-600 dark:text-amber-400">
                   오늘의 분위기
                 </p>
                 <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
                   ✨ {reading.welcome_title}
                 </p>
               </div>
-              {/* [선택사항] 이동 가능하다는 힌트 아이콘 */}
               <span className="text-amber-400 dark:text-amber-500 text-lg">
                 ›
               </span>
@@ -382,18 +391,16 @@ base_stats: ${JSON.stringify(profile.base_stats)}
           </motion.div>
         )}
 
-        {/* Energy Stats */}
+        {/* 오늘의 에너지 — DailyReading의 base_stats 우선 사용 */}
         <EnergyStats stats={reading?.base_stats || profile.base_stats} />
 
-        {/* Tarot Section - 행운 실천 */}
         <TarotSection
           actions={actions}
-          todos={todos} // 🔥 추가: 할 일 목록 전달
+          todos={todos}
           onAddToTodo={addTodo}
           isLoading={actionsLoading}
         />
 
-        {/* Todo List */}
         <TodoList todos={todos} onAdd={addTodo} onToggle={toggleTodo} />
       </div>
     </div>
