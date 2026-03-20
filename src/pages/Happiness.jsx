@@ -53,8 +53,8 @@ export default function Happiness() {
     const texts = records.slice(0, 10).map((r) => r.text);
     const res = await base44.integrations.Core.InvokeLLM({
       prompt: `너는 사용자의 '행복 기록'을 모아서 한 줄로 요약하는 엔진이다.
-최근 기록들: ${JSON.stringify(texts)}
-항상 '지금도 충분히 잘하고 있다'는 메시지를 담아라. 비교/경쟁 느낌 금지.`,
+              최근 기록들: ${JSON.stringify(texts)}
+              항상 '지금도 충분히 잘하고 있다'는 메시지를 담아라. 비교/경쟁 느낌 금지.`,
       response_json_schema: {
         type: "object",
         properties: {

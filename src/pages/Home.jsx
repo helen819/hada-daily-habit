@@ -10,13 +10,7 @@ import { MODE_CONFIGS } from "@/components/home/modeConfig";
 import TarotSection from "@/components/home/TarotSection";
 import ModeCard from "@/components/home/ModeCard";
 import TodoList from "@/components/home/TodoList";
-
-// KST 기준 오늘 날짜 반환 (YYYY-MM-DD)
-const getKSTDateString = () => {
-  const now = new Date();
-  const kst = new Date(now.getTime() + 9 * 60 * 60 * 1000); // UTC+9
-  return kst.toISOString().split("T")[0];
-};
+import { getKSTDateString } from "@/utils/date";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -397,7 +391,6 @@ base_stats: ${JSON.stringify(profile.base_stats)}
           todos={todos} // 🔥 추가: 할 일 목록 전달
           onAddToTodo={addTodo}
           isLoading={actionsLoading}
-          userGoal={profile?.goal}
         />
 
         {/* Todo List */}

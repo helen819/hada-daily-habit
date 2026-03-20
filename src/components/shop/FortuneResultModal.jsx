@@ -164,11 +164,6 @@ export default function FortuneResultModal({ result, category, onClose }) {
                   data={result.yearly}
                   headerColor={headerColor}
                 />
-                {result.fortuneSource && (
-                  <p className="text-[10px] text-gray-400 dark:text-slate-500 italic text-center pt-2">
-                    {result.fortuneSource}
-                  </p>
-                )}
               </div>
             ) : (
               <>

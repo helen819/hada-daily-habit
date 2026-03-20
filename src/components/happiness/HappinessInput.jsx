@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Heart } from "lucide-react";
 import { Keyboard } from "@capacitor/keyboard";
+import { getKSTDateString } from "@/utils/date";
 
 const MAX_LENGTH = 100;
 
@@ -52,7 +53,7 @@ export default function HappinessInput({ onSubmit, isSubmitting }) {
       text: text.trim(),
       mood_score: moodScore,
       emoji: moods.find((m) => m.score === moodScore)?.emoji || "🙂",
-      date: new Date().toISOString().split("T")[0],
+      date: getKSTDateString(),
     });
     setText("");
     setMoodScore(3);

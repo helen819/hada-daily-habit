@@ -353,28 +353,27 @@ export const base44 = {
             InvokeLLM: async function({ prompt, response_json_schema }) {
                 if (!GEMINI_API_KEY) throw new Error("API Key 미설정");
 
-                // 1. 현재 사용자 프로필 가져오기 (가장 최근 것)
-                const profiles = await base44.entities.UserProfile.list(
-                    "-created_at",
-                    1,
-                );
-                const profile = profiles[0];
-
                 let finalPrompt = prompt;
 
-                // 2. 만약 프로필이 있다면, 로컬 계산기 데이터를 프롬프트 상단에 강제 주입
-                if (profile) {
-                    const destinyData = getFullDestinyData(profile);
-                    finalPrompt = `
+                if (!prompt.includes("한 줄로 요약하는 엔진")) {
+                    // 1. 현재 사용자 프로필 가져오기 (가장 최근 것)
+                    const profiles = await base44.entities.UserProfile.list(
+                        "-created_at",
+                        1,
+                    );
+                    const profile = profiles[0];
+
+                    // 2. 만약 프로필이 있다면, 로컬 계산기 데이터를 프롬프트 상단에 강제 주입
+                    if (profile) {
+                        const destinyData = getFullDestinyData(profile);
+                        finalPrompt = `
                     [시스템 데이터: 아래 계산 결과를 바탕으로 분석하세요]
                     ${destinyData.summary_for_ai}
 
                     [사용자 요청]
-                    ${prompt}
-
-                    반드시 순수한 JSON만 반환하고, 마크다운 코드블록이나 다른 텍스트는 포함하지 마세요.`;
+                    ${prompt}`;
+                    }
                 }
-
                 // 변경 2: 유형 감지 → 설정 선택
                 const promptType = detectPromptType(prompt);
                 const genConfig =
@@ -383,7 +382,7 @@ export const base44 = {
                 try {
                     // 변경 1: 공통 규칙 prepend
                     // 변경 3: JSON 스키마를 텍스트로 붙이던 방식 제거
-                    const fullPrompt = `${HADA_SYSTEM_PROMPT}\n\n${prompt}\n\n반드시 순수한 JSON만 반환하고, 마크다운 코드블록이나 다른 텍스트는 포함하지 마세요.`;
+                    const fullPrompt = `${HADA_SYSTEM_PROMPT}\n\n${finalPrompt}\n\n반드시 순수한 JSON만 반환하고, 마크다운 코드블록이나 다른 텍스트는 포함하지 마세요.`;
 
                     const response = await fetch(
                         `generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`, {

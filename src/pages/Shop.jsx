@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   ShoppingBag,
   Loader2,
@@ -16,6 +16,7 @@ import {
 import AdModal from "@/components/shop/AdModal";
 import CharmReveal from "@/components/shop/CharmReveal";
 import FortuneResultModal from "@/components/shop/FortuneResultModal";
+import { getKSTDateString } from "@/utils/date";
 
 const EMOJI_MAP = {
   동전: "🪙",
@@ -47,11 +48,12 @@ const getWeatherMock = () =>
 // ─── 날짜 유틸 ────────────────────────────────────────────────
 /** 이번 주 월요일 날짜 (YYYY-MM-DD) */
 function getThisMonday() {
-  const d = new Date();
-  const day = d.getDay(); // 0=일, 1=월 ...
+  const now = new Date();
+  const kst = new Date(now.getTime() + 9 * 60 * 60 * 1000); // KST 보정
+  const day = kst.getDay();
   const diff = day === 0 ? -6 : 1 - day;
-  d.setDate(d.getDate() + diff);
-  return d.toISOString().split("T")[0];
+  kst.setDate(kst.getDate() + diff);
+  return kst.toISOString().split("T")[0];
 }
 /** 이번 달 1일 (YYYY-MM-DD) */
 function getThisMonthFirst() {
@@ -64,7 +66,7 @@ function getThisYearFirst() {
 }
 /** 오늘 날짜 (YYYY-MM-DD) */
 function getToday() {
-  return new Date().toISOString().split("T")[0];
+  return getKSTDateString();
 }
 
 // ─── AI 부적 생성 ─────────────────────────────────────────────
@@ -79,11 +81,9 @@ async function generateAICharm(profile) {
   // 계산기 사용
   const res = await base44.integrations.Core.InvokeLLM({
     prompt: `너는 'HADA' 앱의 실시간 행운 추천 엔진이다.
-[사용자] 이름: ${profile?.full_name}, 생년월일: ${profile?.birth_date}, 목표: ${
-      profile?.goal
-    }
-[현재] 날짜: ${dateStr}, 날씨: ${getWeatherMock()}
-규칙: 지금 당장 구할 수 있는 평범한 물건만 추천. 운명학 근거 명시.`,
+            사용자 목표: ${profile?.goal}
+            [현재] 날짜: ${dateStr}, 날씨: ${getWeatherMock()}
+            규칙: 지금 당장 구할 수 있는 평범한 물건만 추천. 운명학 근거 명시.`,
     response_json_schema: {
       type: "object",
       properties: {
@@ -195,18 +195,17 @@ async function generateFortune(profile, category) {
     try {
       result = await base44.integrations.Core.InvokeLLM({
         prompt: `너는 'HADA' 앱의 AI 운명 분석 엔진이다.
-성명: ${profile?.full_name}, 생년월일: ${profile?.birth_date}
-현재: ${dateStr} ${timeStr}
+                현재일자: ${dateStr} ${timeStr}
 
-[분석 카테고리] 종합운세 — 주간·월간·연간 분석
-아래 세 기간에 대해 각각 운세를 분석하라.
-- 주간: ${weekStart} 주간 (이번 주 월요일 기준)
-- 월간: ${monthStart} 월간 (이번 달 1일 기준)
-- 연간: ${yearStart} 연간 (올해 1월 1일 기준)
+                [분석 카테고리] 종합운세 — 주간·월간·연간 분석
+                아래 세 기간에 대해 각각 운세를 분석하라.
+                - 주간: ${weekStart} 주간 (이번 주 월요일 기준)
+                - 월간: ${monthStart} 월간 (이번 달 1일 기준)
+                - 연간: ${yearStart} 연간 (올해 1월 1일 기준)
 
-summary는 전체를 아우르는 한 줄 요약이다. 줄바꿈 금지.
-weekly.summary, monthly.summary, yearly.summary는 각 기간 핵심을 한 줄로 요약하라. 줄바꿈 금지.
-weekly.actionTips, monthly.actionTips, yearly.actionTips는 각 기간 관련 행동 팁 2가지씩 제시하라.`,
+                summary는 전체를 아우르는 한 줄 요약이다. 줄바꿈 금지.
+                weekly.summary, monthly.summary, yearly.summary는 각 기간 핵심을 한 줄로 요약하라. 줄바꿈 금지.
+                weekly.actionTips, monthly.actionTips, yearly.actionTips는 각 기간 관련 행동 팁 2가지씩 제시하라.`,
         response_json_schema: {
           type: "object",
           properties: {
@@ -278,21 +277,22 @@ weekly.actionTips, monthly.actionTips, yearly.actionTips는 각 기간 관련 �
     try {
       const raw = await base44.integrations.Core.InvokeLLM({
         prompt: `너는 'HADA' 앱의 AI 운명 분석 엔진이다.
-성명: ${profile?.full_name}, 생년월일: ${profile?.birth_date}
-현재: ${dateStr} ${timeStr}
+                현재일자: ${dateStr} ${timeStr}
 
-[분석 카테고리] ${category.title}
-[분석 항목] ${CATEGORY_FOCUS[category.id] || "종합 운세"}
+                [분석 카테고리] ${category.title}
+                [분석 항목] ${CATEGORY_FOCUS[category.id] || "종합 운세"}
 
-위 카테고리에 집중하여 오늘(${getToday()}) 기준으로 분석하라. 다른 카테고리 내용은 포함하지 마라.
-actionTips는 반드시 ${category.title}와 직접 관련된 행동만 3가지 제시하라.
-title은 반드시 한 줄. 줄바꿈 금지.
-summary는 반드시 한 줄. 줄바꿈 금지.
-${
-  category.id === "daily"
-    ? "luckyColor: 오늘 사용자의 행운 색상을 #RRGGBB 16진수로 반환하라."
-    : ""
-}`,
+                위 카테고리에 집중하여 오늘(${getToday()}) 기준으로 분석하라. 다른 카테고리 내용은 포함하지 마라.
+                actionTips는 반드시 ${
+                  category.title
+                }와 직접 관련된 행동만 3가지 제시하라.
+                title은 반드시 한 줄. 줄바꿈 금지.
+                summary는 반드시 한 줄. 줄바꿈 금지.
+                ${
+                  category.id === "daily"
+                    ? "luckyColor: 오늘 사용자의 행운 색상을 #RRGGBB 16진수로 반환하라."
+                    : ""
+                }`,
         response_json_schema: {
           type: "object",
           properties: {
@@ -434,7 +434,7 @@ export default function Shop() {
       setLoadingDailyPreview(true);
       try {
         const res = await base44.integrations.Core.InvokeLLM({
-          prompt: `사용자 ${profile.full_name}(${profile.birth_date})의 ${today} 오늘의 운세를 두 문장 이내로 따뜻하게 요약해줘. line1과 line2는 각각 한 문장씩, 줄바꿈 없이.`,
+          prompt: `사용자의 ${today} 오늘의 운세를 두 문장 이내로 따뜻하게 요약해줘. line1과 line2는 각각 한 문장씩, 줄바꿈 없이.`,
           response_json_schema: {
             type: "object",
             properties: {

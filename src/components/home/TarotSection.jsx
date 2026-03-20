@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { Sparkles, Palette, MessageCircle, Target, Clover } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import { getKSTDateString } from "@/utils/date";
 
 const statIcons = {
   work_efficiency: Target,
@@ -302,8 +303,7 @@ function InfiniteCardCarousel({ actions, onAddToTodo, todos }) {
   const [direction, setDirection] = useState(0);
   const [showFullAd, setShowFullAd] = useState(false);
   const swipeCount = useRef(0);
-  const storageKey =
-    "tarotSwipeCount_" + new Date().toISOString().split("T")[0];
+  const storageKey = "tarotSwipeCount_" + getKSTDateString();
 
   useEffect(() => {
     const loadSwipeCount = async () => {
@@ -459,9 +459,8 @@ export default function TarotSection({
   onAddToTodo,
   todos,
   isLoading,
-  userGoal,
 }) {
-  const today = new Date().toISOString().split("T")[0];
+  const today = getKSTDateString();
   const storageKey = `tarotCollapsed_${today}`;
   const [collapsed, setCollapsed] = useState(false);
 

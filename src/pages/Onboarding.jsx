@@ -28,6 +28,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { getKSTDateString } from "@/utils/date";
 
 const TOTAL_STEPS = 4;
 
@@ -264,7 +265,7 @@ export default function Onboarding() {
       });
 
       // Save daily reading
-      const today = new Date().toISOString().split("T")[0];
+      const today = getKSTDateString();
       await base44.entities.DailyReading.create({
         date: today,
         welcome_title: res.welcome_title,

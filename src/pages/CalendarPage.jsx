@@ -8,11 +8,12 @@ import AddScheduleModal from "@/components/calendar/AddScheduleModal";
 import TodoColumns from "@/components/calendar/TodoColumns";
 import AdSlot from "@/components/ads/AdSlot";
 import SchedulePopup from "@/components/calendar/SchedulePopup";
+import { getKSTDateString } from "@/utils/date";
 
 export default function CalendarPage() {
   const queryClient = useQueryClient();
   // 🔥 오늘 날짜를 한국 시간 기준으로 획득 (밤 12시 리셋)
-  const today = new Date().toLocaleDateString("en-CA");
+  const today = getKSTDateString();
 
   const [year, setYear] = useState(new Date().getFullYear());
   const [month, setMonth] = useState(new Date().getMonth());
