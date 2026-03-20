@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Zap, Moon, Leaf } from "lucide-react";
+import { X, Zap, Leaf } from "lucide-react";
 
 export default function ModeCard({ data, onDismiss, onSelect }) {
   const [visible, setVisible] = useState(true);

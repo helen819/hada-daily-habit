@@ -3,8 +3,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
   Calendar as CalendarIcon,
-  Clock,
-  Check,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -17,11 +15,6 @@ import {
 } from "date-fns";
 import { ko } from "date-fns/locale";
 import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 
 const CATEGORIES = [

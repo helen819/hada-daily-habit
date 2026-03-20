@@ -1,11 +1,4 @@
-import React, {
-  useState,
-  useRef,
-  useCallback,
-  useEffect,
-  useMemo,
-} from "react";
-import AdSlot from "@/components/ads/AdSlot";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import AdModal from "@/components/shop/AdModal";
 import { motion, AnimatePresence } from "framer-motion";
 import {

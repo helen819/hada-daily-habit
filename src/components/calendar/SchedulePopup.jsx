@@ -1,6 +1,6 @@
 import React, { useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, Sparkles, X, Trash2 } from "lucide-react";
+import { Check, X, Trash2 } from "lucide-react";
 
 const CATEGORY_COLORS = {
   work: "bg-blue-100 text-blue-700 dark:bg-blue-800/50 dark:text-blue-200",

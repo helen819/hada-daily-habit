@@ -1,11 +1,13 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const PARTICLES = Array.from({ length: 20 }, (_, i) => ({
   id: i,
   angle: (i / 20) * 360,
   distance: 60 + Math.random() * 60,
-  color: ["#f472b6", "#a78bfa", "#fb923c", "#34d399", "#60a5fa", "#fbbf24"][i % 6],
+  color: ["#f472b6", "#a78bfa", "#fb923c", "#34d399", "#60a5fa", "#fbbf24"][
+    i % 6
+  ],
 }));
 
 export default function FireworksEffect({ visible }) {

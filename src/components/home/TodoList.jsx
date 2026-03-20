@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Check } from "lucide-react";
+import { Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -28,13 +28,7 @@ function ProgressTask({ todo, onToggle }) {
   );
 }
 
-export default function TodoList({
-  todos,
-  onAdd,
-  onToggle,
-  onConvert,
-  isConverting,
-}) {
+export default function TodoList({ todos, onAdd, onToggle }) {
   const [newTodo, setNewTodo] = useState("");
   const [showAd, setShowAd] = useState(false);
   const addCountRef = useRef(0);

@@ -1,5 +1,5 @@
 import React, { useRef, useState, useMemo, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 
 // 라이트/다크 파스텔 색상 쌍

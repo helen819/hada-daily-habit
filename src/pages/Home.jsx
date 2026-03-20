@@ -1,17 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
 import EnergyStats from "@/components/home/EnergyStats";
-import AdSlot from "@/components/ads/AdSlot";
-import FortuneStats from "@/components/home/FortuneStats";
 import { MODE_CONFIGS } from "@/components/home/modeConfig";
-import ModeToggle from "@/components/home/ModeToggle";
 import TarotSection from "@/components/home/TarotSection";
-import AdviceBanner from "@/components/home/AdviceBanner";
 import ModeCard from "@/components/home/ModeCard";
 import TodoList from "@/components/home/TodoList";
 
@@ -26,7 +22,6 @@ export default function Home() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [showModeCard, setShowModeCard] = useState(false);
-  const [isConverting, setIsConverting] = useState(false);
   const today = getKSTDateString();
 
   // Check onboarding
@@ -69,13 +64,6 @@ export default function Home() {
     queryFn: () => base44.entities.Todo.filter({ completed: false }),
     enabled: !!profile,
   });
-
-  // Generate actions if none exist today
-  // useEffect(() => {
-  //   if (profile && !actionsLoading && actions && actions.length === 0) {
-  //     generateActions();
-  //   }
-  // }, [profile, actionsLoading, actions]);
 
   // Home.jsx 수정
   useEffect(() => {
@@ -191,13 +179,6 @@ user_level: ${profile.level || 1}
       queryClient.invalidateQueries({ queryKey: ["microActions"] });
     }
   };
-
-  // Generate daily reading + advice if none exist
-  // useEffect(() => {
-  //   if (profile && readings && readings.length === 0) {
-  //     generateDailyReading();
-  //   }
-  // }, [profile, readings]);
 
   const generateDailyReading = async (modeOverride) => {
     const currentMode = modeOverride || profile?.current_mode || "action";
@@ -333,25 +314,6 @@ base_stats: ${JSON.stringify(profile.base_stats)}
 
     queryClient.invalidateQueries({ queryKey: ["todos"] });
   };
-  const convertTodo = async (todo) => {
-    setIsConverting(true);
-    // 삭제
-    const res = await base44.integrations.Core.InvokeLLM({
-      prompt: `너는 사용자가 적은 큰 할 일을 당장 실행할 수 있는 마이크로 액션 1단계로 바꾸는 엔진이다.
-할 일: ${todo.title}
-1분 이내에 할 수 있고, 실패하기 힘들 정도로 작은 행동으로 변환해라.`,
-      response_json_schema: {
-        type: "object",
-        properties: {
-          micro_step: { type: "string" },
-        },
-      },
-    });
-
-    await base44.entities.Todo.update(todo.id, { micro_step: res.micro_step });
-    queryClient.invalidateQueries({ queryKey: ["todos"] });
-    setIsConverting(false);
-  };
 
   if (profileLoading) {
     return (
@@ -362,9 +324,6 @@ base_stats: ${JSON.stringify(profile.base_stats)}
   }
 
   if (!profile) return null;
-
-  const completedCount = actions?.filter((a) => a.completed).length || 0;
-  const totalActions = actions?.length || 0;
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -442,13 +401,7 @@ base_stats: ${JSON.stringify(profile.base_stats)}
         />
 
         {/* Todo List */}
-        <TodoList
-          todos={todos}
-          onAdd={addTodo}
-          onToggle={toggleTodo}
-          onConvert={convertTodo}
-          isConverting={isConverting}
-        />
+        <TodoList todos={todos} onAdd={addTodo} onToggle={toggleTodo} />
       </div>
     </div>
   );
