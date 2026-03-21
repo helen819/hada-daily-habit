@@ -159,53 +159,67 @@ const fortuneMemCache = new Map();
 
 // ─── 운세 생성 (summary / 나머지 분리) ───────────────────────
 async function generateFortune(profile, category) {
-  const storageKey = buildCacheKey(profile, category.id);
+  const base = `${profile?.full_name}_${profile?.birth_date}`;
 
-  // 1) 메모리 캐시
-  if (fortuneMemCache.has(storageKey)) {
-    const cached = fortuneMemCache.get(storageKey);
-    if (cached === "FAILED") return null; // ← 추가
-    return cached;
-  }
-  // 2) 영구 저장소 캐시
-  const stored = await base44.storage.get(storageKey);
-  if (stored) {
-    if (stored === "FAILED") return null; // ← 추가: 실패 기록이면 null 반환
-    fortuneMemCache.set(storageKey, stored);
-    return stored;
-  }
-
-  // 3) AI 호출
-  const now = new Date();
-  const dateStr = now.toLocaleDateString("ko-KR", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    weekday: "long",
-  });
-  const timeStr = now.toLocaleTimeString("ko-KR", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-
-  let result;
-
+  // ── summary: 주간/월간/연간 각각 독립 캐시 ──
   if (category.id === "summary") {
-    // ── summary: 주간/월간/연간 운세 ──
-    const weekStart = getThisMonday();
-    const monthStart = getThisMonthFirst();
-    const yearStart = getThisYearFirst();
+    const weekKey = `fortune_${base}_weekly_${getThisMonday()}`;
+    const monthKey = `fortune_${base}_monthly_${getThisMonthFirst()}`;
+    const yearKey = `fortune_${base}_yearly_${getThisYearFirst()}`;
 
+    // 각각 캐시 로드
+    let weekly =
+      fortuneMemCache.get(weekKey) ?? (await base44.storage.get(weekKey));
+    let monthly =
+      fortuneMemCache.get(monthKey) ?? (await base44.storage.get(monthKey));
+    let yearly =
+      fortuneMemCache.get(yearKey) ?? (await base44.storage.get(yearKey));
+
+    // KST 기준 오늘 날짜 체크
+    const kst = new Date(new Date().getTime() + 9 * 60 * 60 * 1000);
+    const isMonday = kst.getDay() === 1;
+    const isFirstOfMonth = kst.getDate() === 1;
+    const isNewYear = kst.getMonth() === 0 && kst.getDate() === 1;
+    const isFirstAccess = !weekly && !monthly && !yearly;
+
+    const needWeekly = isFirstAccess || isMonday || !weekly;
+    const needMonthly = isFirstAccess || isFirstOfMonth || !monthly;
+    const needYearly = isFirstAccess || isNewYear || !yearly;
+
+    // 갱신할 게 없으면 캐시만 반환
+    if (!needWeekly && !needMonthly && !needYearly) {
+      if (!weekly && !monthly && !yearly) return null;
+      return {
+        weekly: weekly ?? null,
+        monthly: monthly ?? null,
+        yearly: yearly ?? null,
+      };
+    }
+
+    // AI 호출 (하나의 프롬프트로 전체)
+    const now = new Date();
+    const dateStr = now.toLocaleDateString("ko-KR", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      weekday: "long",
+    });
+    const timeStr = now.toLocaleTimeString("ko-KR", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+    let aiResult = null;
     try {
-      result = await base44.integrations.Core.InvokeLLM({
+      aiResult = await base44.integrations.Core.InvokeLLM({
         prompt: `너는 'HADA' 앱의 AI 운명 분석 엔진이다.
                 현재일자: ${dateStr} ${timeStr}
 
                 [분석 카테고리] 종합운세 — 주간·월간·연간 분석
                 아래 세 기간에 대해 각각 운세를 분석하라.
-                - 주간: ${weekStart} 주간 (이번 주 월요일 기준)
-                - 월간: ${monthStart} 월간 (이번 달 1일 기준)
-                - 연간: ${yearStart} 연간 (올해 1월 1일 기준)
+                - 주간: ${getThisMonday()} 주간 (이번 주 월요일 기준)
+                - 월간: ${getThisMonthFirst()} 월간 (이번 달 1일 기준)
+                - 연간: ${getThisYearFirst()} 연간 (올해 1월 1일 기준)
 
                 summary는 전체를 아우르는 한 줄 요약이다. 줄바꿈 금지.
                 weekly.summary, monthly.summary, yearly.summary는 각 기간 핵심을 한 줄로 요약하라. 줄바꿈 금지.
@@ -240,66 +254,127 @@ async function generateFortune(profile, category) {
         },
       });
     } catch {
-      console.log("운세 팝업 에러");
+      console.log("종합운세 AI 호출 실패");
     }
-  } else {
-    // ── daily / love / wealth / career / health: 오늘 기준 ──
-    const CATEGORY_FOCUS = {
-      daily: "오늘 하루 전체 에너지 흐름, 업무/대인관계/건강 종합",
-      love: "감성 지수, 연애운, 관계 회복 가능성, 표현력",
-      wealth: "금전운, 재물 흐름, 투자 적합도, 절약 에너지",
-      career: "취업운, 업무 효율, 집중력, 리더십 잠재력",
-      health: "신체 회복력, 멘탈 에너지, 수면 질, 활력 지수",
-    };
 
-    try {
-      const raw = await base44.integrations.Core.InvokeLLM({
-        prompt: `너는 'HADA' 앱의 AI 운명 분석 엔진이다.
-                현재일자: ${dateStr} ${timeStr}
-
-                [분석 카테고리] ${category.title}
-                [분석 항목] ${CATEGORY_FOCUS[category.id] || "종합 운세"}
-
-                위 카테고리에 집중하여 오늘(${getToday()}) 기준으로 분석하라. 다른 카테고리 내용은 포함하지 마라.
-                actionTips는 반드시 ${
-                  category.title
-                }와 직접 관련된 행동만 3가지 제시하라.
-                title은 반드시 한 줄. 줄바꿈 금지.
-                summary는 반드시 한 줄. 줄바꿈 금지.
-                ${
-                  category.id === "daily"
-                    ? "luckyColor: 오늘 사용자의 행운 색상을 #RRGGBB 16진수로 반환하라."
-                    : ""
-                }`,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            title: { type: "string" },
-            summary: { type: "string" },
-            energyLevel: { type: "number" },
-            detailed: { type: "string" },
-            actionTips: { type: "array", items: { type: "string" } },
-            luckyColor: { type: "string" },
-          },
-        },
-      });
-      result = null;
-      if (raw) {
-        result = {
-          ...raw,
-          aiLuckyColor:
-            category.id === "daily" && raw.luckyColor
-              ? raw.luckyColor
-              : undefined,
-        };
+    // 갱신 필요한 항목만 저장
+    if (needWeekly) {
+      weekly = aiResult?.weekly ?? null;
+      if (weekly) {
+        // ← 성공한 경우만 저장
+        await base44.storage.set(weekKey, weekly);
+        fortuneMemCache.set(weekKey, weekly);
       }
-    } catch {
-      console.log("운세 팝업 에러");
     }
+    if (needMonthly) {
+      monthly = aiResult?.monthly ?? null;
+      if (monthly) {
+        // ← 성공한 경우만 저장
+        await base44.storage.set(monthKey, monthly);
+        fortuneMemCache.set(monthKey, monthly);
+      }
+    }
+    if (needYearly) {
+      yearly = aiResult?.yearly ?? null;
+      if (yearly) {
+        // ← 성공한 경우만 저장
+        await base44.storage.set(yearKey, yearly);
+        fortuneMemCache.set(yearKey, yearly);
+      }
+    }
+
+    if (!weekly && !monthly && !yearly) return null;
+
+    return {
+      summary: aiResult?.summary ?? null,
+      detailed: aiResult?.detailed ?? null,
+      weekly: weekly ?? null,
+      monthly: monthly ?? null,
+      yearly: yearly ?? null,
+    };
   }
 
-  // 4) 저장 후 반환
-  const valueToStore = result ?? "FAILED"; // ← null 대신 실패 마커 저장
+  // ── summary 외 나머지 (daily/love/wealth/career/health) ──
+  const storageKey = buildCacheKey(profile, category.id);
+
+  if (fortuneMemCache.has(storageKey)) {
+    const cached = fortuneMemCache.get(storageKey);
+    if (cached === "FAILED") return null;
+    return cached;
+  }
+  const stored = await base44.storage.get(storageKey);
+  if (stored) {
+    if (stored === "FAILED") return null;
+    fortuneMemCache.set(storageKey, stored);
+    return stored;
+  }
+
+  const now = new Date();
+  const dateStr = now.toLocaleDateString("ko-KR", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    weekday: "long",
+  });
+  const timeStr = now.toLocaleTimeString("ko-KR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  const CATEGORY_FOCUS = {
+    daily: "오늘 하루 전체 에너지 흐름, 업무/대인관계/건강 종합",
+    love: "감성 지수, 연애운, 관계 회복 가능성, 표현력",
+    wealth: "금전운, 재물 흐름, 투자 적합도, 절약 에너지",
+    career: "취업운, 업무 효율, 집중력, 리더십 잠재력",
+    health: "신체 회복력, 멘탈 에너지, 수면 질, 활력 지수",
+  };
+
+  let result;
+  try {
+    const raw = await base44.integrations.Core.InvokeLLM({
+      prompt: `너는 'HADA' 앱의 AI 운명 분석 엔진이다.
+              현재일자: ${dateStr} ${timeStr}
+
+              [분석 카테고리] ${category.title}
+              [분석 항목] ${CATEGORY_FOCUS[category.id] || "종합 운세"}
+
+              위 카테고리에 집중하여 오늘(${getToday()}) 기준으로 분석하라. 다른 카테고리 내용은 포함하지 마라.
+              actionTips는 반드시 ${
+                category.title
+              }와 직접 관련된 행동만 3가지 제시하라.
+              title은 반드시 한 줄. 줄바꿈 금지.
+              summary는 반드시 한 줄. 줄바꿈 금지.
+              ${
+                category.id === "daily"
+                  ? "luckyColor: 오늘 사용자의 행운 색상을 #RRGGBB 16진수로 반환하라."
+                  : ""
+              }`,
+      response_json_schema: {
+        type: "object",
+        properties: {
+          title: { type: "string" },
+          summary: { type: "string" },
+          energyLevel: { type: "number" },
+          detailed: { type: "string" },
+          actionTips: { type: "array", items: { type: "string" } },
+          luckyColor: { type: "string" },
+        },
+      },
+    });
+    if (raw) {
+      result = {
+        ...raw,
+        aiLuckyColor:
+          category.id === "daily" && raw.luckyColor
+            ? raw.luckyColor
+            : undefined,
+      };
+    }
+  } catch {
+    console.log("운세 팝업 에러");
+  }
+
+  const valueToStore = result ?? "FAILED";
   await base44.storage.set(storageKey, valueToStore);
   fortuneMemCache.set(storageKey, valueToStore);
   return result ?? null;
@@ -388,6 +463,7 @@ export default function Shop() {
     const loadPreview = async () => {
       const cached = await base44.storage.get(cacheKey);
       if (cached) {
+        if (cached === "FAILED") return; // ← 추가: 실패 기록이면 그냥 종료 (아무것도 안 보임)
         setDailyFortunePreview(cached);
         return;
       }
@@ -403,6 +479,10 @@ export default function Shop() {
             },
           },
         });
+        if (!res) {
+          await base44.storage.set(cacheKey, "FAILED"); // ← 추가
+          return;
+        }
         setDailyFortunePreview(res);
         await base44.storage.set(cacheKey, res);
       } catch (e) {
