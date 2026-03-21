@@ -162,11 +162,15 @@ async function generateFortune(profile, category) {
   const storageKey = buildCacheKey(profile, category.id);
 
   // 1) 메모리 캐시
-  if (fortuneMemCache.has(storageKey)) return fortuneMemCache.get(storageKey);
-
+  if (fortuneMemCache.has(storageKey)) {
+    const cached = fortuneMemCache.get(storageKey);
+    if (cached === "FAILED") return null; // ← 추가
+    return cached;
+  }
   // 2) 영구 저장소 캐시
   const stored = await base44.storage.get(storageKey);
   if (stored) {
+    if (stored === "FAILED") return null; // ← 추가: 실패 기록이면 null 반환
     fortuneMemCache.set(storageKey, stored);
     return stored;
   }
@@ -236,7 +240,7 @@ async function generateFortune(profile, category) {
         },
       });
     } catch {
-      // AI 호출 실패시 아무것도 띄우지 말기
+      console.log("운세 팝업 에러");
     }
   } else {
     // ── daily / love / wealth / career / health: 오늘 기준 ──
@@ -279,23 +283,26 @@ async function generateFortune(profile, category) {
           },
         },
       });
-
-      result = {
-        ...raw,
-        aiLuckyColor:
-          category.id === "daily" && raw.luckyColor
-            ? raw.luckyColor
-            : undefined,
-      };
+      result = null;
+      if (raw) {
+        result = {
+          ...raw,
+          aiLuckyColor:
+            category.id === "daily" && raw.luckyColor
+              ? raw.luckyColor
+              : undefined,
+        };
+      }
     } catch {
-      // AI 호출 실패시 아무것도 띄우지 말기}
+      console.log("운세 팝업 에러");
     }
   }
 
   // 4) 저장 후 반환
-  await base44.storage.set(storageKey, result);
-  fortuneMemCache.set(storageKey, result);
-  return result;
+  const valueToStore = result ?? "FAILED"; // ← null 대신 실패 마커 저장
+  await base44.storage.set(storageKey, valueToStore);
+  fortuneMemCache.set(storageKey, valueToStore);
+  return result ?? null;
 }
 
 // ─── 상세 운세 리스트 아이템 ──────────────────────────────────
@@ -400,10 +407,6 @@ export default function Shop() {
         await base44.storage.set(cacheKey, res);
       } catch (e) {
         console.error(e);
-        setDailyFortunePreview({
-          line1: "(가짜 데이터) 오늘도 당신의 에너지가 빛나고 있어요.",
-          line2: "(가짜 데이터) 작은 것에서 큰 행운이 시작됩니다.",
-        });
       } finally {
         setLoadingDailyPreview(false);
       }
@@ -450,6 +453,15 @@ export default function Shop() {
     setShowAdForCharm(false);
     try {
       const charm = await charmPromiseRef.current;
+
+      // ← 추가: AI 실패 시 횟수 차감 없이 에러 안내
+      if (!charm) {
+        alert(
+          "과한 에너지는 흐름에 방해가 되니 잠시 쉬었다가 내일 다시 확인해주세요 🙏",
+        );
+        return;
+      }
+
       const todayStr = new Date().toDateString();
       const todayDate = new Date().toLocaleDateString("en-CA");
 
@@ -494,6 +506,15 @@ export default function Shop() {
     setShowAdForFortune(false);
     try {
       const result = await fortunePromiseRef.current;
+
+      // ← 추가: AI 실패 시 팝업 없이 에러 안내
+      if (!result) {
+        alert(
+          "과한 에너지는 흐름에 방해가 되니 잠시 쉬었다가 내일 다시 확인해주세요 🙏",
+        );
+        setSelectedCategory(null);
+        return;
+      }
       setFortuneResult(result);
     } catch (e) {
       console.error(e);

@@ -152,7 +152,6 @@ function detectPromptType(prompt) {
         return "onboarding";
     return "general";
 }
-
 const GENERATION_CONFIGS = {
     fortune_preview: { temperature: 0.8, maxOutputTokens: 256 },
     monthly_fortune: { temperature: 0.8, maxOutputTokens: 256 },
@@ -170,65 +169,17 @@ const GENERATION_CONFIGS = {
 // getFallbackData: 원본 그대로 유지
 // ══════════════════════════════════════════════════════════════════
 const getFallbackData = (prompt) => {
-    // ── 오늘의 운세 미리보기 ──
-    if (prompt.includes("두 문장 이내로 따뜻하게 요약해줘")) {
-        return {
-            line1: "(가짜 데이터) 오늘은 주변 사람들과의 조화가 빛나는 날입니다.",
-            line2: "(가짜 데이터) 작은 배려가 예상치 못한 행운의 소식으로 돌아올 거예요.",
-        };
-    }
-
-    // ── summary 주간/월간/연간 운세 ──
-    if (prompt.includes("주간·월간·연간")) {
-        return {
-            summary: "(가짜 데이터) 이번 주·달·해를 아우르는 안정적인 흐름이 이어집니다.",
-            detailed: "(가짜 데이터) 전반적으로 균형 잡힌 에너지가 흐르고 있습니다. 지금은 새로운 도전보다 현재의 관계와 기반을 다지는 시기입니다.",
-            weekly: {
-                summary: "(가짜 데이터) 이번 주는 새로운 시작에 좋은 기운이 흐릅니다.",
-                actionTips: [
-                    "(가짜 데이터) 중요한 약속은 수요일 전에 잡기",
-                    "(가짜 데이터) 매일 10분 독서로 집중력 키우기",
-                ],
-            },
-            monthly: {
-                summary: "(가짜 데이터) 이번 달은 관계 회복과 재정 정리에 집중하세요.",
-                actionTips: [
-                    "(가짜 데이터) 불필요한 지출 점검하기",
-                    "(가짜 데이터) 가까운 사람과 솔직한 대화 늘리기",
-                ],
-            },
-            yearly: {
-                summary: "(가짜 데이터) 올해는 변화보다 내실을 다지는 해입니다.",
-                actionTips: [
-                    "(가짜 데이터) 연간 목표를 글로 써서 눈에 띄는 곳에 붙이기",
-                    "(가짜 데이터) 상반기 안에 건강 검진 예약하기",
-                ],
-            },
-        };
-    }
-
-    // ── daily / love / wealth / career / health 오늘 운세 ──
     if (
-        prompt.includes("오늘의 운세") ||
-        prompt.includes("애정운") ||
-        prompt.includes("재물운") ||
-        prompt.includes("취업운") ||
-        prompt.includes("건강운") ||
-        prompt.includes("오늘 하루 전체") ||
+        prompt.includes("한 줄로 요약하는 엔진") ||
+        prompt.includes("실시간 행운 추천 엔진") ||
         prompt.includes("분석 카테고리")
     ) {
-        const isDaily = prompt.includes("행운 색상");
+        return null;
+    }
+    if (prompt.includes("두 문장 이내로 따뜻하게 요약해줘.")) {
         return {
-            title: "(가짜 데이터) 오늘의 에너지 안정적",
-            summary: "(가짜 데이터) 에너지 흐름이 고르게 유지되고 있습니다.",
-            energyLevel: 70,
-            detailed: "(가짜 데이터) 오늘 관련 에너지가 안정적입니다. 멘탈 에너지도 좋으니 집중력을 활용해보세요.",
-            actionTips: [
-                "(가짜 데이터) 책상에 물 한 잔 두기",
-                "(가짜 데이터) 3분간 창밖 바라보기",
-                "(가짜 데이터) 깊게 숨 5회 들이쉬기",
-            ],
-            ...(isDaily ? { luckyColor: "#F59E0B", aiLuckyColor: "#F59E0B" } : {}),
+            line1: "(가짜 데이터) line1",
+            line2: "(가짜 데이터) line2",
         };
     }
 
@@ -240,22 +191,7 @@ const getFallbackData = (prompt) => {
                 card_title: "(가짜 데이터) 오늘의 특별한 제안",
                 card_body: "(가짜 데이터) 분석 결과, 현재 당신은 약간의 휴식이 행운을 불러올 기운입니다.",
             },
-            name: "(가짜 데이터) 은색 볼펜",
-            description: "(가짜 데이터) 중요한 결정을 내리거나 메모를 할 때 이 펜을 사용하세요. 차가운 금속의 기운이 판단력을 날카롭게 세워줄 것입니다.",
-            effect: "(가짜 데이터) 집중력 향상 및 논리적 사고 강화",
-            source: "(가짜 데이터) 사주 천간 庚(경금) 기운 보완 분석",
-            header_text: " (가짜 데이터)작은 기쁨들이 모여 당신의 결을 만들고 있어요.",
-            encouragement: "(가짜 데이터) 일상의 소중함을 발견할 줄 아는 당신은 지금도 충분히 잘하고 있습니다.",
-            title: "(가짜 데이터) 오늘의 분석 결과",
-            summary: "(가짜 데이터) 역동적이고 활기찬 에너지의 흐름",
-            energyLevel: 88,
-            detailed: "(가짜 데이터) 현재 목(木)의 성장 에너지와 만나 매우 역동적입니다. 평소 미뤄두었던 과제를 해결하기에 가장 적합한 시기입니다.",
-            actionTips: [
-                "(가짜 데이터) 중요 업무는 오후 2시 전 처리",
-                "(가짜 데이터) 초록색 소품 곁에 두기",
-                "(가짜 데이터) 따뜻한 인사 건네기",
-            ],
-            luckyColor: "#10B981",
+
             analysis_data: {
                 sasoo: "(가짜 데이터) 따뜻한 봄날의 햇살 같은 기운을 타고나셨습니다.",
                 myungri: "(가짜 데이터) 목(木)의 기운이 강하여 성장이 빠르고 유연합니다.",

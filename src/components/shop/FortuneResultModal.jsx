@@ -88,7 +88,7 @@ export default function FortuneResultModal({ result, category, onClose }) {
   if (!result) return null;
 
   const isSummary = category?.id === "summary";
-  const energy = result.energyLevel || 70;
+  const energy = result.energyLevel;
   const energyLabel = ENERGY_LABELS[category?.id] || "오늘의 에너지";
 
   return (
