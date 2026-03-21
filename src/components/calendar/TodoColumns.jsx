@@ -88,9 +88,7 @@ function ScheduleCard({ schedule, onToggle }) {
       layout
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`bg-white dark:bg-[#363D54] rounded-xl border border-blue-100 dark:border-blue-800/40 p-3 shadow-sm transition-opacity ${
-        schedule.completed ? "opacity-40" : ""
-      }`}
+      className={`bg-white dark:bg-[#363D54] rounded-xl border border-blue-100 dark:border-blue-800/40 p-3 shadow-sm`}
     >
       <div className="flex items-center gap-2">
         <button
@@ -105,13 +103,7 @@ function ScheduleCard({ schedule, onToggle }) {
             <Check className="w-3 h-3 text-blue-500 dark:text-blue-300" />
           )}
         </button>
-        <p
-          className={`text-sm flex-1 ${
-            schedule.completed
-              ? "line-through text-gray-400 dark:text-slate-500"
-              : "text-gray-800 dark:text-slate-200"
-          }`}
-        >
+        <p className={`text-sm flex-1 "text-gray-800 dark:text-slate-200"`}>
           {schedule.title}
         </p>
         <span
