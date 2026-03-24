@@ -59,11 +59,51 @@ const borderColors = {
   fortune: "border-amber-400",
 };
 
+const buttonColors = {
+  work_efficiency: "bg-purple-500 dark:bg-purple-600",
+  creativity: "bg-fuchsia-500 dark:bg-fuchsia-600",
+  communication: "bg-pink-500 dark:bg-pink-600",
+  focus: "bg-blue-500 dark:bg-blue-600",
+  fortune: "bg-amber-500 dark:bg-amber-600",
+};
+
+const buttonAddedColors = {
+  work_efficiency:
+    "bg-purple-100 dark:bg-purple-800/50 text-purple-600 dark:text-purple-300",
+  creativity:
+    "bg-fuchsia-100 dark:bg-fuchsia-800/50 text-fuchsia-600 dark:text-fuchsia-300",
+  communication:
+    "bg-pink-100 dark:bg-pink-800/50 text-pink-600 dark:text-pink-300",
+  focus: "bg-blue-100 dark:bg-blue-800/50 text-blue-600 dark:text-blue-300",
+  fortune:
+    "bg-amber-100 dark:bg-amber-800/50 text-amber-600 dark:text-amber-300",
+};
+
+const buttonBgColors = {
+  work_efficiency:
+    "bg-purple-100 dark:bg-purple-700/50 text-purple-500 dark:text-purple-200 hover:bg-purple-200",
+  creativity:
+    "bg-fuchsia-100 dark:bg-fuchsia-700/50 text-fuchsia-500 dark:text-fuchsia-200 hover:bg-fuchsia-200",
+  communication:
+    "bg-pink-100 dark:bg-pink-700/50 text-pink-500 dark:text-pink-200 hover:bg-pink-200",
+  focus:
+    "bg-blue-100 dark:bg-blue-700/50 text-blue-500 dark:text-blue-200 hover:bg-blue-200",
+  fortune:
+    "bg-amber-100 dark:bg-amber-700/50 text-amber-500 dark:text-amber-200 hover:bg-amber-200",
+};
+
 function TarotDetailModal({ action, onClose, onAdd, added }) {
   const Icon = statIcons[action.stat_focus] || Sparkles;
   const backGradient =
     cardBackGradients[action.stat_focus] || "from-purple-400 to-indigo-500";
   const borderColor = borderColors[action.stat_focus] || "border-purple-400";
+
+  // 변수 추가
+  const buttonColor =
+    buttonColors[action.stat_focus] || "bg-purple-500 dark:bg-purple-600";
+  const buttonAddedColor =
+    buttonAddedColors[action.stat_focus] ||
+    "bg-purple-100 dark:bg-purple-800/50 text-purple-600 dark:text-purple-300";
 
   useEffect(() => {
     document.body.classList.add("modal-open");
@@ -129,9 +169,7 @@ function TarotDetailModal({ action, onClose, onAdd, added }) {
             }}
             disabled={added}
             className={`w-full py-4 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 transition-all ${
-              added
-                ? "bg-green-100 dark:bg-green-800/50 text-green-600 dark:text-green-300"
-                : "bg-purple-500 dark:bg-purple-600 text-white shadow-lg"
+              added ? buttonAddedColor : `${buttonColor} text-white shadow-lg`
             }`}
           >
             {added ? (
@@ -147,10 +185,24 @@ function TarotDetailModal({ action, onClose, onAdd, added }) {
   );
 }
 
-function MiniTarotCard({ action, onAddToTodo, todos, onNext, onPrev }) {
+// ─── canFlip prop 추가, 뒤집을 때 viewed 업데이트 ───
+function MiniTarotCard({
+  action,
+  onAddToTodo,
+  todos,
+  onNext,
+  onPrev,
+  canFlip,
+}) {
   const [flipped, setFlipped] = useState(false);
   const [added, setAdded] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
+  const buttonBg =
+    buttonBgColors[action.stat_focus] ||
+    "bg-purple-100 dark:bg-purple-700/50 text-purple-500";
+  const buttonAdded =
+    buttonAddedColors[action.stat_focus] ||
+    "bg-purple-100 dark:bg-purple-800/50 text-purple-600";
 
   const Icon = statIcons[action.stat_focus] || Sparkles;
   const backGradient =
@@ -167,6 +219,19 @@ function MiniTarotCard({ action, onAddToTodo, todos, onNext, onPrev }) {
   const handleAdd = (e) => {
     e?.stopPropagation();
     if (!isAlreadyAdded) onAddToTodo(action.micro_action);
+  };
+
+  const handleFlip = async () => {
+    if (!canFlip || flipped || added) return;
+    setFlipped(true);
+    // viewed 처리: 아직 viewed가 아닌 경우에만 업데이트
+    if (!action.viewed) {
+      try {
+        await base44.entities.MicroAction.update(action.id, { viewed: true });
+      } catch (err) {
+        console.error("viewed 업데이트 실패:", err);
+      }
+    }
   };
 
   return (
@@ -189,7 +254,7 @@ function MiniTarotCard({ action, onAddToTodo, todos, onNext, onPrev }) {
           added ? "opacity-40 pointer-events-none" : ""
         }`}
         style={{ perspective: "800px", height: "150px" }}
-        onClick={() => !flipped && !added && setFlipped(true)}
+        onClick={handleFlip}
       >
         <motion.div
           animate={{ rotateY: flipped ? 180 : 0 }}
@@ -212,12 +277,25 @@ function MiniTarotCard({ action, onAddToTodo, todos, onNext, onPrev }) {
             <div
               className={`w-full h-full bg-gradient-to-br ${backGradient} flex flex-col items-center justify-center gap-1`}
             >
-              <div className="text-white/40 text-2xl font-serif select-none">
-                ✦
-              </div>
-              <p className="text-white/70 text-[10px] font-semibold tracking-widest uppercase">
-                열기
-              </p>
+              {canFlip ? (
+                <>
+                  <div className="text-white/40 text-2xl font-serif select-none">
+                    ✦
+                  </div>
+                  <p className="text-white/70 text-[10px] font-semibold tracking-widest uppercase">
+                    열기
+                  </p>
+                </>
+              ) : (
+                <>
+                  <div className="text-white/30 text-2xl font-serif select-none">
+                    ✦
+                  </div>
+                  <p className="text-white/40 text-[10px] font-semibold tracking-widest uppercase">
+                    준비중
+                  </p>
+                </>
+              )}
             </div>
           </div>
 
@@ -260,9 +338,7 @@ function MiniTarotCard({ action, onAddToTodo, todos, onNext, onPrev }) {
                 onClick={handleAdd}
                 disabled={isAlreadyAdded}
                 className={`flex items-center justify-center w-6 h-6 rounded-lg transition-all ${
-                  added
-                    ? "bg-green-100 dark:bg-green-800/50 text-green-600 dark:text-green-300"
-                    : "bg-purple-100 dark:bg-purple-700/50 text-purple-500 dark:text-purple-200 hover:bg-purple-200 dark:hover:bg-purple-700/70"
+                  isAlreadyAdded ? buttonAdded : buttonBg
                 }`}
               >
                 {added ? (
@@ -298,7 +374,7 @@ function AdCard() {
   );
 }
 
-function InfiniteCardCarousel({ actions, onAddToTodo, todos }) {
+function InfiniteCardCarousel({ actions, onAddToTodo, todos, canFlip }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState(0);
   const [showFullAd, setShowFullAd] = useState(false);
@@ -442,6 +518,7 @@ function InfiniteCardCarousel({ actions, onAddToTodo, todos }) {
                       todos={todos}
                       onNext={goRight}
                       onPrev={goLeft}
+                      canFlip={canFlip} // ← 전달
                     />
                   )}
                 </motion.div>
@@ -459,6 +536,7 @@ export default function TarotSection({
   onAddToTodo,
   todos,
   isLoading,
+  canFlip,
 }) {
   const today = getKSTDateString();
   const storageKey = `tarotCollapsed_${today}`;
@@ -527,6 +605,7 @@ export default function TarotSection({
                 actions={list}
                 onAddToTodo={onAddToTodo}
                 todos={todos}
+                canFlip={canFlip} // ← 전달
               />
             ) : null}
           </motion.div>

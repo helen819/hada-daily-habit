@@ -52,9 +52,19 @@ export default function Happiness() {
     setSummaryLoading(true);
     const texts = records.slice(0, 10).map((r) => r.text);
     const res = await base44.integrations.Core.InvokeLLM({
-      prompt: `너는 사용자의 '행복 기록'을 모아서 한 줄로 요약하는 엔진이다.
-              최근 기록들: ${JSON.stringify(texts)}
-              항상 '지금도 충분히 잘하고 있다'는 메시지를 담아라. 비교/경쟁 느낌 금지.`,
+      prompt: `너는 사용자의 '행복 기록을 모아서'
+              따뜻하게 요약하는 엔진이다.
+
+              최근 기록 ${texts.length}개:
+              ${JSON.stringify(texts)}
+
+              [작성 규칙]
+              - header_text: 25자 이내. 감정 담은 제목형 문구.
+                줄바꿈 금지.
+              - encouragement: 50자 이내.
+                '지금도 충분히 잘하고 있다' 메시지 필수.
+                줄바꿈 금지. 비교·경쟁 표현 금지.
+              - 기록에 없는 내용 추측 금지.`,
       response_json_schema: {
         type: "object",
         properties: {

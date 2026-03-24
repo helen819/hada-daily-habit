@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
@@ -15,171 +15,82 @@ import { getKSTDateString } from "@/utils/date";
 export default function Home() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+
   const [showModeCard, setShowModeCard] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
 
+  // 생성 중복 방지 ref
+  const hasGeneratedReading = useRef(false);
+  const hasGeneratedActions = useRef(false);
+  const isModeChanging = useRef(false);
+
   const today = getKSTDateString();
 
+  // ─── 프로필 ───────────────────────────────────────────────
   const { data: profiles, isLoading: profileLoading } = useQuery({
     queryKey: ["userProfile"],
     queryFn: () => base44.entities.UserProfile.list(),
   });
-
   const profile = profiles?.[0];
 
-  useEffect(() => {
-    if (!profileLoading && !profile) {
-      navigate("/Onboarding", { replace: true });
-    }
-  }, [profileLoading, profile, navigate]);
-
+  // ─── 오늘의 리딩 ──────────────────────────────────────────
   const { data: readings } = useQuery({
     queryKey: ["dailyReading", today],
     queryFn: () => base44.entities.DailyReading.filter({ date: today }),
     enabled: !!profile,
   });
-
   const reading = readings?.[0];
 
+  // ─── 오늘의 액션 (created_at 내림차순 = 최신순) ───────────
   const { data: actions, isLoading: actionsLoading } = useQuery({
     queryKey: ["microActions", today],
-    queryFn: () => base44.entities.MicroAction.filter({ date: today }),
+    queryFn: async () => {
+      const result = await base44.entities.MicroAction.filter({ date: today });
+      // created_at 내림차순 정렬 (최신이 앞)
+      return [...result].sort(
+        (a, b) => new Date(b.created_at) - new Date(a.created_at),
+      );
+    },
     enabled: !!profile,
   });
 
+  // ─── 투두 & 스케줄 ────────────────────────────────────────
   const { data: todos = [] } = useQuery({
     queryKey: ["todos", today],
     queryFn: () => base44.entities.Todo.filter({ date: today }),
     enabled: !!profile,
   });
 
-  // 오늘 스케줄
   const { data: allSchedules = [] } = useQuery({
     queryKey: ["schedules"],
     queryFn: () => base44.entities.ScheduleItem.list("-date"),
     enabled: !!profile,
   });
-
   const todaySchedules = useMemo(
     () => allSchedules.filter((s) => s.date === today),
     [allSchedules, today],
   );
 
-  // 모드 카드 팝업 체크
   useEffect(() => {
-    if (profile && reading?.mode_card) {
-      const checkAndShowPopup = async () => {
-        const todayDate = getKSTDateString();
-        const lastShownDate = await base44.storage.get("modeCardLastShownDate");
-        if (lastShownDate !== todayDate) {
-          setShowModeCard(true);
-          await base44.storage.set("modeCardLastShownDate", todayDate);
-        }
-      };
-      checkAndShowPopup();
+    if (!profileLoading && (!profile || !profile.onboarding_complete)) {
+      navigate("/Onboarding", { replace: true });
     }
-  }, [profile, reading]);
+  }, [profileLoading, profile, navigate]);
 
-  // 모드 변경 이벤트 리스너
+  // ─── 모드 카드 팝업: 하루 한 번 ──────────────────────────
   useEffect(() => {
-    const handler = async (e) => {
-      if (profile) {
-        setIsInitializing(true);
-        queryClient.invalidateQueries({ queryKey: ["userProfile"] });
-        await generateDailyReading(e.detail);
-        await new Promise((r) => setTimeout(r, 1500));
-        await generateActions(e.detail);
-        setIsInitializing(false);
+    if (!profile || !reading?.mode_card) return;
+    const checkPopup = async () => {
+      const lastShown = await base44.storage.get("modeCardLastShownDate");
+      if (lastShown !== today) {
+        setShowModeCard(true);
+        await base44.storage.set("modeCardLastShownDate", today);
       }
     };
-    window.addEventListener("modeChanged", handler);
-    return () => window.removeEventListener("modeChanged", handler);
-  }, [profile]);
+    checkPopup();
+  }, [profile, reading?.mode_card, today]);
 
-  const generateActions = async (modeOverride) => {
-    const currentMode = modeOverride || profile?.current_mode || "action";
-    const config = MODE_CONFIGS[currentMode] || MODE_CONFIGS["action"];
-    const hour = new Date().getHours();
-    const timeSlot =
-      hour < 6
-        ? "밤"
-        : hour < 12
-        ? "아침"
-        : hour < 18
-        ? "낮"
-        : hour < 22
-        ? "저녁"
-        : "밤";
-
-    const res = await base44.integrations.Core.InvokeLLM({
-      prompt: `너는 HADA 앱의 마이크로 액션 생성 엔진이다.
-
-=== ${config.name} (${currentMode.toUpperCase()} MODE) ===
-분석 위계:
-- ${config.weights[Object.keys(config.weights)[0]]}
-- ${config.weights[Object.keys(config.weights)[1]]}
-- ${config.weights[Object.keys(config.weights)[2]]}
-- ${config.weights[Object.keys(config.weights)[3]]}
-
-톤앤매너 키워드: ${config.tone_keywords.join(", ")}
-목표 영역: ${config.goal_focus.join(", ")}
-
-사용자 정보:
-base_stats: ${JSON.stringify(profile.base_stats)}
-user_level: ${profile.level || 1}
-오늘 목표: ${profile.goal}
-현재 시간대: ${timeSlot}
-
-마이크로 액션 원칙: 1~2분이면 바로 할 수 있는 아주 사소한 행동만 추천.
-전문 용어는 절대 사용하지 마라. 부드러운 존댓말로 작성.`,
-      response_json_schema: {
-        type: "object",
-        properties: {
-          cards: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                keyword: { type: "string" },
-                micro_action: { type: "string" },
-                how: { type: "string" },
-                fortune: { type: "string" },
-                stat_focus: { type: "string" },
-                level: { type: "number" },
-              },
-            },
-          },
-        },
-      },
-    });
-
-    const validStatFocus = [
-      "work_efficiency",
-      "creativity",
-      "communication",
-      "focus",
-      "fortune",
-    ];
-    if (res.cards) {
-      for (const card of res.cards) {
-        await base44.entities.MicroAction.create({
-          date: today,
-          keyword: card.keyword,
-          micro_action: card.micro_action,
-          how: card.how,
-          fortune: card.fortune,
-          stat_focus: validStatFocus.includes(card.stat_focus)
-            ? card.stat_focus
-            : "focus",
-          level: card.level || 1,
-          completed: false,
-          mode: currentMode,
-        });
-      }
-      queryClient.invalidateQueries({ queryKey: ["microActions"] });
-    }
-  };
-
+  // ─── generateDailyReading ─────────────────────────────────
   const generateDailyReading = async (modeOverride) => {
     const currentMode = modeOverride || profile?.current_mode || "action";
     const config = MODE_CONFIGS[currentMode] || MODE_CONFIGS["action"];
@@ -195,37 +106,48 @@ user_level: ${profile.level || 1}
         ? "저녁"
         : "밤";
 
+    // ─── traits가 없을 때만 프롬프트에 추가 ───
+    const needsTraits = !profile.traits?.strengths?.length;
+    const traitsPrompt = needsTraits
+      ? `
+6. traits: 사용자의 사주·성명·별자리 분석을 바탕으로 딱 한 번만 생성.
+   - strengths: 강점 3개 (각 10자 이내)
+   - weaknesses: 성장 포인트 3개 (각 10자 이내)
+   - potentials: 잠재력 3개 (각 10자 이내)`
+      : "";
+
     const res = await base44.integrations.Core.InvokeLLM({
       prompt: `너는 HADA 앱의 일일 리딩 엔진이다.
 
-=== ${config.name} (${currentMode.toUpperCase()} MODE) ===
-분석 위계:
-- ${config.weights[Object.keys(config.weights)[0]]}
-- ${config.weights[Object.keys(config.weights)[1]]}
-- ${config.weights[Object.keys(config.weights)[2]]}
-- ${config.weights[Object.keys(config.weights)[3]]}
+              === ${config.name} (${currentMode.toUpperCase()} MODE) ===
+              분석 위계:
+              - ${config.weights[Object.keys(config.weights)[0]]}
+              - ${config.weights[Object.keys(config.weights)[1]]}
+              - ${config.weights[Object.keys(config.weights)[2]]}
+              - ${config.weights[Object.keys(config.weights)[3]]}
 
-톤앤매너 키워드: ${config.tone_keywords.join(", ")}
-목표 영역: ${config.goal_focus.join(", ")}
-목표: ${
-        profile.goal
-      }, 시간대: ${timeSlot}, 모드: ${currentMode}, 오늘 날짜: ${today}
+              톤앤매너 키워드: ${config.tone_keywords.join(", ")}
+              목표 영역: ${config.goal_focus.join(", ")}
+              목표: ${profile.goal}, 시간대: ${timeSlot}
+              모드: ${currentMode}, 오늘 날짜: ${today}
 
-[작성 규칙]
-1. today_hint: 헤더에 들어갈 인사말. 17자 이내로 짧고 강렬하게 작성.
-2. welcome_title: 오늘의 분위기. 20자 이내 키워드형 문구.
-3. base_stats: 오늘 날짜(${today})와 사용자의 생년월일, 목표, 모드를 종합하여 오늘 하루의 에너지 수치를 0~100 사이 숫자로 계산하라. 매일 다른 값이 나와야 한다.
-
-아래 JSON 스키마로만 답하라. 전문 용어 금지. 부드러운 존댓말.`,
+              [작성 규칙 — 글자 수는 방향 지시, 초과 시 코드 truncate]
+              1. today_hint: 헤더 인사말.
+                16자 이내(text-xl 기준 iPhone SE 1줄).
+                줄바꿈 금지.
+              2. welcome_title: 오늘 분위기 키워드.
+                18자 이내(text-lg 기준). 줄바꿈 금지.
+              3. welcome_subtitle: 목표와 연결된 문구.
+                20자 이내(text-base 기준). 줄바꿈 금지.
+              4. base_stats: 오늘 날짜·목표·모드 종합
+                0~100 정수. 매일 다른 값 필수.
+              5. mode_card.card_body: 60자 이내.${traitsPrompt}`,
       response_json_schema: {
         type: "object",
         properties: {
           welcome_title: { type: "string" },
           welcome_subtitle: { type: "string" },
           today_hint: { type: "string" },
-          summary_text: { type: "string" },
-          advice_title: { type: "string" },
-          advice_body: { type: "string" },
           base_stats: {
             type: "object",
             properties: {
@@ -244,46 +166,171 @@ user_level: ${profile.level || 1}
               card_body: { type: "string" },
             },
           },
+          // ─── traits는 needsTraits일 때만 스키마에 포함 ───
+          ...(needsTraits && {
+            traits: {
+              type: "object",
+              properties: {
+                strengths: { type: "array", items: { type: "string" } },
+                weaknesses: { type: "array", items: { type: "string" } },
+                potentials: { type: "array", items: { type: "string" } },
+              },
+            },
+          }),
         },
       },
     });
 
-    await base44.entities.DailyReading.create({
+    const newReading = await base44.entities.DailyReading.create({
       date: today,
       welcome_title: res.welcome_title,
       welcome_subtitle: res.welcome_subtitle,
       today_hint: res.today_hint,
-      summary_text: res.summary_text,
-      advice_title: res.advice_title,
-      advice_body: res.advice_body,
-      recommended_mode: res.mode_card?.suggested_mode || profile.current_mode,
+      recommended_mode: res.mode_card?.suggested_mode || currentMode,
       base_stats: res.base_stats,
       mode_card: res.mode_card,
     });
 
-    // 추가
-    await base44.entities.UserProfile.update(profile.id, {
-      base_stats: res.base_stats,
-    });
+    // ─── traits 저장: 응답에 있고 아직 없을 때만 ───
+    const updatePayload = { base_stats: res.base_stats };
+    if (needsTraits && res.traits?.strengths?.length) {
+      updatePayload.traits = res.traits;
+    }
+    await base44.entities.UserProfile.update(profile.id, updatePayload);
+
     queryClient.invalidateQueries({ queryKey: ["userProfile"] });
     queryClient.invalidateQueries({ queryKey: ["dailyReading"] });
+
+    return newReading;
   };
 
-  // 홈 초기화
+  // ─── generateActions ──────────────────────────────────────
+  const generateActions = async (modeOverride) => {
+    const currentMode = modeOverride || profile?.current_mode || "action";
+    const config = MODE_CONFIGS[currentMode] || MODE_CONFIGS["action"];
+    const hour = new Date().getHours();
+    const timeSlot =
+      hour < 6
+        ? "밤"
+        : hour < 12
+        ? "아침"
+        : hour < 18
+        ? "낮"
+        : hour < 22
+        ? "저녁"
+        : "밤";
+
+    const res = await base44.integrations.Core.InvokeLLM({
+      prompt: `너는 HADA 앱의 마이크로 액션 생성 엔진이다.
+
+                === ${config.name} (${currentMode.toUpperCase()} MODE) ===
+                분석 위계:
+                - ${config.weights[Object.keys(config.weights)[0]]}
+                - ${config.weights[Object.keys(config.weights)[1]]}
+                - ${config.weights[Object.keys(config.weights)[2]]}
+                - ${config.weights[Object.keys(config.weights)[3]]}
+
+                톤앤매너 키워드: ${config.tone_keywords.join(", ")}
+                목표 영역: ${config.goal_focus.join(", ")}
+
+                사용자 정보:
+                base_stats: ${JSON.stringify(profile.base_stats)}
+                오늘 목표: ${profile.goal}
+                현재 시간대: ${timeSlot}
+
+                [카드 생성 규칙]
+                반드시 정확히 5개의 카드를 cards 배열로 반환.
+                5개 미만·초과 금지.
+
+                각 카드 필드 규칙:
+                - keyword: 10자 이내 핵심 단어
+                - micro_action: 20자 이내 행동 제목
+                - how: 50자 이내. 줄바꿈 금지.
+                - fortune: 40자 이내. 줄바꿈 금지.
+                - stat_focus: 아래 5가지 중 하나만:
+                  work_efficiency / creativity /
+                  communication / focus / fortune
+                  (5개 값 고르게 분배 권장)
+
+                1~2분이면 바로 할 수 있는 사소한 행동만.
+                전문 용어 사용 금지.
+                부드러운 존댓말로 작성.`,
+      response_json_schema: {
+        type: "object",
+        properties: {
+          cards: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                keyword: { type: "string" },
+                micro_action: { type: "string" },
+                how: { type: "string" },
+                fortune: { type: "string" },
+                stat_focus: { type: "string" },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const validStatFocus = [
+      "work_efficiency",
+      "creativity",
+      "communication",
+      "focus",
+      "fortune",
+    ];
+    if (res.cards?.length) {
+      for (const card of res.cards) {
+        await base44.entities.MicroAction.create({
+          date: today,
+          keyword: card.keyword,
+          micro_action: card.micro_action,
+          how: card.how,
+          fortune: card.fortune,
+          stat_focus: validStatFocus.includes(card.stat_focus)
+            ? card.stat_focus
+            : "focus",
+          completed: false,
+          viewed: false, // ← 새 필드
+          mode: currentMode,
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: ["microActions"] });
+      return true;
+    }
+  };
+
+  // ─── 홈 초기화 ────────────────────────────────────────────
   useEffect(() => {
-    if (!profile) return;
-    if (readings === undefined) return;
-    if (actions === undefined) return;
+    // 데이터 로딩 완료 전이거나 모드 변경 중이면 스킵
+    if (!profile || readings === undefined || actions === undefined) return;
+    if (isModeChanging.current) return;
 
     const initToday = async () => {
       setIsInitializing(true);
       try {
-        if (readings.length === 0) {
+        // 1) 오늘 리딩이 없으면 생성
+        if (readings.length === 0 && !hasGeneratedReading.current) {
+          hasGeneratedReading.current = true;
           await generateDailyReading();
         }
-        if (!actionsLoading && actions.length === 0) {
-          await new Promise((r) => setTimeout(r, 1500));
-          await generateActions();
+
+        // 2) 액션 생성 조건 체크
+        if (!actionsLoading && !hasGeneratedActions.current) {
+          const allViewed =
+            actions.length > 0 && actions.every((a) => a.viewed === true);
+          const isEmpty = actions.length === 0;
+
+          if (isEmpty || allViewed) {
+            hasGeneratedActions.current = true;
+            // 리딩 생성 직후면 약간 대기 (LLM 연속 호출 부하 방지)
+            if (readings.length === 0)
+              await new Promise((r) => setTimeout(r, 1500));
+            await generateActions();
+          }
         }
       } finally {
         setIsInitializing(false);
@@ -293,17 +340,25 @@ user_level: ${profile.level || 1}
     initToday();
   }, [profile, readings, actions, actionsLoading]);
 
+  // ─── 모드 선택 처리 ───────────────────────────────────────
   const handleModeSelect = async (mode) => {
     setShowModeCard(false);
+    isModeChanging.current = true;
+    hasGeneratedReading.current = false;
+    hasGeneratedActions.current = false;
+    setIsInitializing(true);
+
     await base44.entities.UserProfile.update(profile.id, {
       current_mode: mode,
     });
-    window.dispatchEvent(new CustomEvent("modeChanged", { detail: mode }));
-    queryClient.invalidateQueries({ queryKey: ["userProfile"] });
     await generateDailyReading(mode);
-    await generateActions(mode);
+    await generateActions(mode); // 기존 액션 유지 + 새 모드 액션 추가
+    queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+    isModeChanging.current = false;
+    setIsInitializing(false);
   };
 
+  // ─── 투두 관련 ────────────────────────────────────────────
   const addTodo = async (title) => {
     await base44.entities.Todo.create({ title, completed: false, date: today });
     queryClient.invalidateQueries({ queryKey: ["todos", today] });
@@ -331,6 +386,7 @@ user_level: ${profile.level || 1}
     queryClient.invalidateQueries({ queryKey: ["schedules"] });
   };
 
+  // ─── 렌더 가드 ────────────────────────────────────────────
   if (profileLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -339,7 +395,7 @@ user_level: ${profile.level || 1}
     );
   }
 
-  if (!profile) return null;
+  if (!profile || !profile.onboarding_complete) return null;
 
   if (isInitializing) {
     return (
@@ -352,9 +408,12 @@ user_level: ${profile.level || 1}
     );
   }
 
+  // actions가 하나도 없으면 카드 뒤집기 비활성화 플래그
+  const canFlipCards = actions && actions.length > 0;
+
   return (
     <div className="min-h-screen bg-background pb-24">
-      {showModeCard && (
+      {showModeCard && reading?.mode_card && (
         <ModeCard
           data={reading.mode_card}
           onDismiss={() => setShowModeCard(false)}
@@ -412,11 +471,13 @@ user_level: ${profile.level || 1}
 
         <EnergyStats stats={reading?.base_stats || profile.base_stats} />
 
+        {/* canFlipCards=false면 TarotSection에서 카드 뒤집기 막아야 함 */}
         <TarotSection
-          actions={actions}
+          actions={actions ?? []}
           todos={todos}
           onAddToTodo={addTodo}
           isLoading={actionsLoading}
+          canFlip={canFlipCards}
         />
 
         <TodoList

@@ -80,7 +80,7 @@ export default function CharmReveal({ charm, onSave, onClose }) {
                 {charm.effect}
               </p>
               <p className="text-xs text-gray-400 dark:text-slate-400">
-                {charm.source}
+                {charm.description}
               </p>
             </div>
 

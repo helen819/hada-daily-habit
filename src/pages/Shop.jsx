@@ -41,9 +41,6 @@ const getEmoji = (name = "") => {
   }
   return "✨";
 };
-const WEATHER_MOCK = ["맑음", "흐림", "비", "눈", "바람"];
-const getWeatherMock = () =>
-  WEATHER_MOCK[new Date().getHours() % WEATHER_MOCK.length];
 
 // ─── 날짜 유틸 ────────────────────────────────────────────────
 /** 이번 주 월요일 날짜 (YYYY-MM-DD) */
@@ -80,17 +77,22 @@ async function generateAICharm(profile) {
   });
   // 계산기 사용
   const res = await base44.integrations.Core.InvokeLLM({
-    prompt: `너는 'HADA' 앱의 실시간 행운 추천 엔진이다.
+    prompt: `너는 'HADA' 앱의
+            실시간 행운 추천 엔진이다.
             사용자 목표: ${profile?.goal}
-            [현재] 날짜: ${dateStr}, 날씨: ${getWeatherMock()}
-            규칙: 지금 당장 구할 수 있는 평범한 물건만 추천. 운명학 근거 명시.`,
+            오늘 날짜: ${dateStr}
+
+            [반환 필드 규칙]
+            - name: 10자 이내. 일상에서 당장 구할 수 있는 일반적인 물건.
+            - effect: 20자 이내. 핵심 효과 한 줄.
+            - description: 60자 이내. 사용법·의미.
+              줄바꿈 금지.`,
     response_json_schema: {
       type: "object",
       properties: {
         name: { type: "string" },
-        description: { type: "string" },
         effect: { type: "string" },
-        source: { type: "string" },
+        description: { type: "string" },
       },
     },
   });
@@ -213,17 +215,22 @@ async function generateFortune(profile, category) {
     try {
       aiResult = await base44.integrations.Core.InvokeLLM({
         prompt: `너는 'HADA' 앱의 AI 운명 분석 엔진이다.
-                현재일자: ${dateStr} ${timeStr}
+                분석 기준일: ${dateStr} ${timeStr}
 
                 [분석 카테고리] 종합운세 — 주간·월간·연간 분석
-                아래 세 기간에 대해 각각 운세를 분석하라.
-                - 주간: ${getThisMonday()} 주간 (이번 주 월요일 기준)
-                - 월간: ${getThisMonthFirst()} 월간 (이번 달 1일 기준)
-                - 연간: ${getThisYearFirst()} 연간 (올해 1월 1일 기준)
+                - 주간: ${getThisMonday()} 
+                - 월간: ${getThisMonthFirst()} 
+                - 연간: ${getThisYearFirst()}
 
-                summary는 전체를 아우르는 한 줄 요약이다. 줄바꿈 금지.
-                weekly.summary, monthly.summary, yearly.summary는 각 기간 핵심을 한 줄로 요약하라. 줄바꿈 금지.
-                weekly.actionTips, monthly.actionTips, yearly.actionTips는 각 기간 관련 행동 팁 2가지씩 제시하라.`,
+                [전체 공통 규칙]
+                - summary: 전체 아우르는 한 줄 요약. 30자 이내.
+                - detailed: 전체 종합 설명. 80자 이내. 줄바꿈 금지.
+                - fortuneSource: "HADA 운명학 분석" 고정.
+
+                [기간별 규칙]
+                - *.summary: 각 기간 핵심 한 줄. 30자 이내.
+                - *.actionTips: 정확히 2개.
+                  각 항목 20자 이내. 구체 행동만.`,
         response_json_schema: {
           type: "object",
           properties: {
@@ -333,21 +340,22 @@ async function generateFortune(profile, category) {
   try {
     const raw = await base44.integrations.Core.InvokeLLM({
       prompt: `너는 'HADA' 앱의 AI 운명 분석 엔진이다.
-              현재일자: ${dateStr} ${timeStr}
+              분석 기준일: ${getToday()}
 
               [분석 카테고리] ${category.title}
-              [분석 항목] ${CATEGORY_FOCUS[category.id] || "종합 운세"}
+              [분석 항목] ${CATEGORY_FOCUS[category.id]}
 
-              위 카테고리에 집중하여 오늘(${getToday()}) 기준으로 분석하라. 다른 카테고리 내용은 포함하지 마라.
-              actionTips는 반드시 ${
-                category.title
-              }와 직접 관련된 행동만 3가지 제시하라.
-              title은 반드시 한 줄. 줄바꿈 금지.
-              summary는 반드시 한 줄. 줄바꿈 금지.
+              해당 카테고리만 집중. 다른 카테고리 금지.
+
+              [반환 필드 규칙]
+              - title: 15자 이내. 오늘 키워드 제목. 줄바꿈 금지.
+              - summary: 30자 이내. 한 줄 핵심. 줄바꿈 금지.
+              - energyLevel: 0~100 사이 정수만.
+              - detailed: 100자 이내. 줄바꿈 금지.
+              - actionTips: 정확히 3개.
+                각 항목 20자 이내. 구체적인 행동만.
               ${
-                category.id === "daily"
-                  ? "luckyColor: 오늘 사용자의 행운 색상을 #RRGGBB 16진수로 반환하라."
-                  : ""
+                category.id === "daily" ? "- luckyColor: #RRGGBB 형식만." : ""
               }`,
       response_json_schema: {
         type: "object",
@@ -470,7 +478,17 @@ export default function Shop() {
       setLoadingDailyPreview(true);
       try {
         const res = await base44.integrations.Core.InvokeLLM({
-          prompt: `사용자의 ${today} 오늘의 운세를 두 문장 이내로 따뜻하게 요약해줘. line1과 line2는 각각 한 문장씩, 줄바꿈 없이.`,
+          prompt: `오늘 하루 운세를 두 줄로 요약해줘.
+
+                  [규칙]
+                  - line1: 오늘 전체 에너지 흐름.
+                    23자 이내(text-sm 기준 iPhone SE 1줄).
+                    줄바꿈 금지.
+                  - line2: 오늘 실천할 핵심 행동 조언.
+                    23자 이내. 줄바꿈 금지.
+                  - 두 줄은 서로 다른 관점이어야 함.
+                    (에너지 설명 + 실천 제안)
+                  - 따뜻하고 희망적인 톤.`,
           response_json_schema: {
             type: "object",
             properties: {
@@ -741,7 +759,7 @@ export default function Shop() {
                 </p>
               </div>
               <p className="text-[10px] dark:text-purple-300/60 text-white/60 italic text-center pt-2">
-                {dailyCharm.source}
+                HADA 분석 데이터
               </p>
             </div>
           </motion.div>
