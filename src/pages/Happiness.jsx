@@ -90,7 +90,6 @@ export default function Happiness() {
   return (
     <div className="min-h-screen bg-background pb-24">
       <FireworksEffect visible={showFireworks} />
-
       <AnimatePresence>
         {showPoster && (
           <HappinessPoster
@@ -99,7 +98,6 @@ export default function Happiness() {
           />
         )}
       </AnimatePresence>
-
       <AdModal
         visible={showAd}
         onClose={() => {
@@ -107,17 +105,11 @@ export default function Happiness() {
           setShowPoster(true);
         }}
       />
-
       {/* 배너 광고 */}
-      <div className="px-5 pt-5">
-        <AdSlot
-          type="banner"
-          adUnitId="ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX"
-        />
-      </div>
+      <AdSlot type="banner" adUnitId="ca-app-pub-3940256099942544/6300978111" />
 
       {/* 헤더 */}
-      <div className="px-5 pt-4 pb-4">
+      <div className="px-5 pt-16 pb-4">
         <p className="text-xs font-semibold text-pink-500 dark:text-pink-400 uppercase tracking-widest mb-1">
           행복 기록
         </p>
@@ -128,7 +120,6 @@ export default function Happiness() {
           매일 모으는 나만의 행복 기록
         </p>
       </div>
-
       <div className="px-5 space-y-5">
         {/* 요약 카드 */}
         {summary && (

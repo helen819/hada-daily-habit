@@ -17,6 +17,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import StatsRadar from "@/components/home/StatsRadar";
 import AdSlot from "@/components/ads/AdSlot";
 import { useNavigate } from "react-router-dom";
+import { Preferences } from "@capacitor/preferences";
+import { getFullDestinyData } from "@/components/services/calculator/destinyCalculator";
 
 const EMOJI_MAP = {
   동전: "🪙",
@@ -190,8 +192,25 @@ export default function Profile() {
   };
   const handleSaveGoal = async () => {
     setIsSavingGoal(true);
-    await updateGoalMutation.mutateAsync(editedGoal);
-    setIsSavingGoal(false);
+    try {
+      const updatedProfile = await updateGoalMutation.mutateAsync(editedGoal);
+
+      // ── 목표 변경 시 destiny summary 재계산 후 저장 ──────
+      try {
+        const destinyData = getFullDestinyData({
+          ...profile,
+          goal: editedGoal,
+        });
+        await Preferences.set({
+          key: "CAP_local-app_setting_destiny_summary",
+          value: JSON.stringify(destinyData.summary_for_ai),
+        });
+      } catch (e) {
+        console.error("destiny 재저장 실패:", e);
+      }
+    } finally {
+      setIsSavingGoal(false);
+    }
   };
 
   const handleReset = async () => {
@@ -337,8 +356,8 @@ export default function Profile() {
               다음 레벨까지 {100 - xpProgress} XP
             </p>
             <AdSlot
-              type="native"
-              adUnitId="ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX"
+              type="banner"
+              adUnitId="ca-app-pub-3940256099942544/6300978111"
               className="mt-4 bg-white/10 dark:bg-purple-500/10 border-white/20 dark:border-purple-500/30"
             />
           </div>
@@ -485,8 +504,8 @@ export default function Profile() {
         )}
 
         <AdSlot
-          type="native"
-          adUnitId="ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX"
+          type="banner"
+          adUnitId="ca-app-pub-3940256099942544/6300978111"
         />
 
         {/* 초기화 버튼 */}

@@ -181,15 +181,27 @@ export default function Home() {
       },
     });
 
-    const newReading = await base44.entities.DailyReading.create({
+    const existingReadings = await base44.entities.DailyReading.filter({
       date: today,
-      welcome_title: res.welcome_title,
-      welcome_subtitle: res.welcome_subtitle,
-      today_hint: res.today_hint,
-      recommended_mode: res.mode_card?.suggested_mode || currentMode,
-      base_stats: res.base_stats,
-      mode_card: res.mode_card,
     });
+    const newReading = existingReadings?.[0]
+      ? await base44.entities.DailyReading.update(existingReadings[0].id, {
+          welcome_title: res.welcome_title,
+          welcome_subtitle: res.welcome_subtitle,
+          today_hint: res.today_hint,
+          recommended_mode: res.mode_card?.suggested_mode || currentMode,
+          base_stats: res.base_stats,
+          mode_card: res.mode_card,
+        })
+      : await base44.entities.DailyReading.create({
+          date: today,
+          welcome_title: res.welcome_title,
+          welcome_subtitle: res.welcome_subtitle,
+          today_hint: res.today_hint,
+          recommended_mode: res.mode_card?.suggested_mode || currentMode,
+          base_stats: res.base_stats,
+          mode_card: res.mode_card,
+        });
 
     // ─── traits 저장: 응답에 있고 아직 없을 때만 ───
     const updatePayload = { base_stats: res.base_stats };
@@ -305,20 +317,17 @@ export default function Home() {
 
   // ─── 홈 초기화 ────────────────────────────────────────────
   useEffect(() => {
-    // 데이터 로딩 완료 전이거나 모드 변경 중이면 스킵
     if (!profile || readings === undefined || actions === undefined) return;
     if (isModeChanging.current) return;
 
     const initToday = async () => {
       setIsInitializing(true);
       try {
-        // 1) 오늘 리딩이 없으면 생성
-        if (readings.length === 0 && !hasGeneratedReading.current) {
+        if (!hasGeneratedReading.current) {
           hasGeneratedReading.current = true;
           await generateDailyReading();
         }
 
-        // 2) 액션 생성 조건 체크
         if (!actionsLoading && !hasGeneratedActions.current) {
           const allViewed =
             actions.length > 0 && actions.every((a) => a.viewed === true);
@@ -326,7 +335,6 @@ export default function Home() {
 
           if (isEmpty || allViewed) {
             hasGeneratedActions.current = true;
-            // 리딩 생성 직후면 약간 대기 (LLM 연속 호출 부하 방지)
             if (readings.length === 0)
               await new Promise((r) => setTimeout(r, 1500));
             await generateActions();
@@ -340,9 +348,37 @@ export default function Home() {
     initToday();
   }, [profile, readings, actions, actionsLoading]);
 
+  // ─── 레이아웃 모드 변경 감지 ──────────────────────────────
+  useEffect(() => {
+    const handleExternalModeChange = async (e) => {
+      const newMode = e.detail;
+      if (!newMode || newMode === profile?.current_mode) return;
+
+      // handleModeSelect와 동일한 로직 실행
+      isModeChanging.current = true;
+      hasGeneratedReading.current = false;
+      hasGeneratedActions.current = false;
+      setIsInitializing(true);
+
+      await generateDailyReading(newMode);
+      await generateActions(newMode);
+      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+      isModeChanging.current = false;
+      setIsInitializing(false);
+    };
+
+    window.addEventListener("modeChanged", handleExternalModeChange);
+    return () =>
+      window.removeEventListener("modeChanged", handleExternalModeChange);
+  }, [profile]); // profile 의존성 필요
+
   // ─── 모드 선택 처리 ───────────────────────────────────────
   const handleModeSelect = async (mode) => {
     setShowModeCard(false);
+
+    // 현재 모드와 같으면 아무것도 안 함
+    if (mode === profile?.current_mode) return;
+
     isModeChanging.current = true;
     hasGeneratedReading.current = false;
     hasGeneratedActions.current = false;
@@ -411,6 +447,12 @@ export default function Home() {
   // actions가 하나도 없으면 카드 뒤집기 비활성화 플래그
   const canFlipCards = actions && actions.length > 0;
 
+  const handleCardViewed = () => {
+    // allViewed 상태가 될 수 있으니 가드 리셋 후 invalidate
+    hasGeneratedActions.current = false;
+    queryClient.invalidateQueries({ queryKey: ["microActions", today] });
+  };
+
   return (
     <div className="min-h-screen bg-background pb-24">
       {showModeCard && reading?.mode_card && (
@@ -478,6 +520,7 @@ export default function Home() {
           onAddToTodo={addTodo}
           isLoading={actionsLoading}
           canFlip={canFlipCards}
+          onViewed={handleCardViewed} // ← 추가
         />
 
         <TodoList

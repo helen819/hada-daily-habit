@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { showInterstitial, preloadInterstitial } from "@/plugins/admob";
+import { AdMob } from "@capacitor-community/admob";
 
 export default function AdModal({
   visible,
@@ -11,6 +13,32 @@ export default function AdModal({
   useEffect(() => {
     if (!visible) return;
     setCountdown(5);
+
+    const tryInterstitial = async () => {
+      try {
+        // 인터스티셜 닫힘 이벤트 리스닝 먼저 등록
+        const dismissListener = await AdMob.addListener(
+          "onInterstitialDismissed",
+          () => {
+            onClose(); // 광고 닫히면 onClose 호출
+            dismissListener.remove();
+          },
+        );
+
+        const shown = await showInterstitial();
+
+        if (!shown) {
+          // 인터스티셜 실패 시 리스너 정리 (카운트다운 UI로 폴백)
+          dismissListener.remove();
+        }
+        // shown이 true면 AdMob이 전체화면으로 광고 표시 중
+        // 카운트다운 UI는 뒤에서 계속 돌지만 어차피 AdMob UI에 가려짐
+      } catch (e) {
+        console.log("인터스티셜 처리 실패:", e);
+      }
+    };
+    tryInterstitial();
+
     const timer = setInterval(() => {
       setCountdown((c) => {
         if (c <= 1) {

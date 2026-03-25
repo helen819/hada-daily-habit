@@ -193,6 +193,7 @@ function MiniTarotCard({
   onNext,
   onPrev,
   canFlip,
+  onViewed, // ← 추가
 }) {
   const [flipped, setFlipped] = useState(false);
   const [added, setAdded] = useState(false);
@@ -228,6 +229,7 @@ function MiniTarotCard({
     if (!action.viewed) {
       try {
         await base44.entities.MicroAction.update(action.id, { viewed: true });
+        onViewed?.(); // ← 부모에게 알림
       } catch (err) {
         console.error("viewed 업데이트 실패:", err);
       }
@@ -374,7 +376,13 @@ function AdCard() {
   );
 }
 
-function InfiniteCardCarousel({ actions, onAddToTodo, todos, canFlip }) {
+function InfiniteCardCarousel({
+  actions,
+  onAddToTodo,
+  todos,
+  canFlip,
+  onViewed,
+}) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState(0);
   const [showFullAd, setShowFullAd] = useState(false);
@@ -519,6 +527,7 @@ function InfiniteCardCarousel({ actions, onAddToTodo, todos, canFlip }) {
                       onNext={goRight}
                       onPrev={goLeft}
                       canFlip={canFlip} // ← 전달
+                      onViewed={onViewed} // ← 전달
                     />
                   )}
                 </motion.div>
@@ -537,6 +546,7 @@ export default function TarotSection({
   todos,
   isLoading,
   canFlip,
+  onViewed, // ← 추가
 }) {
   const today = getKSTDateString();
   const storageKey = `tarotCollapsed_${today}`;
@@ -606,6 +616,7 @@ export default function TarotSection({
                 onAddToTodo={onAddToTodo}
                 todos={todos}
                 canFlip={canFlip} // ← 전달
+                onViewed={onViewed} // ← 전달
               />
             ) : null}
           </motion.div>

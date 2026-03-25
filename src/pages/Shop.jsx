@@ -389,12 +389,13 @@ async function generateFortune(profile, category) {
 }
 
 // ─── 상세 운세 리스트 아이템 ──────────────────────────────────
-function FortuneListItem({ category, onClick }) {
+function FortuneListItem({ category, onClick, isLoading }) {
   const IconComponent = category.icon;
   return (
     <motion.button
       whileTap={{ scale: 0.98 }}
       onClick={() => onClick(category)}
+      disabled={isLoading}
       className="w-full flex items-center gap-4 bg-white dark:bg-transparent rounded-2xl px-4 py-3.5 border border-gray-100 dark:border-[#424B63] hover:shadow-md dark:hover:border-[#5A6380] transition-all relative overflow-hidden shadow-sm"
     >
       <div
@@ -403,19 +404,30 @@ function FortuneListItem({ category, onClick }) {
       <div
         className={`relative z-10 w-10 h-10 rounded-xl bg-gradient-to-br ${category.gradient} flex items-center justify-center flex-shrink-0`}
       >
-        <IconComponent className="w-5 h-5 text-white" strokeWidth={1.5} />
+        {isLoading ? (
+          <Loader2
+            className="w-5 h-5 text-white animate-spin"
+            strokeWidth={1.5}
+          />
+        ) : (
+          <IconComponent className="w-5 h-5 text-white" strokeWidth={1.5} />
+        )}
       </div>
       <div className="relative z-10 flex-1 text-left">
         <p className="text-sm font-bold text-gray-800 dark:text-slate-200">
           {category.title}
         </p>
         <p className="text-xs text-gray-400 dark:text-slate-400">
-          {category.subtitle}
+          {isLoading ? "분석 중..." : category.subtitle}
         </p>
       </div>
-      <span className="relative z-10 text-gray-300 dark:text-slate-400 text-lg">
-        ›
-      </span>
+      {isLoading ? (
+        <Loader2 className="relative z-10 w-4 h-4 text-gray-300 dark:text-slate-400 animate-spin" />
+      ) : (
+        <span className="relative z-10 text-gray-300 dark:text-slate-400 text-lg">
+          ›
+        </span>
+      )}
     </motion.button>
   );
 }
@@ -827,11 +839,24 @@ export default function Shop() {
                 <motion.button
                   whileTap={{ scale: 0.97 }}
                   onClick={() => handleCategoryClick(FORTUNE_DAILY)}
+                  disabled={loadingFortune && selectedCategory?.id === "daily"}
                   className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-yellow-400 dark:bg-amber-500/20 dark:border dark:border-amber-500/50 hover:bg-yellow-500 dark:hover:bg-amber-500/30 text-white dark:text-amber-300 text-sm font-bold transition-all"
                   style={{ boxShadow: "0 2px 8px rgba(180,140,0,0.25)" }}
                 >
-                  <span>자세히 보기</span>
-                  <ChevronRight className="w-4 h-4" strokeWidth={2} />
+                  {loadingFortune && selectedCategory?.id === "daily" ? (
+                    <>
+                      <Loader2
+                        className="w-4 h-4 animate-spin"
+                        strokeWidth={2}
+                      />
+                      <span>분석 중...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>자세히 보기</span>
+                      <ChevronRight className="w-4 h-4" strokeWidth={2} />
+                    </>
+                  )}
                 </motion.button>
               </div>
             </div>
@@ -849,6 +874,7 @@ export default function Shop() {
                   key={cat.id}
                   category={cat}
                   onClick={handleCategoryClick}
+                  isLoading={loadingFortune && selectedCategory?.id === cat.id}
                 />
               ))}
             </div>

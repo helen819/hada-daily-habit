@@ -28,7 +28,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { getKSTDateString } from "@/utils/date";
+
+import { Preferences } from "@capacitor/preferences";
+import { getFullDestinyData } from "@/components/services/calculator/destinyCalculator";
 
 const TOTAL_STEPS = 4;
 
@@ -107,7 +109,7 @@ export default function Onboarding() {
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      await base44.entities.UserProfile.create({
+      const newProfile = await base44.entities.UserProfile.create({
         full_name: form.full_name,
         birth_date: form.birth_date,
         birth_time: form.birth_time || "미입력",
@@ -122,6 +124,18 @@ export default function Onboarding() {
         current_mode: "action",
         onboarding_complete: true,
       });
+
+      // ── destiny summary_for_ai 계산 후 저장 ──────────────
+      try {
+        const destinyData = getFullDestinyData(newProfile);
+        await Preferences.set({
+          key: "CAP_local-app_setting_destiny_summary",
+          value: JSON.stringify(destinyData.summary_for_ai),
+        });
+      } catch (e) {
+        console.error("destiny 저장 실패:", e);
+      }
+
       await queryClient.invalidateQueries({ queryKey: ["userProfile"] });
       navigate("/Home", { replace: true });
     } catch (error) {
@@ -374,8 +388,18 @@ export default function Onboarding() {
                       className="h-14 bg-white border border-purple-100 rounded-2xl text-center font-bold text-gray-800 shadow-sm appearance-none"
                     >
                       {[
-                        "00", "05", "10", "15", "20", "25",
-                        "30", "35", "40", "45", "50", "55",
+                        "00",
+                        "05",
+                        "10",
+                        "15",
+                        "20",
+                        "25",
+                        "30",
+                        "35",
+                        "40",
+                        "45",
+                        "50",
+                        "55",
                       ].map((m) => (
                         <option key={m} value={m}>
                           {m}분

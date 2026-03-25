@@ -7,6 +7,9 @@ import { pagesConfig } from "./pages.config";
 import { HashRouter as Router, Route, Routes } from "react-router-dom";
 import PageNotFound from "./lib/PageNotFound";
 import { AuthProvider } from "@/lib/AuthContext";
+import { DailyAlarmPlugin } from "@/plugins/DailyAlarmPlugin";
+import { initAdMob } from "@/plugins/admob";
+import { LocalNotifications } from "@capacitor/local-notifications";
 
 const { Pages, Layout, mainPage } = pagesConfig;
 
@@ -26,6 +29,16 @@ const MainAppContent = () => {
   const lastTimeBackPress = useRef(0);
   const pressCount = useRef(0); // 클릭 횟수 추적
   const timePeriod = 2000; // 2초 이내 기준
+
+  const scheduleAlarmIfGranted = async () => {
+    try {
+      await DailyAlarmPlugin.scheduleAlarm({
+        apiKey: import.meta.env.VITE_GEMINI_API_KEY,
+      });
+    } catch (e) {
+      console.log("알람 예약 실패:", e);
+    }
+  };
 
   useEffect(() => {
     const backHandler = CapApp.addListener("backButton", () => {
@@ -49,6 +62,35 @@ const MainAppContent = () => {
         CapApp.exitApp();
       }
     });
+
+    // AdMob 초기화 + 인터스티셜 프리로드
+    initAdMob();
+
+    // 권한 체크 후 알람 예약
+    const init = async () => {
+      // 알림 표시 권한 요청 (Android 13+)
+      const { display } = await LocalNotifications.requestPermissions();
+      if (display !== "granted") {
+        console.log("알림 권한 거부됨");
+      }
+
+      try {
+        const { granted } =
+          await DailyAlarmPlugin.checkAndRequestExactAlarmPermission();
+
+        if (!granted) {
+          console.log("정확한 알람 권한 없음 - 알람 예약 스킵");
+          return;
+        }
+
+        await scheduleAlarmIfGranted();
+      } catch (e) {
+        // 웹 환경 또는 API 31 미만 기기
+        await scheduleAlarmIfGranted();
+      }
+    };
+
+    init();
 
     return () => {
       backHandler.then((h) => h.remove());
