@@ -64,18 +64,18 @@ class DailyAlarmPlugin : Plugin() {
     }
 
     companion object {
-        // AlarmManager request code 기준: 1001 ~ 1007 (7일치)
+        // AlarmManager request code 기준: 1001 ~ 1030 (30일치)
         private const val BASE_REQUEST_CODE = 1001
-        private const val ALARM_DAYS = 7
+        private const val ALARM_DAYS = 30
 
         fun scheduleWeeklyAlarms(context: Context) {
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
-            for (dayOffset in 1..ALARM_DAYS) {
+            for (dayOffset in 0..ALARM_DAYS) {
                 val calendar = Calendar.getInstance(TimeZone.getTimeZone("Asia/Seoul")).apply {
                     add(Calendar.DAY_OF_YEAR, dayOffset)
-                    set(Calendar.HOUR_OF_DAY, 7)
-                    set(Calendar.MINUTE, 50)
+                    set(Calendar.HOUR_OF_DAY, 8)
+                    set(Calendar.MINUTE, 0)
                     set(Calendar.SECOND, 0)
                     set(Calendar.MILLISECOND, 0)
                 }

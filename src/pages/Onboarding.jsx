@@ -129,7 +129,7 @@ export default function Onboarding() {
       try {
         const destinyData = getFullDestinyData(newProfile);
         await Preferences.set({
-          key: "CAP_local-app_setting_destiny_summary",
+          key: "local-app_setting_destiny_summary",
           value: JSON.stringify(destinyData.summary_for_ai),
         });
       } catch (e) {
