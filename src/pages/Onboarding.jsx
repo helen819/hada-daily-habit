@@ -3,12 +3,15 @@ import { AnimatePresence, motion } from "framer-motion";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Loader2,
   Clock,
   Calendar as CalendarIcon,
   ChevronLeft,
   ChevronRight,
+  Plus,
+  Trash2,
 } from "lucide-react";
 import OnboardingStep from "@/components/onboarding/OnboardingStep";
 import GenderSelector from "@/components/onboarding/GenderSelector";
@@ -33,6 +36,68 @@ import { Preferences } from "@capacitor/preferences";
 import { getFullDestinyData } from "@/components/services/calculator/destinyCalculator";
 
 const TOTAL_STEPS = 4;
+const MAX_GOALS = 3;
+
+// ─── 목표 항목 컴포넌트 ───────────────────────────────────────
+function GoalItem({ goal, index, onChange, onDelete, canDelete, isFirst }) {
+  const titleCount = goal.title.length;
+  const isTitleOver = titleCount > 10;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -8, height: 0 }}
+      transition={{ duration: 0.2 }}
+      className="space-y-2"
+    >
+      <div className="flex items-center gap-2">
+        <div className="flex-1 relative">
+          <Input
+            value={goal.title}
+            onChange={(e) => onChange(index, "title", e.target.value)}
+            placeholder="목표 제목 (예: 꾸준히 운동하기)"
+            maxLength={12}
+            className={`rounded-xl h-12 bg-gray-50 border text-base pr-12 transition-colors ${
+              isTitleOver
+                ? "border-red-300 focus:border-red-400"
+                : "border-gray-200 focus:border-purple-400"
+            }`}
+          />
+          <span
+            className={`absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-medium tabular-nums ${
+              isTitleOver ? "text-red-400" : "text-gray-300"
+            }`}
+          >
+            {titleCount}/10
+          </span>
+        </div>
+        {canDelete && (
+          <button
+            onClick={() => onDelete(index)}
+            className="w-10 h-10 flex items-center justify-center rounded-xl bg-red-50 text-red-400 hover:bg-red-100 transition-colors flex-shrink-0"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        )}
+      </div>
+
+      <Textarea
+        value={goal.description}
+        onChange={(e) => onChange(index, "description", e.target.value)}
+        placeholder="이 목표에 대해 설명해주세요. 왜 이루고 싶은지, 어떻게 실천할지 등..."
+        rows={3}
+        className="rounded-xl bg-gray-50 border-gray-200 focus:border-purple-400 text-sm resize-none transition-colors"
+      />
+
+      {isTitleOver && (
+        <p className="text-xs text-red-400 ml-1">
+          제목은 10자 이내로 입력해주세요
+        </p>
+      )}
+    </motion.div>
+  );
+}
 
 export default function Onboarding() {
   const navigate = useNavigate();
@@ -51,8 +116,10 @@ export default function Onboarding() {
     birth_time: "",
     gender: "",
     location: "",
-    goal: "",
   });
+
+  // ─── 목표 목록 ────────────────────────────────────────────
+  const [goals, setGoals] = useState([{ title: "", description: "" }]);
 
   const [date, setDate] = useState(new Date(2000, 0, 1));
   const [currentMonth, setCurrentMonth] = useState(new Date(2000, 0, 1));
@@ -82,11 +149,24 @@ export default function Onboarding() {
 
   const update = (key, val) => setForm((p) => ({ ...p, [key]: val }));
 
+  // ─── 목표 유효성: 첫 번째 목표는 제목+설명 모두 필수 ──────
+  const isFirstGoalValid =
+    goals[0].title.trim().length > 0 &&
+    goals[0].title.trim().length <= 10 &&
+    goals[0].description.trim().length > 0;
+
+  const areAllGoalsValid = goals.every(
+    (g) =>
+      g.title.trim().length > 0 &&
+      g.title.trim().length <= 10 &&
+      g.description.trim().length > 0,
+  );
+
   const canNext =
     (step === 0 && isStrictKorean(form.full_name) && form.gender) ||
     (step === 1 && form.birth_date) ||
     step === 2 ||
-    (step === 3 && form.goal);
+    (step === 3 && isFirstGoalValid && areAllGoalsValid);
 
   useEffect(() => {
     base44.entities.UserProfile.list().then((profiles) => {
@@ -106,9 +186,34 @@ export default function Onboarding() {
     );
   }
 
+  // ─── 목표 핸들러 ──────────────────────────────────────────
+  const handleGoalChange = (index, field, value) => {
+    setGoals((prev) => {
+      const next = [...prev];
+      next[index] = { ...next[index], [field]: value };
+      return next;
+    });
+  };
+
+  const handleAddGoal = () => {
+    if (goals.length < MAX_GOALS) {
+      setGoals((prev) => [...prev, { title: "", description: "" }]);
+    }
+  };
+
+  const handleDeleteGoal = (index) => {
+    setGoals((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async () => {
     setLoading(true);
     try {
+      const primaryGoal = goals[0].title;
+      const extraGoals = goals.slice(1).map((g) => ({
+        title: g.title,
+        description: g.description,
+      }));
+
       const newProfile = await base44.entities.UserProfile.create({
         full_name: form.full_name,
         birth_date: form.birth_date,
@@ -118,7 +223,9 @@ export default function Onboarding() {
         longitude: 126.978,
         location: form.location || "미입력",
         hanja_name: "",
-        goal: form.goal,
+        goal: primaryGoal,
+        goal_description: goals[0].description,
+        goals_extra: extraGoals.length > 0 ? extraGoals : [],
         level: 1,
         xp: 0,
         current_mode: "action",
@@ -320,7 +427,6 @@ export default function Onboarding() {
                         }}
                       />
 
-                      {/* 선택 완료 버튼 */}
                       <Button
                         onClick={() => setCalendarOpen(false)}
                         className="w-full h-12 mt-4 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-2xl shadow-lg"
@@ -388,18 +494,8 @@ export default function Onboarding() {
                       className="h-14 bg-white border border-purple-100 rounded-2xl text-center font-bold text-gray-800 shadow-sm appearance-none"
                     >
                       {[
-                        "00",
-                        "05",
-                        "10",
-                        "15",
-                        "20",
-                        "25",
-                        "30",
-                        "35",
-                        "40",
-                        "45",
-                        "50",
-                        "55",
+                        "00","05","10","15","20","25",
+                        "30","35","40","45","50","55",
                       ].map((m) => (
                         <option key={m} value={m}>
                           {m}분
@@ -444,15 +540,49 @@ export default function Onboarding() {
             key="s3"
             step={3}
             totalSteps={TOTAL_STEPS}
-            title="요즘 이루고 싶은 것은?"
-            subtitle="한 줄로 적어주세요."
+            title="이루고 싶은 목표는? 🎯"
+            subtitle="제목 10자 이내, 설명도 함께 적어주세요."
           >
-            <Input
-              value={form.goal}
-              onChange={(e) => update("goal", e.target.value)}
-              placeholder="꾸준히 운동하기, 사이드 프로젝트 시작..."
-              className="rounded-xl h-12 bg-gray-50 border-gray-200 text-base"
-            />
+            <div className="space-y-4">
+              <AnimatePresence>
+                {goals.map((goal, index) => (
+                  <GoalItem
+                    key={index}
+                    goal={goal}
+                    index={index}
+                    onChange={handleGoalChange}
+                    onDelete={handleDeleteGoal}
+                    canDelete={goals.length > 1}
+                    isFirst={index === 0}
+                  />
+                ))}
+              </AnimatePresence>
+
+              {/* 목표 추가 버튼 */}
+              {goals.length < MAX_GOALS && (
+                <motion.button
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  onClick={handleAddGoal}
+                  disabled={!areAllGoalsValid}
+                  className={`w-full h-11 rounded-xl border-2 border-dashed text-sm font-semibold flex items-center justify-center gap-2 transition-colors ${
+                    areAllGoalsValid
+                      ? "border-purple-300 text-purple-500 hover:bg-purple-50"
+                      : "border-gray-200 text-gray-300 cursor-not-allowed"
+                  }`}
+                >
+                  <Plus className="w-4 h-4" />
+                  목표 추가 ({goals.length}/{MAX_GOALS})
+                </motion.button>
+              )}
+
+              {/* 첫 번째 목표 미완성 안내 */}
+              {!isFirstGoalValid && (goals[0].title || goals[0].description) && (
+                <p className="text-xs text-amber-500 text-center">
+                  첫 번째 목표의 제목과 설명을 모두 입력해주세요
+                </p>
+              )}
+            </div>
           </OnboardingStep>
         )}
       </AnimatePresence>
