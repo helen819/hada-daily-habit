@@ -38,6 +38,21 @@ import { getFullDestinyData } from "@/components/services/calculator/destinyCalc
 const TOTAL_STEPS = 4;
 const MAX_GOALS = 3;
 
+// ─── 일요일 기준 주 식별자 반환 (예: "2025-W12") ──────────────
+// 매주 일요일이 새 주의 시작 → 값이 바뀌면 xp 초기화 트리거로 사용
+function getWeekKey() {
+  const now = new Date();
+  const dayOfWeek = now.getDay(); // 0=일, 1=월 ... 6=토
+  const sunday = new Date(now);
+  sunday.setDate(now.getDate() - dayOfWeek);
+  const year = sunday.getFullYear();
+  const startOfYear = new Date(year, 0, 1);
+  const weekNum = Math.ceil(
+    ((sunday - startOfYear) / 86400000 + startOfYear.getDay() + 1) / 7,
+  );
+  return `${year}-W${String(weekNum).padStart(2, "0")}`;
+}
+
 // ─── 목표 항목 컴포넌트 ───────────────────────────────────────
 function GoalItem({ goal, index, onChange, onDelete, canDelete, isFirst }) {
   const titleCount = goal.title.length;
@@ -209,11 +224,8 @@ export default function Onboarding() {
     setLoading(true);
     try {
       const primaryGoal = goals[0].title;
-      const extraGoals = goals.slice(1).map((g) => ({
-        title: g.title,
-        description: g.description,
-      }));
 
+      // ── 1. UserProfile 생성 (goal 필드는 기존 코드 호환용) ──
       const newProfile = await base44.entities.UserProfile.create({
         full_name: form.full_name,
         birth_date: form.birth_date,
@@ -223,16 +235,35 @@ export default function Onboarding() {
         longitude: 126.978,
         location: form.location || "미입력",
         hanja_name: "",
-        goal: primaryGoal,
-        goal_description: goals[0].description,
-        goals_extra: extraGoals.length > 0 ? extraGoals : [],
+        goal: primaryGoal,   // Home·Shop 등 기존 profile.goal 참조 호환
         level: 1,
         xp: 0,
         current_mode: "action",
         onboarding_complete: true,
       });
 
-      // ── destiny summary_for_ai 계산 후 저장 ──────────────
+      // ── 2. Goal 엔티티에 각 목표 개별 저장 ──────────────
+      // order       : 정렬 순서 (0 = 대표 목표)
+      // is_primary  : profile.goal 과 동기화된 대표 목표 여부
+      // xp          : 이번 주 획득 경험치 (일요일 기준 초기화)
+      // xp_reset_week : 마지막 초기화 기준 주 식별자 (YYYY-WW)
+      const currentWeekKey = getWeekKey();
+      await Promise.all(
+        goals.map((g, i) =>
+          base44.entities.Goal.create({
+            user_profile_id: newProfile.id,
+            title: g.title,
+            description: g.description,
+            order: i,
+            is_primary: i === 0,
+            is_completed: false,
+            xp: 0,
+            xp_reset_week: currentWeekKey,
+          }),
+        ),
+      );
+
+      // ── 3. destiny summary_for_ai 계산 후 저장 ──────────
       try {
         const destinyData = getFullDestinyData(newProfile);
         await Preferences.set({
@@ -244,6 +275,7 @@ export default function Onboarding() {
       }
 
       await queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+      await queryClient.invalidateQueries({ queryKey: ["goals"] });
       navigate("/Home", { replace: true });
     } catch (error) {
       console.error("오류 발생:", error);

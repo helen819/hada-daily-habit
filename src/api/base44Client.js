@@ -83,9 +83,7 @@ const createEntity = (name) => ({
 
 // ══════════════════════════════════════════════════════════════════
 // 변경 1: HADA 공통 시스템 프롬프트
-// ──────────────────────────────────────────────────────────────────
-// 모든 InvokeLLM 호출 시 사용자 프롬프트 앞에 자동으로 붙음.
-// 각 페이지(Home, Shop 등)의 프롬프트에서 아래 규칙을 개별 기재할 필요 없음.
+// ══════════════════════════════════════════════════════════════════
 const HADA_SYSTEM_PROMPT = `[HADA 앱 공통 규칙 — 모든 응답에 반드시 적용]
 // 데이터 처리 규칙 
 
@@ -122,35 +120,32 @@ const HADA_SYSTEM_PROMPT = `[HADA 앱 공통 규칙 — 모든 응답에 반드�
 
 // ══════════════════════════════════════════════════════════════════
 // 변경 2: 프롬프트 유형 감지 + 유형별 생성 설정
-// ──────────────────────────────────────────────────────────────────
-// 기존: 모든 호출 temperature 0.7 / maxOutputTokens 8192 고정.
-// 개선: 짧은 응답(미리보기·한 줄)은 maxOutputTokens를 줄여 속도·비용 절감.
-//       창의성이 필요한 운세는 temperature를 높임.
+// ══════════════════════════════════════════════════════════════════
 function detectPromptType(prompt) {
     if (prompt.includes("오늘 하루 운세를 두 줄로 요약"))
-        return "fortune_preview"; // 확인
-    if (prompt.includes("주간·월간·연간")) return "fortune_summary"; // 확인
-    if (prompt.includes("해당 카테고리만 집중")) return "fortune_detail"; // 확인
-    if (prompt.includes("행운 추천")) return "charm"; // 확인
-    if (prompt.includes("마이크로 액션 생성")) return "micro_action"; // 확인
-    if (prompt.includes("일일 리딩")) return "daily_reading"; // 확인
-    if (prompt.includes("행복 기록을 모아서")) return "happiness_summary"; // 확인
+        return "fortune_preview";
+    if (prompt.includes("주간·월간·연간")) return "fortune_summary";
+    if (prompt.includes("해당 카테고리만 집중")) return "fortune_detail";
+    if (prompt.includes("행운 추천")) return "charm";
+    if (prompt.includes("마이크로 액션 생성")) return "micro_action";
+    if (prompt.includes("일일 리딩")) return "daily_reading";
+    if (prompt.includes("행복 기록을 모아서")) return "happiness_summary";
     return "general";
 }
 
 const GENERATION_CONFIGS = {
-    fortune_preview: { temperature: 0.8, maxOutputTokens: 8192 }, // ✅ 유지
-    fortune_summary: { temperature: 0.7, maxOutputTokens: 8192 }, // 4096 → 1024
-    fortune_detail: { temperature: 0.75, maxOutputTokens: 8192 }, // 2048 → 768
-    charm: { temperature: 0.85, maxOutputTokens: 8192 }, // ✅ 유지
-    micro_action: { temperature: 0.7, maxOutputTokens: 8192 }, // ✅ 유지
-    daily_reading: { temperature: 0.6, maxOutputTokens: 8192 }, // 2048 → 1024
-    happiness_summary: { temperature: 0.6, maxOutputTokens: 8192 }, // ✅ 신규 추가
-    general: { temperature: 0.7, maxOutputTokens: 8192 }, // ✅ 유지
+    fortune_preview: { temperature: 0.8, maxOutputTokens: 8192 },
+    fortune_summary: { temperature: 0.7, maxOutputTokens: 8192 },
+    fortune_detail: { temperature: 0.75, maxOutputTokens: 8192 },
+    charm: { temperature: 0.85, maxOutputTokens: 8192 },
+    micro_action: { temperature: 0.7, maxOutputTokens: 8192 },
+    daily_reading: { temperature: 0.6, maxOutputTokens: 8192 },
+    happiness_summary: { temperature: 0.6, maxOutputTokens: 8192 },
+    general: { temperature: 0.7, maxOutputTokens: 8192 },
 };
 
 // ══════════════════════════════════════════════════════════════════
-// getFallbackData: 원본 그대로 유지
+// getFallbackData
 // ══════════════════════════════════════════════════════════════════
 const getFallbackData = (prompt) => {
     if (
@@ -166,8 +161,6 @@ const getFallbackData = (prompt) => {
             line2: "(가짜 데이터) line2",
         };
     }
-
-    // ── 부적 / 온보딩 분석 ──
     if (prompt.includes("엔진")) {
         return {
             mode_card: {
@@ -175,7 +168,6 @@ const getFallbackData = (prompt) => {
                 card_title: "(가짜 데이터) 오늘의 특별한 제안",
                 card_body: "(가짜 데이터) 분석 결과, 현재 당신은 약간의 휴식이 행운을 불러올 기운입니다.",
             },
-
             base_stats: {
                 work_efficiency: 100,
                 creativity: 100,
@@ -197,7 +189,6 @@ const getFallbackData = (prompt) => {
             today_hint: "(가짜 데이터) today_hint",
         };
     }
-
     return null;
 };
 
@@ -217,6 +208,22 @@ export const base44 = {
         ScheduleItem: createEntity("ScheduleItem"),
         HappinessRecord: createEntity("HappinessRecord"),
         CharmItem: createEntity("CharmItem"),
+
+        // ── Goal 엔티티 ─────────────────────────────────────────
+        // 저장 필드:
+        //   id              : 자동 생성 UUID
+        //   created_at      : 자동 생성
+        //   user_profile_id : UserProfile.id (소유자)
+        //   title           : 목표 제목 (10자 이내)
+        //   description     : 목표 설명
+        //   order           : 정렬 순서 (0 = 대표 목표)
+        //   is_primary      : 대표 목표 여부 (profile.goal 호환용)
+        //   is_completed    : 달성 여부
+        //   completed_at    : 달성 일시 (선택)
+        //   xp              : 이번 주 획득 경험치 (홈 화면 표시용)
+        //   xp_reset_week   : 마지막 초기화 기준 주 식별자 "YYYY-WW"
+        //                     (일요일 기준. 현재 주와 다르면 xp=0 으로 초기화)
+        Goal: createEntity("Goal"),
     },
 
     integrations: {
@@ -227,14 +234,12 @@ export const base44 = {
                 let finalPrompt = prompt;
 
                 if (!prompt.includes("행복 기록을 모아서")) {
-                    // 1. 현재 사용자 프로필 가져오기 (가장 최근 것)
                     const profiles = await base44.entities.UserProfile.list(
                         "-created_at",
                         1,
                     );
                     const profile = profiles[0];
 
-                    // 2. 만약 프로필이 있다면, 로컬 계산기 데이터를 프롬프트 상단에 강제 주입
                     if (profile) {
                         const destinyData = getFullDestinyData(profile);
                         finalPrompt = `
@@ -245,14 +250,12 @@ export const base44 = {
                     ${prompt}`;
                     }
                 }
-                // 변경 2: 유형 감지 → 설정 선택
+
                 const promptType = detectPromptType(prompt);
                 const genConfig =
                     GENERATION_CONFIGS[promptType] || GENERATION_CONFIGS.general;
 
                 try {
-                    // 변경 1: 공통 규칙 prepend
-                    // 변경 3: JSON 스키마를 텍스트로 붙이던 방식 제거
                     const fullPrompt = `${HADA_SYSTEM_PROMPT}\n\n${finalPrompt}\n\n
                             [출력 규칙]
                             - 반드시 JSON만 반환한다
@@ -270,8 +273,8 @@ export const base44 = {
                                 generationConfig: {
                                     response_mime_type: "application/json",
                                     responseSchema: response_json_schema,
-                                    temperature: genConfig.temperature, // 변경 2
-                                    maxOutputTokens: genConfig.maxOutputTokens, // 변경 2
+                                    temperature: genConfig.temperature,
+                                    maxOutputTokens: genConfig.maxOutputTokens,
                                 },
                             }),
                         },
@@ -313,7 +316,7 @@ export const base44 = {
                         return JSON.parse(cleaned);
                     } catch (parseError) {
                         console.error("JSON 파싱 실패 rawText:", rawText);
-                        console.error("candidate 전체:", JSON.stringify(candidate)); // ← 이거 추가
+                        console.error("candidate 전체:", JSON.stringify(candidate));
                         return getFallbackData(prompt);
                     }
                 } catch (e) {
@@ -343,3 +346,19 @@ export const base44 = {
         },
     },
 };
+
+// ─── 일요일 기준 주 식별자 유틸 ──────────────────────────────────
+// Goal.xp_reset_week 와 비교해 초기화 여부를 판단할 때 사용.
+// import { getWeekKey } from "@/api/base44Client"; 로 불러와 쓰세요.
+export function getWeekKey() {
+  const now = new Date();
+  const dayOfWeek = now.getDay(); // 0=일, 1=월 ... 6=토
+  const sunday = new Date(now);
+  sunday.setDate(now.getDate() - dayOfWeek);
+  const year = sunday.getFullYear();
+  const startOfYear = new Date(year, 0, 1);
+  const weekNum = Math.ceil(
+    ((sunday - startOfYear) / 86400000 + startOfYear.getDay() + 1) / 7,
+  );
+  return `${year}-W${String(weekNum).padStart(2, "0")}`;
+}
