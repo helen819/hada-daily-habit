@@ -235,7 +235,7 @@ export default function Onboarding() {
         longitude: 126.978,
         location: form.location || "미입력",
         hanja_name: "",
-        goal: primaryGoal,   // Home·Shop 등 기존 profile.goal 참조 호환
+        goal: primaryGoal, // Home·Shop 등 기존 profile.goal 참조 호환
         level: 1,
         xp: 0,
         current_mode: "action",
@@ -248,20 +248,18 @@ export default function Onboarding() {
       // xp          : 이번 주 획득 경험치 (일요일 기준 초기화)
       // xp_reset_week : 마지막 초기화 기준 주 식별자 (YYYY-WW)
       const currentWeekKey = getWeekKey();
-      await Promise.all(
-        goals.map((g, i) =>
-          base44.entities.Goal.create({
-            user_profile_id: newProfile.id,
-            title: g.title,
-            description: g.description,
-            order: i,
-            is_primary: i === 0,
-            is_completed: false,
-            xp: 0,
-            xp_reset_week: currentWeekKey,
-          }),
-        ),
-      );
+      for (const [index, g] of goals.entries()) {
+        await base44.entities.Goal.create({
+          user_profile_id: newProfile.id,
+          title: g.title,
+          description: g.description,
+          order: index,
+          is_primary: index === 0,
+          is_completed: false,
+          xp: 0,
+          xp_reset_week: currentWeekKey,
+        });
+      }
 
       // ── 3. destiny summary_for_ai 계산 후 저장 ──────────
       try {
@@ -526,8 +524,18 @@ export default function Onboarding() {
                       className="h-14 bg-white border border-purple-100 rounded-2xl text-center font-bold text-gray-800 shadow-sm appearance-none"
                     >
                       {[
-                        "00","05","10","15","20","25",
-                        "30","35","40","45","50","55",
+                        "00",
+                        "05",
+                        "10",
+                        "15",
+                        "20",
+                        "25",
+                        "30",
+                        "35",
+                        "40",
+                        "45",
+                        "50",
+                        "55",
                       ].map((m) => (
                         <option key={m} value={m}>
                           {m}분
@@ -609,11 +617,12 @@ export default function Onboarding() {
               )}
 
               {/* 첫 번째 목표 미완성 안내 */}
-              {!isFirstGoalValid && (goals[0].title || goals[0].description) && (
-                <p className="text-xs text-amber-500 text-center">
-                  첫 번째 목표의 제목과 설명을 모두 입력해주세요
-                </p>
-              )}
+              {!isFirstGoalValid &&
+                (goals[0].title || goals[0].description) && (
+                  <p className="text-xs text-amber-500 text-center">
+                    첫 번째 목표의 제목과 설명을 모두 입력해주세요
+                  </p>
+                )}
             </div>
           </OnboardingStep>
         )}

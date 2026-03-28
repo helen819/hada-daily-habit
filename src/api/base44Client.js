@@ -224,6 +224,36 @@ export const base44 = {
         //   xp_reset_week   : 마지막 초기화 기준 주 식별자 "YYYY-WW"
         //                     (일요일 기준. 현재 주와 다르면 xp=0 으로 초기화)
         Goal: createEntity("Goal"),
+
+        // ── GoalAction 엔티티 ────────────────────────────────────
+        // 목표별 행운실천 카드 (MicroAction 의 goal 연결 버전)
+        // 저장 필드:
+        //   id              : 자동 UUID
+        //   created_at      : 자동 생성
+        //   user_profile_id : 소유 유저 ID
+        //   goal_id         : Goal.id (어느 목표의 카드인지)
+        //   date            : 생성 날짜 "YYYY-MM-DD"
+        //   keyword         : 핵심 키워드 (10자 이내)
+        //   micro_action    : 행동 제목 (20자 이내)
+        //   how             : 실천 방법 (50자 이내)
+        //   fortune         : 행운 메시지 (40자 이내)
+        //   stat_focus      : work_efficiency|creativity|communication|focus|fortune
+        //   completed       : 완료 여부
+        //   viewed          : 카드 뒤집기 여부
+        //   mode            : 생성 당시 모드
+        GoalAction: createEntity("GoalAction"),
+
+        // ── GoalTodo 엔티티 ──────────────────────────────────────
+        // 목표별 할일 (Todo 의 goal 연결 버전)
+        // 저장 필드:
+        //   id              : 자동 UUID
+        //   created_at      : 자동 생성
+        //   user_profile_id : 소유 유저 ID
+        //   goal_id         : Goal.id
+        //   title           : 할일 제목
+        //   completed       : 완료 여부
+        //   date            : 날짜 "YYYY-MM-DD"
+        GoalTodo: createEntity("GoalTodo"),
     },
 
     integrations: {

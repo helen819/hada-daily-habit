@@ -571,9 +571,15 @@ export default function TarotSection({
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
-          행운 실천
-        </h3>
+        {/* 아이콘과 텍스트를 하나로 묶음 */}
+        <div className="flex items-center gap-2">
+          <Sparkles className="w-4 h-4 text-purple-400" />
+          <p className="text-[12px] font-black text-purple-500 uppercase tracking-widest">
+            오늘의 행운 실천 카드
+          </p>
+        </div>
+
+        {/* 토글 버튼만 우측 정렬 */}
         <button
           onClick={handleToggle}
           className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-[#2E3447] transition-colors"

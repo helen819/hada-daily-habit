@@ -71,7 +71,7 @@ class DailyAlarmPlugin : Plugin() {
         fun scheduleWeeklyAlarms(context: Context) {
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
-            for (dayOffset in 0..ALARM_DAYS) {
+            for (dayOffset in 1..ALARM_DAYS) {
                 val calendar = Calendar.getInstance(TimeZone.getTimeZone("Asia/Seoul")).apply {
                     add(Calendar.DAY_OF_YEAR, dayOffset)
                     set(Calendar.HOUR_OF_DAY, 8)
