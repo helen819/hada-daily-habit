@@ -685,6 +685,10 @@ export default function Goals() {
       // 되돌리기는 확인 없이 바로
       doComplete(goal);
     } else {
+      if (activeGoals.length <= 1) {
+        setShowCannotDelete(true);
+        return;
+      }
       setCompleteConfirm(goal);
     }
   };
@@ -801,7 +805,7 @@ export default function Goals() {
                         setSelectedGoalId((p) => (p === id ? null : id))
                       }
                       onComplete={handleCompleteClick}
-                      onDelete={(id) => setDeleteConfirm(id)}
+                      onDelete={(id) => handleDeleteClick(id)}
                     />
                     <AnimatePresence>
                       {selectedGoalId === goal.id && (
@@ -854,7 +858,7 @@ export default function Goals() {
                     isSelected={false}
                     onSelect={() => {}}
                     onComplete={handleCompleteClick}
-                    onDelete={(id) => handleDeleteClick(id)}
+                    onDelete={(id) => setDeleteConfirm(id)}
                   />
                 ))}
               </AnimatePresence>
@@ -870,8 +874,8 @@ export default function Goals() {
             key="cannot-delete-alert"
             icon={<AlertTriangle className="w-6 h-6 text-amber-500" />}
             iconBg="bg-amber-50 dark:bg-amber-900/30"
-            title="목표를 삭제할 수 없어요"
-            description={`HADA를 이용하기 위해서는\n최소 1개의 진행 중인 목표가 필요합니다.\n\n새로운 목표를 먼저 추가하거나,\n기존 목표를 달성 완료해 주세요.`}
+            title="최소 1개의 진행 중인 목표가 필요해요"
+            description={`HADA의 분석과 실천 리스트를 이용하기 위해\n최소 1개의 진행 중인 목표가 유지되어야 합니다.\n\n새로운 목표를 추가한 뒤에\n기존 목표를 삭제하거나 달성 완료해 주세요.`}
             confirmLabel="확인"
             confirmStyle="bg-gray-900 dark:bg-gray-700"
             onConfirm={() => setShowCannotDelete(false)}
