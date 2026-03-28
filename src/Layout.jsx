@@ -6,12 +6,12 @@ import {
   Heart,
   User,
   ShoppingBag,
-  CalendarDays,
   Moon,
   Sun,
   Zap,
   Leaf,
   Goal,
+  CalendarDays,
 } from "lucide-react";
 // All icons use strokeWidth={1.5} for line-art consistency
 import { base44 } from "@/api/base44Client";
@@ -23,14 +23,13 @@ import {
 } from "@capacitor-community/admob";
 import { AD_UNITS } from "@/plugins/admob";
 
-// const PAGES_WITH_BANNER = ["CalendarPage", "Happiness", "Profile"];
 const PAGES_WITH_BANNER = ["Happiness"];
 
 const navItems = [
   { name: "Home", icon: Home, label: "홈" },
   { name: "Goals", icon: Goal, label: "목표" },
-  { name: "CalendarPage", icon: CalendarDays, label: "캘린더" },
-  { name: "Happiness", icon: Heart, label: "기록" },
+  { name: "Record", icon: CalendarDays, label: "기록" },
+  { name: "Happiness", icon: Heart, label: "행복" },
   { name: "Shop", icon: ShoppingBag, label: "상점" },
   { name: "Profile", icon: User, label: "프로필" },
 ];

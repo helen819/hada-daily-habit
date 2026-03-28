@@ -48,7 +48,7 @@
  * The mainPage value must match a key in the PAGES object exactly.
  */
 import Goals from "./pages/Goals";
-import CalendarPage from "./pages/CalendarPage";
+import Record from "./pages/Record";
 import Happiness from "./pages/Happiness";
 import Home from "./pages/Home";
 import Onboarding from "./pages/Onboarding";
@@ -58,7 +58,7 @@ import __Layout from "./Layout.jsx";
 
 export const PAGES = {
     Goals: Goals,
-    CalendarPage: CalendarPage,
+    Record: Record,
     Happiness: Happiness,
     Home: Home,
     Onboarding: Onboarding,

@@ -747,7 +747,7 @@ export default function Goals() {
           <div className="flex items-end justify-between">
             <div>
               <h1 className="text-2xl font-black text-gray-900 dark:text-white leading-tight">
-                나의 목표
+                목표 관리
               </h1>
               <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 font-semibold">
                 {activeGoals.length}개 진행 중 · {completedGoals.length}개 달성
@@ -767,7 +767,7 @@ export default function Goals() {
 
       <div className="px-5 space-y-3">
         {/* 진행 중 */}
-        <div className="bg-white dark:bg-gray-900 rounded-[32px] p-5 shadow-[0_8px_40px_rgba(120,50,255,0.06)] border border-purple-50 dark:border-gray-800">
+        <div className="bg-white dark:bg-[#2E3447] rounded-[32px] p-5 shadow-[0_8px_40px_rgba(120,50,255,0.06)] border border-purple-50 dark:border-gray-800">
           <div className="flex items-center gap-2.5 mb-4">
             <div className="w-2 h-6 bg-purple-500 rounded-full shadow-[0_0_12px_rgba(168,85,247,0.25)]" />
             <p className="text-sm font-black text-gray-800 dark:text-gray-100">
@@ -837,7 +837,7 @@ export default function Goals() {
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white dark:bg-gray-900 rounded-[32px] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.04)] border border-gray-50 dark:border-gray-800"
+            className="bg-white dark:bg-[#2E3447] rounded-[32px] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.04)] border border-gray-50 dark:border-gray-800"
           >
             <div className="flex items-center gap-2.5 mb-4">
               <div className="w-2 h-6 bg-emerald-400 rounded-full" />

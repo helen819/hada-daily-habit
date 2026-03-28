@@ -802,7 +802,7 @@ export default function Home() {
         </div>
 
         <div className="px-5">
-          <div className="bg-white dark:bg-gray-900 rounded-[45px] p-8 shadow-[0_20px_60px_rgba(120,50,255,0.06)] border border-purple-50 dark:border-gray-800 transition-all">
+          <div className="bg-white dark:bg-[#2E3447] rounded-[45px] p-8 shadow-[0_20px_60px_rgba(120,50,255,0.06)] border border-purple-50 dark:border-gray-800 transition-all">
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-3">
                 <div className="w-2.5 h-8 bg-purple-500 rounded-full shadow-[0_0_15px_rgba(168,85,247,0.3)]" />
