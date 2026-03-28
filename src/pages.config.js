@@ -49,7 +49,6 @@
  */
 import Goals from "./pages/Goals";
 import Record from "./pages/Record";
-import Happiness from "./pages/Happiness";
 import Home from "./pages/Home";
 import Onboarding from "./pages/Onboarding";
 import Profile from "./pages/Profile";
@@ -59,7 +58,6 @@ import __Layout from "./Layout.jsx";
 export const PAGES = {
     Goals: Goals,
     Record: Record,
-    Happiness: Happiness,
     Home: Home,
     Onboarding: Onboarding,
     Profile: Profile,

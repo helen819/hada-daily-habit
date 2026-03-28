@@ -16,20 +16,11 @@ import {
 // All icons use strokeWidth={1.5} for line-art consistency
 import { base44 } from "@/api/base44Client";
 import AdModal from "@/components/shop/AdModal";
-import {
-  AdMob,
-  BannerAdSize,
-  BannerAdPosition,
-} from "@capacitor-community/admob";
-import { AD_UNITS } from "@/plugins/admob";
-
-const PAGES_WITH_BANNER = ["Happiness"];
 
 const navItems = [
   { name: "Home", icon: Home, label: "홈" },
   { name: "Goals", icon: Goal, label: "목표" },
   { name: "Record", icon: CalendarDays, label: "기록" },
-  { name: "Happiness", icon: Heart, label: "행복" },
   { name: "Shop", icon: ShoppingBag, label: "상점" },
   { name: "Profile", icon: User, label: "프로필" },
 ];
@@ -76,26 +67,6 @@ export default function Layout({ children, currentPageName }) {
       window.removeEventListener("modeChanged", handleModeChange);
     };
   }, []);
-
-  useEffect(() => {
-    if (hideNav) return;
-
-    const updateBanner = async () => {
-      if (PAGES_WITH_BANNER.includes(currentPageName)) {
-        await AdMob.hideBanner().catch(() => {});
-        await AdMob.showBanner({
-          adId: AD_UNITS.banner,
-          adSize: BannerAdSize.ADAPTIVE_BANNER,
-          position: BannerAdPosition.TOP_CENTER,
-          margin: 20,
-        }).catch((e) => console.log("배너 로드 실패:", e));
-      } else {
-        await AdMob.hideBanner().catch(() => {});
-      }
-    };
-
-    updateBanner();
-  }, [currentPageName, hideNav]);
 
   // 2. [수정] 테마 토글 로직 (Preferences 사용)
   const toggleTheme = async () => {
