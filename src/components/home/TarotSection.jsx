@@ -9,7 +9,14 @@ import {
   Maximize2,
   X,
 } from "lucide-react";
-import { Sparkles, Palette, MessageCircle, Target, Clover } from "lucide-react";
+import {
+  Sparkles,
+  Palette,
+  MessageCircle,
+  Target,
+  Clover,
+  Loader2,
+} from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { getKSTDateString } from "@/utils/date";
 
@@ -219,20 +226,19 @@ function MiniTarotCard({
 
   const handleAdd = (e) => {
     e?.stopPropagation();
-    if (!isAlreadyAdded) onAddToTodo(action.micro_action);
+    if (!isAlreadyAdded) {
+      onAddToTodo(action.micro_action);
+      setAdded(true);
+    }
   };
 
   const handleFlip = async () => {
-    if (!canFlip || flipped || added) return;
+    if (!canFlip || flipped) return;
     setFlipped(true);
-    // viewed 처리: 아직 viewed가 아닌 경우에만 업데이트
+
     if (!action.viewed) {
-      try {
-        await base44.entities.MicroAction.update(action.id, { viewed: true });
-        onViewed?.(); // ← 부모에게 알림
-      } catch (err) {
-        console.error("viewed 업데이트 실패:", err);
-      }
+      await base44.entities.GoalAction.update(action.id, { viewed: true });
+      onViewed?.();
     }
   };
 
@@ -253,7 +259,7 @@ function MiniTarotCard({
 
       <div
         className={`relative cursor-pointer transition-opacity ${
-          added ? "opacity-40 pointer-events-none" : ""
+          added ? "opacity-40" : ""
         }`}
         style={{ perspective: "800px", height: "150px" }}
         onClick={handleFlip}
@@ -340,7 +346,7 @@ function MiniTarotCard({
                 onClick={handleAdd}
                 disabled={isAlreadyAdded}
                 className={`flex items-center justify-center w-6 h-6 rounded-lg transition-all ${
-                  isAlreadyAdded ? buttonAdded : buttonBg
+                  isAlreadyAdded ? "opacity-50 cursor-not-allowed" : buttonBg
                 }`}
               >
                 {added ? (
@@ -354,25 +360,6 @@ function MiniTarotCard({
         </motion.div>
       </div>
     </>
-  );
-}
-
-function AdCard() {
-  return (
-    <div
-      className="relative rounded-xl border border-dashed border-purple-300 dark:border-purple-600/60 bg-gradient-to-br from-purple-50 to-violet-50 dark:from-purple-800/30 dark:to-violet-800/30 flex flex-col items-center justify-center gap-2"
-      style={{ height: "150px" }}
-    >
-      <div className="w-8 h-8 rounded-xl bg-purple-100 dark:bg-purple-700/50 flex items-center justify-center">
-        <Sparkles
-          className="w-4 h-4 text-purple-400 dark:text-purple-300"
-          strokeWidth={1.5}
-        />
-      </div>
-      <p className="text-[10px] font-semibold text-purple-300 dark:text-purple-400 uppercase tracking-widest">
-        AD
-      </p>
-    </div>
   );
 }
 
@@ -390,6 +377,11 @@ function InfiniteCardCarousel({
   const storageKey = "tarotSwipeCount_" + getKSTDateString();
 
   useEffect(() => {
+    setDirection(0);
+    setCurrentIndex(0);
+  }, [actions.length]);
+
+  useEffect(() => {
     const loadSwipeCount = async () => {
       const savedCount = await base44.storage.get(storageKey);
       swipeCount.current = parseInt(savedCount || "0", 10);
@@ -397,15 +389,10 @@ function InfiniteCardCarousel({
     loadSwipeCount();
   }, [storageKey]);
 
-  const items = [];
-  let nextAdAt = Math.floor(Math.random() * 3) + 3;
-  actions.forEach((action, i) => {
-    items.push({ type: "card", action });
-    if (i + 1 === nextAdAt) {
-      items.push({ type: "ad" });
-      nextAdAt += Math.floor(Math.random() * 3) + 3;
-    }
-  });
+  const items = actions.map((action) => ({
+    type: "card",
+    action,
+  }));
 
   const total = items.length;
   const containerRef = useRef(null);
@@ -517,19 +504,15 @@ function InfiniteCardCarousel({
                     pointerEvents: isCenter ? "auto" : "none",
                   }}
                 >
-                  {items[idx].type === "ad" ? (
-                    <AdCard />
-                  ) : (
-                    <MiniTarotCard
-                      action={items[idx].action}
-                      onAddToTodo={onAddToTodo}
-                      todos={todos}
-                      onNext={goRight}
-                      onPrev={goLeft}
-                      canFlip={canFlip} // ← 전달
-                      onViewed={onViewed} // ← 전달
-                    />
-                  )}
+                  <MiniTarotCard
+                    action={items[idx].action}
+                    onAddToTodo={onAddToTodo}
+                    todos={todos}
+                    onNext={goRight}
+                    onPrev={goLeft}
+                    canFlip={canFlip} // ← 전달
+                    onViewed={onViewed} // ← 전달
+                  />
                 </motion.div>
               );
             })}
@@ -566,7 +549,11 @@ export default function TarotSection({
     await base44.storage.set(storageKey, String(newState));
   };
 
-  const list = (actions || []).slice(0, 9);
+  const list = useMemo(() => {
+    return [...(actions || [])]
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at)) // 최신순
+      .slice(0, 9);
+  }, [actions]);
 
   return (
     <div className="space-y-2">
@@ -608,13 +595,11 @@ export default function TarotSection({
             className="overflow-hidden"
           >
             {isLoading ? (
-              <div className="flex gap-2 justify-center py-4">
-                {[...Array(3)].map((_, i) => (
-                  <div
-                    key={i}
-                    className="h-[150px] w-[120px] rounded-xl bg-gray-100 dark:bg-[#2E3447] animate-pulse"
-                  />
-                ))}
+              <div className="flex flex-col items-center justify-center py-6 gap-3">
+                <Loader2 className="w-8 h-8 text-purple-500 animate-spin drop-shadow-[0_0_8px_rgba(168,85,247,0.6)]" />
+                <p className="text-xs text-gray-400 dark:text-gray-500 font-medium">
+                  카드 생성 중...
+                </p>
               </div>
             ) : list.length > 0 ? (
               <InfiniteCardCarousel
@@ -624,7 +609,11 @@ export default function TarotSection({
                 canFlip={canFlip} // ← 전달
                 onViewed={onViewed} // ← 전달
               />
-            ) : null}
+            ) : (
+              <div className="text-center py-6 text-xs text-gray-400">
+                아직 생성된 카드가 없어요
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
