@@ -3,7 +3,12 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Loader2, Sparkles, X, CheckCircle2, Circle, Heart,
+  Loader2,
+  Sparkles,
+  X,
+  CheckCircle2,
+  Circle,
+  Heart,
 } from "lucide-react";
 
 import MiniCalendar from "@/components/calendar/MiniCalendar";
@@ -33,9 +38,9 @@ function DayPopup({ date, badges, goalTodos, goals, onClose }) {
 
   const BADGE_LABELS = {
     heart: { emoji: "💕", label: "행복 기록 있음" },
-    fire:  { emoji: "🔥", label: "할일 70% 이상 완료" },
-    rest:  { emoji: "😴", label: "할일 거의 미완료" },
-    star:  { emoji: "⭐", label: "일정 3개 이상" },
+    fire: { emoji: "🔥", label: "할일 70% 이상 완료" },
+    rest: { emoji: "😴", label: "할일 거의 미완료" },
+    star: { emoji: "⭐", label: "일정 3개 이상" },
   };
 
   const hasTodos = goalTodos && goalTodos.length > 0;
@@ -111,7 +116,10 @@ function DayPopup({ date, badges, goalTodos, goals, onClose }) {
               const pending = todos.filter((t) => !t.completed);
 
               return (
-                <div key={gid} className="rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
+                <div
+                  key={gid}
+                  className="rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden"
+                >
                   {/* 목표 라벨 */}
                   {goal && (
                     <div className="px-4 py-2.5 bg-purple-50 dark:bg-purple-900/20 border-b border-gray-100 dark:border-gray-800">
@@ -122,25 +130,41 @@ function DayPopup({ date, badges, goalTodos, goals, onClose }) {
                   )}
                   {!goal && gid === "__none__" && (
                     <div className="px-4 py-2.5 bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-800">
-                      <p className="text-xs font-black text-gray-400">목표 없음</p>
+                      <p className="text-xs font-black text-gray-400">
+                        목표 없음
+                      </p>
                     </div>
                   )}
 
                   <div className="px-4 py-2 divide-y divide-gray-50 dark:divide-gray-800">
                     {/* 완료 */}
                     {done.map((t) => (
-                      <div key={t.id} className="flex items-center gap-3 py-2.5">
+                      <div
+                        key={t.id}
+                        className="flex items-center gap-3 py-2.5"
+                      >
                         <CheckCircle2 className="w-4 h-4 text-purple-400 flex-shrink-0" />
-                        <span className="text-sm line-through text-gray-400 flex-1">{t.title}</span>
-                        <span className="text-[10px] font-bold text-purple-400">완료</span>
+                        <span className="text-sm line-through text-gray-400 flex-1">
+                          {t.title}
+                        </span>
+                        <span className="text-[10px] font-bold text-purple-400">
+                          완료
+                        </span>
                       </div>
                     ))}
                     {/* 미완료 */}
                     {pending.map((t) => (
-                      <div key={t.id} className="flex items-center gap-3 py-2.5">
+                      <div
+                        key={t.id}
+                        className="flex items-center gap-3 py-2.5"
+                      >
                         <Circle className="w-4 h-4 text-gray-300 dark:text-gray-600 flex-shrink-0" />
-                        <span className="text-sm text-gray-600 dark:text-gray-300 flex-1">{t.title}</span>
-                        <span className="text-[10px] font-bold text-gray-300 dark:text-gray-600">미완료</span>
+                        <span className="text-sm text-gray-600 dark:text-gray-300 flex-1">
+                          {t.title}
+                        </span>
+                        <span className="text-[10px] font-bold text-gray-300 dark:text-gray-600">
+                          미완료
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -151,7 +175,9 @@ function DayPopup({ date, badges, goalTodos, goals, onClose }) {
         ) : (
           <div className="py-8 text-center">
             <p className="text-2xl mb-2">📋</p>
-            <p className="text-sm font-bold text-gray-400">이날의 실천 기록이 없어요</p>
+            <p className="text-sm font-bold text-gray-400">
+              이날의 실천 기록이 없어요
+            </p>
           </div>
         )}
       </motion.div>
@@ -175,6 +201,7 @@ export default function Record() {
   // ─── 행복 기록 상태 ─────────────────────────────────────────
   const [summary, setSummary] = useState(null);
   const [summaryLoading, setSummaryLoading] = useState(false);
+  const [summaryLoaded, setSummaryLoaded] = useState(false); // 캐시 로드 완료 여부
   const [showAd, setShowAd] = useState(false);
   const [showPoster, setShowPoster] = useState(false);
   const [showFireworks, setShowFireworks] = useState(false);
@@ -265,8 +292,14 @@ export default function Record() {
   const handleMonthChange = (delta) => {
     let m = month + delta;
     let y = year;
-    if (m < 0) { m = 11; y -= 1; }
-    if (m > 11) { m = 0; y += 1; }
+    if (m < 0) {
+      m = 11;
+      y -= 1;
+    }
+    if (m > 11) {
+      m = 0;
+      y += 1;
+    }
     setMonth(m);
     setYear(y);
   };
@@ -274,7 +307,7 @@ export default function Record() {
   // 선택 날짜의 GoalTodo
   const selectedDayTodos = useMemo(
     () => allGoalTodos.filter((t) => t.date === selectedDate),
-    [allGoalTodos, selectedDate]
+    [allGoalTodos, selectedDate],
   );
 
   // ─── 행복 기록 ───────────────────────────────────────────────
@@ -284,8 +317,7 @@ export default function Record() {
       queryClient.invalidateQueries({ queryKey: ["happinessRecords"] });
       setShowFireworks(true);
       setTimeout(() => setShowFireworks(false), 1200);
-      // 요약 재생성 트리거
-      setSummary(null);
+      // 요약 재생성은 useEffect의 기록 개수 증가 감지로 자동 처리됨
     },
   });
 
@@ -301,6 +333,45 @@ export default function Record() {
       setIsFetchingFull(false);
     }
   };
+
+  const SUMMARY_CACHE_KEY = "happiness_summary_cache";
+
+  // 캐시에서 요약 불러오기 (탭 복귀 시)
+  React.useEffect(() => {
+    if (summaryLoaded) return;
+    const load = async () => {
+      const cached = await base44.storage.get(SUMMARY_CACHE_KEY);
+      if (cached) {
+        try {
+          setSummary(JSON.parse(cached));
+        } catch {}
+      }
+      setSummaryLoaded(true);
+    };
+    load();
+  }, []);
+
+  // 새 기록이 추가된 경우에만 재생성 (기록 개수 증가 감지)
+  const prevCountRef = React.useRef(null);
+  React.useEffect(() => {
+    if (!summaryLoaded) return;
+    if (happinessRecords.length < 3) return;
+
+    const currentCount = happinessRecords.length;
+
+    // 최초 마운트 시 캐시가 없으면 생성, 있으면 스킵
+    if (prevCountRef.current === null) {
+      prevCountRef.current = currentCount;
+      if (!summary) generateSummary();
+      return;
+    }
+
+    // 기록 개수가 늘어난 경우에만 재생성
+    if (currentCount > prevCountRef.current) {
+      prevCountRef.current = currentCount;
+      generateSummary();
+    }
+  }, [happinessRecords, summaryLoaded]);
 
   const generateSummary = async () => {
     if (happinessRecords.length < 3) return;
@@ -330,16 +401,14 @@ export default function Record() {
         },
       });
       setSummary(res);
+      // 스토리지에 캐싱
+      await base44.storage.set(SUMMARY_CACHE_KEY, JSON.stringify(res));
     } catch (e) {
       console.error("요약 생성 실패:", e);
     } finally {
       setSummaryLoading(false);
     }
   };
-
-  React.useEffect(() => {
-    if (happinessRecords.length >= 3 && !summary) generateSummary();
-  }, [happinessRecords]);
 
   const latestRecords = useMemo(() => {
     return [...happinessRecords]
@@ -356,20 +425,33 @@ export default function Record() {
 
       <AnimatePresence>
         {showPoster && (
-          <HappinessPoster records={fullRecords} onClose={() => setShowPoster(false)} />
+          <HappinessPoster
+            records={fullRecords}
+            onClose={() => setShowPoster(false)}
+          />
         )}
       </AnimatePresence>
 
       <AdModal
         visible={showAd}
-        onClose={() => { setShowAd(false); setShowPoster(true); }}
+        onClose={() => {
+          setShowAd(false);
+          setShowPoster(true);
+        }}
       />
 
       {/* ── 헤더 ─────────────────────────────────────────────── */}
       <div className="px-6 pt-12 pb-6">
-        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
-          <p className="text-[10px] font-black text-purple-500 uppercase tracking-[0.3em] mb-2">HADA</p>
-          <h1 className="text-2xl font-black text-gray-900 dark:text-white leading-tight">기록</h1>
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <p className="text-[10px] font-black text-purple-500 uppercase tracking-[0.3em] mb-2">
+            HADA
+          </p>
+          <h1 className="text-2xl font-black text-gray-900 dark:text-white leading-tight">
+            기록
+          </h1>
           <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 font-semibold">
             날짜를 눌러 그날의 기록을 확인해요
           </p>
@@ -377,7 +459,6 @@ export default function Record() {
       </div>
 
       <div className="px-5 space-y-5">
-
         {/* ── 캘린더 ──────────────────────────────────────────── */}
         <motion.div
           initial={{ opacity: 0, y: 8 }}
@@ -399,10 +480,16 @@ export default function Record() {
         </motion.div>
 
         {/* ── 행복 기록 입력 ───────────────────────────────────── */}
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
           <div className="flex items-center gap-2.5 mb-3 px-1">
             <div className="w-2 h-6 bg-pink-400 rounded-full" />
-            <p className="text-sm font-black text-gray-800 dark:text-gray-100">오늘의 행복 기록</p>
+            <p className="text-sm font-black text-gray-800 dark:text-gray-100">
+              오늘의 행복 기록
+            </p>
           </div>
           <HappinessInput
             onSubmit={(data) => createMutation.mutate(data)}
@@ -414,17 +501,23 @@ export default function Record() {
         <AnimatePresence>
           {summaryLoading && (
             <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               className="flex items-center justify-center gap-2 py-3"
             >
               <Loader2 className="w-4 h-4 animate-spin text-pink-400" />
-              <span className="text-xs font-semibold text-gray-400">요약 생성 중...</span>
+              <span className="text-xs font-semibold text-gray-400">
+                요약 생성 중...
+              </span>
             </motion.div>
           )}
 
           {summary && !summaryLoading && (
             <motion.div
-              initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
               className="bg-white dark:bg-gray-900 rounded-[24px] p-5 border border-pink-50 dark:border-pink-900/30 shadow-[0_4px_20px_rgba(236,72,153,0.07)]"
             >
               <div className="flex items-center gap-2 mb-3">
@@ -447,10 +540,16 @@ export default function Record() {
 
         {/* ── 최근 행복 기록 3개 ──────────────────────────────── */}
         {latestRecords.length > 0 && (
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+          >
             <div className="flex items-center gap-2.5 mb-3 px-1">
               <div className="w-2 h-6 bg-pink-300 rounded-full" />
-              <p className="text-sm font-black text-gray-800 dark:text-gray-100">최근 기록</p>
+              <p className="text-sm font-black text-gray-800 dark:text-gray-100">
+                최근 기록
+              </p>
             </div>
             <div className="space-y-3">
               {latestRecords.map((record, i) => (
@@ -480,7 +579,6 @@ export default function Record() {
             </div>
           </motion.button>
         )}
-
       </div>
 
       {/* ── 날짜 팝업 ────────────────────────────────────────── */}
@@ -492,7 +590,10 @@ export default function Record() {
             badges={dateBadges[selectedDate] || []}
             goalTodos={selectedDayTodos}
             goals={goals}
-            onClose={() => { setShowDayPopup(false); setSelectedDate(null); }}
+            onClose={() => {
+              setShowDayPopup(false);
+              setSelectedDate(null);
+            }}
           />
         )}
       </AnimatePresence>
