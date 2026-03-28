@@ -627,6 +627,19 @@ export default function Home() {
     enabled: !!profile?.id,
   });
 
+  useEffect(() => {
+    if (goals.length > 0) {
+      // 리스트의 첫 번째(index 0) 목표의 ID를 기본값으로 설정
+      // 만약 이미 선택된 ID가 있더라도, 그 ID가 현재 리스트에 없다면 첫 번째로 리셋
+      const isStillValid = goals.some((g) => g.id === selectedGoalId);
+      if (!selectedGoalId || !isStillValid) {
+        setSelectedGoalId(goals[0].id);
+      }
+    } else {
+      setSelectedGoalId(null);
+    }
+  }, [goals, selectedGoalId]);
+
   const { data: allActions = [] } = useQuery({
     queryKey: ["allGoalActions", today],
     queryFn: () => base44.entities.GoalAction.filter({ date: today }),
