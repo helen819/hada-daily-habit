@@ -47,6 +47,7 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
+import Goals from "./pages/Goals";
 import CalendarPage from "./pages/CalendarPage";
 import Happiness from "./pages/Happiness";
 import Home from "./pages/Home";
@@ -56,16 +57,17 @@ import Shop from "./pages/Shop";
 import __Layout from "./Layout.jsx";
 
 export const PAGES = {
-  CalendarPage: CalendarPage,
-  Happiness: Happiness,
-  Home: Home,
-  Onboarding: Onboarding,
-  Profile: Profile,
-  Shop: Shop,
+    Goals: Goals,
+    CalendarPage: CalendarPage,
+    Happiness: Happiness,
+    Home: Home,
+    Onboarding: Onboarding,
+    Profile: Profile,
+    Shop: Shop,
 };
 
 export const pagesConfig = {
-  mainPage: "Home",
-  Pages: PAGES,
-  Layout: __Layout,
+    mainPage: "Home",
+    Pages: PAGES,
+    Layout: __Layout,
 };

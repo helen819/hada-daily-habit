@@ -11,6 +11,7 @@ import {
   Sun,
   Zap,
   Leaf,
+  Goal,
 } from "lucide-react";
 // All icons use strokeWidth={1.5} for line-art consistency
 import { base44 } from "@/api/base44Client";
@@ -27,6 +28,7 @@ const PAGES_WITH_BANNER = ["Happiness"];
 
 const navItems = [
   { name: "Home", icon: Home, label: "홈" },
+  { name: "Goals", icon: Goal, label: "목표" },
   { name: "CalendarPage", icon: CalendarDays, label: "캘린더" },
   { name: "Happiness", icon: Heart, label: "기록" },
   { name: "Shop", icon: ShoppingBag, label: "상점" },

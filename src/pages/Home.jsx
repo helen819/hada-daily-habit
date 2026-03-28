@@ -621,6 +621,7 @@ export default function Home() {
       const all = await base44.entities.Goal.list();
       return all
         .filter((g) => g.user_profile_id === profile.id)
+        .filter((g) => !g.is_completed)
         .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
     },
     enabled: !!profile?.id,
