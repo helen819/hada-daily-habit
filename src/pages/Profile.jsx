@@ -319,10 +319,25 @@ export default function Profile() {
   const [showResetModal, setShowResetModal] = useState(false);
   const [resetting, setResetting] = useState(false);
 
+  // 다크모드 감지
+  const [isDark, setIsDark] = useState(
+    () => document.documentElement.classList.contains("dark")
+  );
+  useEffect(() => {
+    const el = document.documentElement;
+    const observer = new MutationObserver(() => {
+      setIsDark(el.classList.contains("dark"));
+    });
+    observer.observe(el, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, []);
+
   // 레벨업 부스트
   const [showAdForBoost, setShowAdForBoost] = useState(false);
-  const [showLevelUp, setShowLevelUp] = useState(false);
-  const [newLevel, setNewLevel] = useState(null);
+  // xpBarPhase: "idle" | "filling" | "done"
+  // "filling" 동안 바가 현재값→100%로 호로록 차오름
+  // "done" 되면 레벨업 이펙트 표시
+  const [xpBarPhase, setXpBarPhase] = useState("idle");
 
   // 운세
   const [dailyPreview, setDailyPreview] = useState(null);
@@ -359,13 +374,28 @@ export default function Profile() {
   const handleBoostAdClose = async () => {
     setShowAdForBoost(false);
     if (!profile) return;
+
+    // 1단계: 바를 현재값에서 100%까지 호로록 채움
+    setXpBarPhase("filling");
+
+    // 2단계: 바가 다 찰 때까지 대기 (transition duration과 맞춤)
+    await new Promise((r) => setTimeout(r, 900));
+
+    // 3단계: 실제 레벨업 처리
     const current = profile.level || 1;
     const next = current + 1;
-    // XP도 다음 레벨 시작값으로
-    await base44.entities.UserProfile.update(profile.id, { level: next, xp: (next - 1) * 100 });
-    queryClient.invalidateQueries({ queryKey: ["userProfile"] });
-    setNewLevel(next);
-    setShowLevelUp(true);
+    try {
+      await base44.entities.UserProfile.update(profile.id, {
+        level: next,
+        xp: (next - 1) * 100,
+      });
+      await queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+    } catch (e) {
+      console.error(e);
+    }
+
+    // 4단계: 바 애니메이션 종료, idle 복귀
+    setXpBarPhase("idle");
   };
 
   // ─── 운세 클릭 ───────────────────────────────────────────────
@@ -424,13 +454,6 @@ export default function Profile() {
       {/* 광고 모달들 */}
       <AdModal visible={showAdForBoost} onClose={handleBoostAdClose} />
       <AdModal visible={showAdForFortune} onClose={handleFortuneAdClose} />
-
-      {/* 레벨업 이펙트 */}
-      <AnimatePresence>
-        {showLevelUp && newLevel && (
-          <LevelUpEffect level={newLevel} onDone={() => setShowLevelUp(false)} />
-        )}
-      </AnimatePresence>
 
       {/* 운세 결과 모달 */}
       <FortuneResultModal
@@ -491,28 +514,48 @@ export default function Profile() {
               <span className="text-sm font-bold opacity-95 dark:text-purple-300">{profile.xp || 0} XP</span>
             </div>
 
-            {/* XP 바 */}
+            {/* XP 바 — filling 단계에서 현재값→100% 호로록 */}
             <div className="h-3 bg-white/20 dark:bg-purple-900/40 rounded-full overflow-hidden mb-4">
               <motion.div
-                key={xpProgress}
-                className="h-full bg-yellow-200 dark:bg-purple-400 rounded-full"
-                initial={{ width: 0 }}
-                animate={{ width: `${xpProgress}%` }}
-                transition={{ duration: 0.8, ease: "easeOut" }}
+                className="h-full rounded-full"
+                animate={{
+                  width: xpBarPhase === "filling" ? "100%" : `${xpProgress}%`,
+                  background: xpBarPhase === "filling"
+                    ? ["#fef08a", "#facc15", "#fbbf24", "#facc15"]
+                    : "#fef08a",
+                }}
+                transition={{
+                  width: { duration: 0.8, ease: "easeInOut" },
+                  background: { duration: 0.6, repeat: xpBarPhase === "filling" ? Infinity : 0 },
+                }}
               />
             </div>
             <p className="text-xs font-medium opacity-90 dark:text-purple-300 mb-4">
-              다음 레벨까지 {100 - xpProgress} XP
+              {xpBarPhase === "filling"
+                ? "레벨업 중! ✨"
+                : `다음 레벨까지 ${100 - xpProgress} XP`}
             </p>
 
-            {/* 레벨업 부스트 버튼 */}
+            {/* 레벨업 부스트 버튼
+                라이트: 골드/오렌지
+                다크:   퍼플 (응원 버튼과 동일) */}
             <motion.button
-              whileTap={{ scale: 0.97 }}
+              whileTap={{ scale: 0.96 }}
               onClick={handleBoostClick}
-              className="w-full h-12 rounded-2xl bg-white/20 dark:bg-purple-500/20 dark:border dark:border-purple-400/50 backdrop-blur-sm flex items-center justify-center gap-2 font-black text-sm text-white dark:text-purple-200 hover:bg-white/30 transition-all"
+              disabled={xpBarPhase === "filling"}
+              className={`w-full h-14 rounded-2xl font-black text-sm flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.98] transition-transform ${
+                isDark
+                  ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-900/30"
+                  : ""
+              }`}
+              style={!isDark ? {
+                background: "linear-gradient(135deg, #facc15 0%, #f59e0b 100%)",
+                color: "#78350f",
+                boxShadow: "0 4px 16px rgba(245,158,11,0.45), 0 1px 3px rgba(0,0,0,0.1)",
+              } : undefined}
             >
-              <Zap className="w-4 h-4" />
-              레벨업 부스트
+              <Zap className={`w-4 h-4 ${xpBarPhase === "filling" ? "animate-bounce" : ""}`} />
+              {xpBarPhase === "filling" ? "부스트 적용 중..." : "레벨업 부스트"}
             </motion.button>
 
             {/* 다음 레벨 잠금 해제 문구 */}

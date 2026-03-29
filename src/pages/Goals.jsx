@@ -205,34 +205,38 @@ function AnalysisModal({ goal, allTodos, onClose }) {
         const res = await base44.integrations.Core.InvokeLLM({
           prompt: `너는 HADA 앱의 목표 분석 엔진이다.
 
-아래 사용자의 목표와 실천 현황을 분석해 종합 평가를 작성하라.
+                    아래 사용자의 목표와 실천 현황을 분석해 종합 평가를 작성하라.
 
-[목표]
-제목: ${goal.title}
-설명: ${goal.description || "없음"}
+                    [목표]
+                    제목: ${goal.title}
+                    설명: ${goal.description || "없음"}
 
-[완료한 실천 항목 (${doneTodos.length}개)]
-${
-  doneTodos.length
-    ? doneTodos.map((t, i) => `${i + 1}. ${t}`).join("\n")
-    : "없음"
-}
+                    [완료한 실천 항목 (${doneTodos.length}개)]
+                    ${
+                      doneTodos.length
+                        ? doneTodos.map((t, i) => `${i + 1}. ${t}`).join("\n")
+                        : "없음"
+                    }
 
-[진행 중/미완료 항목 (${pendingTodos.length}개)]
-${
-  pendingTodos.length
-    ? pendingTodos.map((t, i) => `${i + 1}. ${t}`).join("\n")
-    : "없음"
-}
+                    [진행 중/미완료 항목 (${pendingTodos.length}개)]
+                    ${
+                      pendingTodos.length
+                        ? pendingTodos
+                            .map((t, i) => `${i + 1}. ${t}`)
+                            .join("\n")
+                        : "없음"
+                    }
 
-[작성 규칙]
-- summary: 전체적인 실천 현황과 노력에 대한 따뜻한 종합 평가. 100자 이내.
-- strengths: 잘 하고 있는 점 2가지. 각 30자 이내.
-- suggestions: 앞으로 더 발전할 수 있는 구체적 제안 2가지. 각 40자 이내.
-- encouragement: 한 줄 응원 메시지. 30자 이내.
-- score: 실천 달성도 0~100 정수 (완료 비율 + 노력도 종합).
+                    [작성 규칙]
+                    - summary: 전체적인 실천 현황과 노력에 대한 따뜻한 종합 평가. 100자 이내.
+                    - strengths: 잘 하고 있는 점 2가지. 각 30자 이내.
+                    - suggestions: 앞으로 더 발전할 수 있는 구체적 제안 2가지. 각 40자 이내.
+                    - encouragement: 응원 메시지. 100자 이내.
+                      사용자 정보 다음 6개 중 구체적으로 어떻게 기반하여 풀이한 것인지 근거 제시. 
+                      사주 4주 8자 / 명리학 오행 / 자미두수 / 동양 점성술 / 서양 점성술 / 성명학 
+                    - score: 실천 달성도 0~100 정수 (완료 비율 + 노력도 종합).
 
-부드러운 존댓말, 긍정 위주로 작성하라.`,
+                    부드러운 존댓말, 긍정 위주로 작성하라.`,
           response_json_schema: {
             type: "object",
             properties: {

@@ -365,7 +365,9 @@ function GoalDetailPanel({
                 - keyword: 10자 이내 핵심 단어 (짧게)
                 - micro_action: 20자 이내 오늘 할 구체적 행동 (한 줄)
                 - how: 50자 이내. 어떻게 하면 좋은지 설명. 줄바꿈 금지.
-                - fortune: 40자 이내. 이 행동이 가져올 긍정적 효과. 줄바꿈 금지.
+                - fortune: 100자 이내. 이 행동이 가져올 긍정적 효과.
+                  사용자 정보 다음 6개 중 구체적으로 어떻게 기반하여 풀이한 것인지 근거 제시. 
+                  사주 4주 8자 / 명리학 오행 / 자미두수 / 동양 점성술 / 서양 점성술 / 성명학 
                 - stat_focus: 아래 5가지 중 하나만:
                   work_efficiency / creativity /
                   communication / focus / fortune
@@ -501,8 +503,26 @@ export default function Home() {
    - potentials: 잠재력 3개 (각 10자 이내)`
       : "";
 
+    const allGoals = await base44.entities.Goal.list();
+    const activeGoals = allGoals
+      .filter((g) => g.user_profile_id === profile.id && !g.is_completed)
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+    const goalsContext =
+      activeGoals.length > 0
+        ? activeGoals
+            .map(
+              (g, i) =>
+                `${i + 1}. 제목: ${g.title} / 설명: ${
+                  g.description || "설명 없음"
+                }`,
+            )
+            .join("\n")
+        : "현재 설정된 목표가 없습니다.";
+
     const res = await base44.integrations.Core.InvokeLLM({
       prompt: `너는 HADA 앱의 일일 리딩 엔진이다.
+              사용자의 목표 리스트를 분석하여 오늘 하루의 방향성을 제시하라.
 
               === ${config.name} (${currentMode.toUpperCase()} MODE) ===
               분석 위계:
@@ -516,16 +536,17 @@ export default function Home() {
               오늘 날짜: ${today}, 시간대: ${timeSlot}
               모드: ${currentMode} 
 
+              [사용자의 현재 목표 리스트]
+              ${goalsContext}
+              
               [작성 규칙 — 글자 수는 방향 지시, 초과 시 코드 truncate]
-              1. today_hint: 헤더 인사말.
-                16자 이내(text-xl 기준 iPhone SE 1줄).
-                줄바꿈 금지.
-              2. welcome_subtitle: 목표와 연결된 문구.
+              1. today_hint: 헤더 인사말. 사용자의 목표들 중 오늘 가장 집중하면 좋을 키워드를 녹여낼 것.
+                16자 이내(text-xl 기준 iPhone SE 1줄). 줄바꿈 금지.
+              2. welcome_subtitle: 전체 목표의 맥락과 연결된 동기부여 문구.
                 20자 이내(text-base 기준). 줄바꿈 금지.
-              3. base_stats: 오늘 날짜·목표·모드 종합
-                0~100 정수. 매일 다른 값 필수.
+              3. base_stats: 위 목표들을 달성하기 위한 오늘 사용자의 기운/능력치 (0~100 정수).
               4. mode_card.suggested_mode : action 또는 restore 하나 선택.
-              5. mode_card.card_body: 60자 이내.${traitsPrompt}`,
+              5. mode_card.card_body: 사용자의 목표 리스트 중 하나를 언급하며 구체적인 조언을 제공할 것 (60자 이내).${traitsPrompt}`,
       response_json_schema: {
         type: "object",
         properties: {
