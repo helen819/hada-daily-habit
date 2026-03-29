@@ -21,7 +21,7 @@ const navItems = [
   { name: "Home", icon: Home, label: "홈" },
   { name: "Goals", icon: Goal, label: "목표" },
   { name: "Record", icon: CalendarDays, label: "기록" },
-  { name: "Shop", icon: ShoppingBag, label: "상점" },
+  { name: "Cheering", icon: Heart, label: "응원" },
   { name: "Profile", icon: User, label: "프로필" },
 ];
 

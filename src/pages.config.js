@@ -52,7 +52,7 @@ import Record from "./pages/Record";
 import Home from "./pages/Home";
 import Onboarding from "./pages/Onboarding";
 import Profile from "./pages/Profile";
-import Shop from "./pages/Shop";
+import Cheering from "./pages/Cheering";
 import __Layout from "./Layout.jsx";
 
 export const PAGES = {
@@ -61,7 +61,7 @@ export const PAGES = {
     Home: Home,
     Onboarding: Onboarding,
     Profile: Profile,
-    Shop: Shop,
+    Cheering: Cheering,
 };
 
 export const pagesConfig = {
