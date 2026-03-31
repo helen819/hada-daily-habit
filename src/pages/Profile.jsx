@@ -2,8 +2,19 @@ import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import {
-  Loader2, Star, Zap, AlertTriangle, Trash2,
-  Sun, Wand2, Heart, Banknote, Briefcase, Leaf, ChevronRight, X,
+  Loader2,
+  Star,
+  Zap,
+  AlertTriangle,
+  Trash2,
+  Sun,
+  Wand2,
+  Heart,
+  Banknote,
+  Briefcase,
+  Leaf,
+  ChevronRight,
+  X,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import StatsRadar from "@/components/home/StatsRadar";
@@ -15,7 +26,9 @@ import { getFullDestinyData } from "@/components/services/calculator/destinyCalc
 import { getKSTDateString } from "@/utils/date";
 
 // ─── 날짜 유틸 ────────────────────────────────────────────────────
-function getToday() { return getKSTDateString(); }
+function getToday() {
+  return getKSTDateString();
+}
 function getThisMonday() {
   const now = new Date();
   const kst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
@@ -34,15 +47,48 @@ function getThisYearFirst() {
 
 // ─── 운세 상수 ────────────────────────────────────────────────────
 const FORTUNE_DAILY = {
-  id: "daily", title: "오늘의 운세", icon: Sun,
-  subtitle: "오늘 전체 흐름", gradient: "from-amber-300 to-orange-300",
+  id: "daily",
+  title: "오늘의 운세",
+  icon: Sun,
+  subtitle: "오늘 전체 흐름",
+  gradient: "from-amber-300 to-orange-300",
 };
 const FORTUNE_DETAILED = [
-  { id: "summary", title: "종합운세", icon: Wand2, subtitle: "주간·월간·연간", gradient: "from-violet-300 to-purple-300" },
-  { id: "love",    title: "애정운",  icon: Heart,    subtitle: "관계 에너지",   gradient: "from-rose-300 to-pink-300"    },
-  { id: "wealth",  title: "재물운",  icon: Banknote, subtitle: "금전 흐름",     gradient: "from-yellow-300 to-amber-300" },
-  { id: "career",  title: "취업운",  icon: Briefcase,subtitle: "커리어 기회",   gradient: "from-indigo-300 to-blue-300"  },
-  { id: "health",  title: "건강운",  icon: Leaf,     subtitle: "몸과 마음",     gradient: "from-teal-300 to-emerald-300" },
+  {
+    id: "summary",
+    title: "종합운세",
+    icon: Wand2,
+    subtitle: "주간·월간·연간",
+    gradient: "from-violet-300 to-purple-300",
+  },
+  {
+    id: "love",
+    title: "애정운",
+    icon: Heart,
+    subtitle: "관계 에너지",
+    gradient: "from-rose-300 to-pink-300",
+  },
+  {
+    id: "wealth",
+    title: "재물운",
+    icon: Banknote,
+    subtitle: "금전 흐름",
+    gradient: "from-yellow-300 to-amber-300",
+  },
+  {
+    id: "career",
+    title: "취업운",
+    icon: Briefcase,
+    subtitle: "커리어 기회",
+    gradient: "from-indigo-300 to-blue-300",
+  },
+  {
+    id: "health",
+    title: "건강운",
+    icon: Leaf,
+    subtitle: "몸과 마음",
+    gradient: "from-teal-300 to-emerald-300",
+  },
 ];
 
 // ─── in-memory 운세 캐시 ─────────────────────────────────────────
@@ -63,9 +109,12 @@ async function generateFortune(profile, category) {
     const weekKey = `fortune_${base}_weekly_${getThisMonday()}`;
     const monthKey = `fortune_${base}_monthly_${getThisMonthFirst()}`;
     const yearKey = `fortune_${base}_yearly_${getThisYearFirst()}`;
-    let weekly = fortuneMemCache.get(weekKey) ?? (await base44.storage.get(weekKey));
-    let monthly = fortuneMemCache.get(monthKey) ?? (await base44.storage.get(monthKey));
-    let yearly = fortuneMemCache.get(yearKey) ?? (await base44.storage.get(yearKey));
+    let weekly =
+      fortuneMemCache.get(weekKey) ?? (await base44.storage.get(weekKey));
+    let monthly =
+      fortuneMemCache.get(monthKey) ?? (await base44.storage.get(monthKey));
+    let yearly =
+      fortuneMemCache.get(yearKey) ?? (await base44.storage.get(yearKey));
     const kst = new Date(new Date().getTime() + 9 * 60 * 60 * 1000);
     const isMonday = kst.getDay() === 1;
     const isFirstOfMonth = kst.getDate() === 1;
@@ -76,11 +125,23 @@ async function generateFortune(profile, category) {
     const needYearly = isFirstAccess || isNewYear || !yearly;
     if (!needWeekly && !needMonthly && !needYearly) {
       if (!weekly && !monthly && !yearly) return null;
-      return { weekly: weekly ?? null, monthly: monthly ?? null, yearly: yearly ?? null };
+      return {
+        weekly: weekly ?? null,
+        monthly: monthly ?? null,
+        yearly: yearly ?? null,
+      };
     }
     const now = new Date();
-    const dateStr = now.toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric", weekday: "long" });
-    const timeStr = now.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" });
+    const dateStr = now.toLocaleDateString("ko-KR", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      weekday: "long",
+    });
+    const timeStr = now.toLocaleTimeString("ko-KR", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
     let aiResult = null;
     try {
       aiResult = await base44.integrations.Core.InvokeLLM({
@@ -100,27 +161,81 @@ async function generateFortune(profile, category) {
           properties: {
             summary: { type: "string" },
             detailed: { type: "string" },
-            weekly: { type: "object", properties: { summary: { type: "string" }, actionTips: { type: "array", items: { type: "string" } } } },
-            monthly: { type: "object", properties: { summary: { type: "string" }, actionTips: { type: "array", items: { type: "string" } } } },
-            yearly: { type: "object", properties: { summary: { type: "string" }, actionTips: { type: "array", items: { type: "string" } } } },
+            weekly: {
+              type: "object",
+              properties: {
+                summary: { type: "string" },
+                actionTips: { type: "array", items: { type: "string" } },
+              },
+            },
+            monthly: {
+              type: "object",
+              properties: {
+                summary: { type: "string" },
+                actionTips: { type: "array", items: { type: "string" } },
+              },
+            },
+            yearly: {
+              type: "object",
+              properties: {
+                summary: { type: "string" },
+                actionTips: { type: "array", items: { type: "string" } },
+              },
+            },
           },
         },
       });
-    } catch { console.log("종합운세 AI 호출 실패"); }
-    if (needWeekly && aiResult?.weekly) { weekly = aiResult.weekly; await base44.storage.set(weekKey, weekly); fortuneMemCache.set(weekKey, weekly); }
-    if (needMonthly && aiResult?.monthly) { monthly = aiResult.monthly; await base44.storage.set(monthKey, monthly); fortuneMemCache.set(monthKey, monthly); }
-    if (needYearly && aiResult?.yearly) { yearly = aiResult.yearly; await base44.storage.set(yearKey, yearly); fortuneMemCache.set(yearKey, yearly); }
+    } catch {
+      console.log("종합운세 AI 호출 실패");
+    }
+    if (needWeekly && aiResult?.weekly) {
+      weekly = aiResult.weekly;
+      await base44.storage.set(weekKey, weekly);
+      fortuneMemCache.set(weekKey, weekly);
+    }
+    if (needMonthly && aiResult?.monthly) {
+      monthly = aiResult.monthly;
+      await base44.storage.set(monthKey, monthly);
+      fortuneMemCache.set(monthKey, monthly);
+    }
+    if (needYearly && aiResult?.yearly) {
+      yearly = aiResult.yearly;
+      await base44.storage.set(yearKey, yearly);
+      fortuneMemCache.set(yearKey, yearly);
+    }
     if (!weekly && !monthly && !yearly) return null;
-    return { summary: aiResult?.summary ?? null, detailed: aiResult?.detailed ?? null, weekly: weekly ?? null, monthly: monthly ?? null, yearly: yearly ?? null };
+    return {
+      summary: aiResult?.summary ?? null,
+      detailed: aiResult?.detailed ?? null,
+      weekly: weekly ?? null,
+      monthly: monthly ?? null,
+      yearly: yearly ?? null,
+    };
   }
 
   const storageKey = buildCacheKey(profile, category.id);
-  if (fortuneMemCache.has(storageKey)) { const c = fortuneMemCache.get(storageKey); if (c === "FAILED") return null; return c; }
+  if (fortuneMemCache.has(storageKey)) {
+    const c = fortuneMemCache.get(storageKey);
+    if (c === "FAILED") return null;
+    return c;
+  }
   const stored = await base44.storage.get(storageKey);
-  if (stored) { if (stored === "FAILED") return null; fortuneMemCache.set(storageKey, stored); return stored; }
+  if (stored) {
+    if (stored === "FAILED") return null;
+    fortuneMemCache.set(storageKey, stored);
+    return stored;
+  }
   const now = new Date();
-  const dateStr = now.toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric", weekday: "long" });
-  const timeStr = now.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" });
+  const dateStr = now.toLocaleDateString("ko-KR", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    weekday: "long",
+  });
+  const timeStr = now.toLocaleTimeString("ko-KR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
   const CATEGORY_FOCUS = {
     daily: "오늘 하루 전체 에너지 흐름, 업무/대인관계/건강 종합",
     love: "감성 지수, 연애운, 관계 회복 가능성, 표현력",
@@ -142,19 +257,32 @@ async function generateFortune(profile, category) {
               - energyLevel: 0~100 사이 정수만.
               - detailed: 100자 이내. 줄바꿈 금지.
               - actionTips: 정확히 3개. 각 항목 20자 이내. 구체적인 행동만.
-              ${category.id === "daily" ? "- luckyColor: #RRGGBB 형식만." : ""}`,
+              ${
+                category.id === "daily" ? "- luckyColor: #RRGGBB 형식만." : ""
+              }`,
       response_json_schema: {
         type: "object",
         properties: {
-          title: { type: "string" }, summary: { type: "string" },
-          energyLevel: { type: "number" }, detailed: { type: "string" },
+          title: { type: "string" },
+          summary: { type: "string" },
+          energyLevel: { type: "number" },
+          detailed: { type: "string" },
           actionTips: { type: "array", items: { type: "string" } },
           luckyColor: { type: "string" },
         },
       },
     });
-    if (raw) result = { ...raw, aiLuckyColor: category.id === "daily" && raw.luckyColor ? raw.luckyColor : undefined };
-  } catch { console.log("운세 에러"); }
+    if (raw)
+      result = {
+        ...raw,
+        aiLuckyColor:
+          category.id === "daily" && raw.luckyColor
+            ? raw.luckyColor
+            : undefined,
+      };
+  } catch {
+    console.log("운세 에러");
+  }
   const valueToStore = result ?? "FAILED";
   await base44.storage.set(storageKey, valueToStore);
   fortuneMemCache.set(storageKey, valueToStore);
@@ -179,21 +307,30 @@ async function loadDailyPreview(profile) {
         properties: { line1: { type: "string" }, line2: { type: "string" } },
       },
     });
-    if (!res) { await base44.storage.set(cacheKey, "FAILED"); return null; }
+    if (!res) {
+      await base44.storage.set(cacheKey, "FAILED");
+      return null;
+    }
     await base44.storage.set(cacheKey, res);
     return res;
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 }
 
 // ─── 초기화 확인 팝업 ────────────────────────────────────────────
 function ResetConfirmModal({ onConfirm, onCancel }) {
   return (
     <motion.div
-      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-5"
     >
       <motion.div
-        initial={{ scale: 0.88, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.88, opacity: 0 }}
+        initial={{ scale: 0.88, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.88, opacity: 0 }}
         transition={{ type: "spring", damping: 26, stiffness: 340 }}
         className="bg-white dark:bg-gray-900 rounded-[28px] w-full max-w-sm p-6 shadow-2xl"
       >
@@ -201,14 +338,28 @@ function ResetConfirmModal({ onConfirm, onCancel }) {
           <div className="w-14 h-14 rounded-2xl bg-red-50 dark:bg-red-900/30 flex items-center justify-center">
             <AlertTriangle className="w-7 h-7 text-red-500" />
           </div>
-          <h2 className="text-lg font-black text-gray-900 dark:text-white">정말 초기화할까요?</h2>
+          <h2 className="text-lg font-black text-gray-900 dark:text-white">
+            정말 초기화할까요?
+          </h2>
           <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-            모든 데이터(프로필, 할일, 기록 등)가<br />
-            <span className="font-black text-red-500">영구적으로 삭제</span>됩니다.
+            모든 데이터(프로필, 할일, 기록 등)가
+            <br />
+            <span className="font-black text-red-500">영구적으로 삭제</span>
+            됩니다.
           </p>
           <div className="flex gap-3 w-full mt-2">
-            <button onClick={onCancel} className="flex-1 h-12 rounded-2xl bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 font-bold text-sm">취소</button>
-            <button onClick={onConfirm} className="flex-1 h-12 rounded-2xl bg-red-500 text-white font-black text-sm">초기화</button>
+            <button
+              onClick={onCancel}
+              className="flex-1 h-12 rounded-2xl bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 font-bold text-sm"
+            >
+              취소
+            </button>
+            <button
+              onClick={onConfirm}
+              className="flex-1 h-12 rounded-2xl bg-red-500 text-white font-black text-sm"
+            >
+              초기화
+            </button>
           </div>
         </div>
       </motion.div>
@@ -225,7 +376,9 @@ function LevelUpEffect({ level, onDone }) {
 
   return (
     <motion.div
-      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
       className="fixed inset-0 z-[70] flex items-center justify-center pointer-events-none"
     >
       {/* 배경 글로우 */}
@@ -273,7 +426,11 @@ function LevelUpEffect({ level, onDone }) {
           }}
           transition={{ duration: 1.0 + Math.random() * 0.5, delay: 0.2 }}
           className="absolute w-3 h-3 rounded-full"
-          style={{ background: ["#a855f7","#f59e0b","#ec4899","#6366f1","#10b981"][i % 5] }}
+          style={{
+            background: ["#a855f7", "#f59e0b", "#ec4899", "#6366f1", "#10b981"][
+              i % 5
+            ],
+          }}
         />
       ))}
     </motion.div>
@@ -290,21 +447,36 @@ function FortuneListItem({ category, onClick, isLoading }) {
       disabled={isLoading}
       className="w-full flex items-center gap-4 bg-white dark:bg-gray-900 rounded-2xl px-4 py-3.5 border border-gray-100 dark:border-gray-800 hover:shadow-md transition-all relative overflow-hidden shadow-sm"
     >
-      <div className={`absolute inset-0 hidden dark:block opacity-10 bg-gradient-to-r ${category.gradient}`} />
-      <div className={`relative z-10 w-10 h-10 rounded-xl bg-gradient-to-br ${category.gradient} flex items-center justify-center flex-shrink-0`}>
-        {isLoading
-          ? <Loader2 className="w-5 h-5 text-white animate-spin" strokeWidth={1.5} />
-          : <Icon className="w-5 h-5 text-white" strokeWidth={1.5} />
-        }
+      <div
+        className={`absolute inset-0 hidden dark:block opacity-10 bg-gradient-to-r ${category.gradient}`}
+      />
+      <div
+        className={`relative z-10 w-10 h-10 rounded-xl bg-gradient-to-br ${category.gradient} flex items-center justify-center flex-shrink-0`}
+      >
+        {isLoading ? (
+          <Loader2
+            className="w-5 h-5 text-white animate-spin"
+            strokeWidth={1.5}
+          />
+        ) : (
+          <Icon className="w-5 h-5 text-white" strokeWidth={1.5} />
+        )}
       </div>
       <div className="relative z-10 flex-1 text-left">
-        <p className="text-sm font-bold text-gray-800 dark:text-gray-200">{category.title}</p>
-        <p className="text-xs text-gray-400 dark:text-gray-500">{isLoading ? "분석 중..." : category.subtitle}</p>
+        <p className="text-sm font-bold text-gray-800 dark:text-gray-200">
+          {category.title}
+        </p>
+        <p className="text-xs text-gray-400 dark:text-gray-500">
+          {isLoading ? "분석 중..." : category.subtitle}
+        </p>
       </div>
-      {isLoading
-        ? <Loader2 className="relative z-10 w-4 h-4 text-gray-300 animate-spin" />
-        : <span className="relative z-10 text-gray-300 dark:text-gray-600 text-lg">›</span>
-      }
+      {isLoading ? (
+        <Loader2 className="relative z-10 w-4 h-4 text-gray-300 animate-spin" />
+      ) : (
+        <span className="relative z-10 text-gray-300 dark:text-gray-600 text-lg">
+          ›
+        </span>
+      )}
     </motion.button>
   );
 }
@@ -320,8 +492,8 @@ export default function Profile() {
   const [resetting, setResetting] = useState(false);
 
   // 다크모드 감지
-  const [isDark, setIsDark] = useState(
-    () => document.documentElement.classList.contains("dark")
+  const [isDark, setIsDark] = useState(() =>
+    document.documentElement.classList.contains("dark"),
   );
   useEffect(() => {
     const el = document.documentElement;
@@ -410,7 +582,10 @@ export default function Profile() {
     setShowAdForFortune(false);
     try {
       const result = await fortunePromiseRef.current;
-      if (!result) { setSelectedCategory(null); return; }
+      if (!result) {
+        setSelectedCategory(null);
+        return;
+      }
       setFortuneResult(result);
     } catch (e) {
       console.error(e);
@@ -459,30 +634,40 @@ export default function Profile() {
       <FortuneResultModal
         result={fortuneResult}
         category={selectedCategory}
-        onClose={() => { setFortuneResult(null); setSelectedCategory(null); }}
+        onClose={() => {
+          setFortuneResult(null);
+          setSelectedCategory(null);
+        }}
       />
 
       <AnimatePresence>
         {showResetModal && (
-          <ResetConfirmModal onConfirm={handleReset} onCancel={() => setShowResetModal(false)} />
+          <ResetConfirmModal
+            onConfirm={handleReset}
+            onCancel={() => setShowResetModal(false)}
+          />
         )}
       </AnimatePresence>
 
       {/* ── 헤더 ──────────────────────────────────────────────── */}
       <div className="px-6 pt-12 pb-6">
-        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
-          <p className="text-[10px] font-black text-purple-500 uppercase tracking-[0.3em] mb-2">HADA</p>
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <p className="text-[10px] font-black text-purple-500 uppercase tracking-[0.3em] mb-2">
+            HADA
+          </p>
           <h1 className="text-2xl font-black text-gray-900 dark:text-white leading-tight">
-            {profile.full_name}
+            프로필
           </h1>
           <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 font-semibold">
-            {profile.birth_date} · {profile.gender === "male" ? "남성" : "여성"}
+            6대 운명학 기반 알고리즘 계산
           </p>
         </motion.div>
       </div>
 
       <div className="px-5 space-y-5">
-
         {/* ── 레벨 카드 ─────────────────────────────────────────── */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -490,17 +675,28 @@ export default function Profile() {
           className="bg-gradient-to-br from-purple-400 to-blue-400 dark:bg-transparent rounded-3xl p-6 text-white dark:text-purple-300 shadow-lg dark:border dark:border-purple-500/50 relative overflow-hidden"
         >
           <div className="absolute inset-0 hidden dark:block rounded-3xl bg-[#121212]" />
-          <div className="absolute inset-0 hidden dark:block rounded-3xl" style={{ boxShadow: "inset 0 0 30px rgba(167,139,250,0.1), 0 0 30px rgba(167,139,250,0.15)" }} />
+          <div
+            className="absolute inset-0 hidden dark:block rounded-3xl"
+            style={{
+              boxShadow:
+                "inset 0 0 30px rgba(167,139,250,0.1), 0 0 30px rgba(167,139,250,0.15)",
+            }}
+          />
 
           <div className="relative z-10">
             {/* 레벨 + XP */}
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-white/20 dark:bg-purple-500/20 dark:border dark:border-purple-500/40 flex items-center justify-center">
-                  <Star className="w-6 h-6 text-white dark:text-purple-300" strokeWidth={2} />
+                  <Star
+                    className="w-6 h-6 text-white dark:text-purple-300"
+                    strokeWidth={2}
+                  />
                 </div>
                 <div>
-                  <p className="text-xs font-medium uppercase tracking-wide opacity-90">레벨</p>
+                  <p className="text-xs font-medium uppercase tracking-wide opacity-90">
+                    레벨
+                  </p>
                   <motion.span
                     key={currentLevel}
                     initial={{ scale: 0.7, opacity: 0 }}
@@ -511,7 +707,9 @@ export default function Profile() {
                   </motion.span>
                 </div>
               </div>
-              <span className="text-sm font-bold opacity-95 dark:text-purple-300">{profile.xp || 0} XP</span>
+              <span className="text-sm font-bold opacity-95 dark:text-purple-300">
+                {profile.xp || 0} XP
+              </span>
             </div>
 
             {/* XP 바 — filling 단계에서 현재값→100% 호로록 */}
@@ -520,13 +718,17 @@ export default function Profile() {
                 className="h-full rounded-full"
                 animate={{
                   width: xpBarPhase === "filling" ? "100%" : `${xpProgress}%`,
-                  background: xpBarPhase === "filling"
-                    ? ["#fef08a", "#facc15", "#fbbf24", "#facc15"]
-                    : "#fef08a",
+                  background:
+                    xpBarPhase === "filling"
+                      ? ["#fef08a", "#facc15", "#fbbf24", "#facc15"]
+                      : "#fef08a",
                 }}
                 transition={{
                   width: { duration: 0.8, ease: "easeInOut" },
-                  background: { duration: 0.6, repeat: xpBarPhase === "filling" ? Infinity : 0 },
+                  background: {
+                    duration: 0.6,
+                    repeat: xpBarPhase === "filling" ? Infinity : 0,
+                  },
                 }}
               />
             </div>
@@ -548,13 +750,23 @@ export default function Profile() {
                   ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-900/30"
                   : ""
               }`}
-              style={!isDark ? {
-                background: "linear-gradient(135deg, #facc15 0%, #f59e0b 100%)",
-                color: "#78350f",
-                boxShadow: "0 4px 16px rgba(245,158,11,0.45), 0 1px 3px rgba(0,0,0,0.1)",
-              } : undefined}
+              style={
+                !isDark
+                  ? {
+                      background:
+                        "linear-gradient(135deg, #facc15 0%, #f59e0b 100%)",
+                      color: "#78350f",
+                      boxShadow:
+                        "0 4px 16px rgba(245,158,11,0.45), 0 1px 3px rgba(0,0,0,0.1)",
+                    }
+                  : undefined
+              }
             >
-              <Zap className={`w-4 h-4 ${xpBarPhase === "filling" ? "animate-bounce" : ""}`} />
+              <Zap
+                className={`w-4 h-4 ${
+                  xpBarPhase === "filling" ? "animate-bounce" : ""
+                }`}
+              />
               {xpBarPhase === "filling" ? "부스트 적용 중..." : "레벨업 부스트"}
             </motion.button>
 
@@ -574,7 +786,9 @@ export default function Profile() {
         >
           <div className="flex items-center gap-2.5 mb-4">
             <div className="w-2 h-6 bg-purple-500 rounded-full shadow-[0_0_12px_rgba(168,85,247,0.25)]" />
-            <h3 className="text-sm font-black text-gray-800 dark:text-gray-100">기본 에너지</h3>
+            <h3 className="text-sm font-black text-gray-800 dark:text-gray-100">
+              오늘의 에너지
+            </h3>
           </div>
           <StatsRadar stats={profile.base_stats} />
         </motion.div>
@@ -589,35 +803,58 @@ export default function Profile() {
           >
             <div className="flex items-center gap-2.5 mb-1">
               <div className="w-2 h-6 bg-indigo-400 rounded-full" />
-              <h3 className="text-sm font-black text-gray-800 dark:text-gray-100">나의 특성</h3>
+              <h3 className="text-sm font-black text-gray-800 dark:text-gray-100">
+                나의 특성
+              </h3>
             </div>
 
             {profile.traits.strengths?.length > 0 && (
               <div>
-                <p className="text-[11px] font-black text-teal-500 uppercase tracking-widest mb-2">💪 강점</p>
+                <p className="text-[11px] font-black text-teal-500 uppercase tracking-widest mb-2">
+                  💪 강점
+                </p>
                 <div className="flex flex-wrap gap-2">
                   {profile.traits.strengths.map((s, i) => (
-                    <span key={i} className="px-3 py-1.5 bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 rounded-full text-xs font-bold border border-teal-100 dark:border-teal-800/50">{s}</span>
+                    <span
+                      key={i}
+                      className="px-3 py-1.5 bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 rounded-full text-xs font-bold border border-teal-100 dark:border-teal-800/50"
+                    >
+                      {s}
+                    </span>
                   ))}
                 </div>
               </div>
             )}
             {profile.traits.potentials?.length > 0 && (
               <div>
-                <p className="text-[11px] font-black text-purple-500 uppercase tracking-widest mb-2">✨ 잠재력</p>
+                <p className="text-[11px] font-black text-purple-500 uppercase tracking-widest mb-2">
+                  ✨ 잠재력
+                </p>
                 <div className="flex flex-wrap gap-2">
                   {profile.traits.potentials.map((p, i) => (
-                    <span key={i} className="px-3 py-1.5 bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full text-xs font-bold border border-purple-100 dark:border-purple-800/50">{p}</span>
+                    <span
+                      key={i}
+                      className="px-3 py-1.5 bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full text-xs font-bold border border-purple-100 dark:border-purple-800/50"
+                    >
+                      {p}
+                    </span>
                   ))}
                 </div>
               </div>
             )}
             {profile.traits.weaknesses?.length > 0 && (
               <div>
-                <p className="text-[11px] font-black text-orange-500 uppercase tracking-widest mb-2">🌱 성장 포인트</p>
+                <p className="text-[11px] font-black text-orange-500 uppercase tracking-widest mb-2">
+                  🌱 성장 포인트
+                </p>
                 <div className="flex flex-wrap gap-2">
                   {profile.traits.weaknesses.map((w, i) => (
-                    <span key={i} className="px-3 py-1.5 bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 rounded-full text-xs font-bold border border-orange-100 dark:border-orange-800/50">{w}</span>
+                    <span
+                      key={i}
+                      className="px-3 py-1.5 bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 rounded-full text-xs font-bold border border-orange-100 dark:border-orange-800/50"
+                    >
+                      {w}
+                    </span>
                   ))}
                 </div>
               </div>
@@ -636,17 +873,23 @@ export default function Profile() {
           <div>
             <div className="flex items-center gap-2.5 mb-3">
               <div className="w-2 h-6 bg-amber-400 rounded-full" />
-              <h3 className="text-sm font-black text-gray-800 dark:text-gray-100">오늘의 운세</h3>
+              <h3 className="text-sm font-black text-gray-800 dark:text-gray-100">
+                오늘의 운세
+              </h3>
             </div>
 
             <div
               className="rounded-2xl overflow-hidden dark:border dark:border-amber-500/40"
-              style={{ background: "linear-gradient(135deg, #FDE68A 0%, #FCD34D 100%)" }}
+              style={{
+                background: "linear-gradient(135deg, #FDE68A 0%, #FCD34D 100%)",
+              }}
             >
               <div className="px-5 py-4 flex items-center gap-3">
                 <Sun className="w-7 h-7 text-amber-600" strokeWidth={1.5} />
                 <div className="flex-1">
-                  <p className="text-sm font-bold text-amber-900">오늘의 운세</p>
+                  <p className="text-sm font-bold text-amber-900">
+                    오늘의 운세
+                  </p>
                   <p className="text-xs text-amber-700/70">오늘 전체 흐름</p>
                 </div>
               </div>
@@ -658,11 +901,17 @@ export default function Profile() {
                   </div>
                 ) : dailyPreview ? (
                   <div className="space-y-1">
-                    <p className="text-sm text-gray-700 dark:text-gray-200 leading-relaxed">☀️ {dailyPreview.line1}</p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">✨ {dailyPreview.line2}</p>
+                    <p className="text-sm text-gray-700 dark:text-gray-200 leading-relaxed">
+                      ☀️ {dailyPreview.line1}
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+                      ✨ {dailyPreview.line2}
+                    </p>
                   </div>
                 ) : (
-                  <p className="text-xs text-gray-400">오늘의 운세를 불러오는 중이에요...</p>
+                  <p className="text-xs text-gray-400">
+                    오늘의 운세를 불러오는 중이에요...
+                  </p>
                 )}
                 <motion.button
                   whileTap={{ scale: 0.97 }}
@@ -671,10 +920,17 @@ export default function Profile() {
                   className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-yellow-400 dark:bg-amber-500/20 dark:border dark:border-amber-500/50 hover:bg-yellow-500 text-white dark:text-amber-300 text-sm font-black transition-all"
                   style={{ boxShadow: "0 2px 8px rgba(180,140,0,0.25)" }}
                 >
-                  {loadingFortune && selectedCategory?.id === "daily"
-                    ? <><Loader2 className="w-4 h-4 animate-spin" /><span>분석 중...</span></>
-                    : <><span>자세히 보기</span><ChevronRight className="w-4 h-4" strokeWidth={2} /></>
-                  }
+                  {loadingFortune && selectedCategory?.id === "daily" ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>분석 중...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>자세히 보기</span>
+                      <ChevronRight className="w-4 h-4" strokeWidth={2} />
+                    </>
+                  )}
                 </motion.button>
               </div>
             </div>
@@ -684,7 +940,9 @@ export default function Profile() {
           <div>
             <div className="flex items-center gap-2.5 mb-3">
               <div className="w-2 h-6 bg-violet-400 rounded-full" />
-              <h3 className="text-sm font-black text-gray-800 dark:text-gray-100">상세 운세</h3>
+              <h3 className="text-sm font-black text-gray-800 dark:text-gray-100">
+                상세 운세
+              </h3>
             </div>
             <div className="flex flex-col gap-2">
               {FORTUNE_DETAILED.map((cat) => (
@@ -706,14 +964,17 @@ export default function Profile() {
             disabled={resetting}
             className="w-full py-3.5 rounded-2xl border-2 border-red-100 dark:border-red-900/50 text-red-400 text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50 transition-colors hover:bg-red-50 dark:hover:bg-red-900/10"
           >
-            {resetting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+            {resetting ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Trash2 className="w-4 h-4" />
+            )}
             {resetting ? "초기화 중..." : "데이터 초기화"}
           </button>
           <p className="text-center text-[10px] text-gray-300 dark:text-gray-700 mt-2">
             모든 데이터가 삭제되고 처음부터 시작됩니다
           </p>
         </div>
-
       </div>
     </div>
   );

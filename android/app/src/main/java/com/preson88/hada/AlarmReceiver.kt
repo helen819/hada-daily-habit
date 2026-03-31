@@ -49,7 +49,21 @@ class AlarmReceiver : BroadcastReceiver() {
 
     private suspend fun callGeminiAndSave(context: Context): Pair<String, String> {
         val prefs = context.getSharedPreferences("CAPPrefs", Context.MODE_PRIVATE)
+        val today = getKSTDateString()
 
+        // ✅ [추가] 이미 오늘 데이터가 있는지 확인
+        val existingJson = prefs.getString("CAP_local-app_entity_DailyReading", "[]")
+        val existingArray = JSONArray(existingJson)
+        for (i in 0 until existingArray.length()) {
+            val item = existingArray.getJSONObject(i)
+            if (item.optString("date") == today) {
+                // 이미 데이터가 있다면 LLM 호출 없이 기존 데이터 반환
+                val todayHint = item.optString("today_hint", "오늘의 에너지를 확인하세요 ✨")
+                val cardTitle = item.optJSONObject("mode_card")?.optString("card_title")
+                    ?: "HADA가 오늘의 리딩을 준비했어요"
+                return Pair(todayHint, cardTitle)
+            }
+        }
         // ── API 키 읽기 ──────────────────────────────────────
         val apiKeyRaw = prefs.getString("CAP_local-app_setting_gemini_api_key", null)
             ?: throw Exception("API 키 없음")
@@ -60,10 +74,57 @@ class AlarmReceiver : BroadcastReceiver() {
         val profiles = JSONArray(profileJson)
         if (profiles.length() == 0) throw Exception("프로필 없음")
         val profile = profiles.getJSONObject(0)
-
-        val goal = profile.optString("goal", "")
         val currentMode = profile.optString("current_mode", "action")
-        val fullName = profile.optString("full_name", "")
+
+        // ── 목표 리스트 (JS 로직 재현) ──
+        val goalsJson = prefs.getString("CAP_local-app_entity_Goal", "[]")
+        val goalsArray = JSONArray(goalsJson)
+        val activeGoalsList = mutableListOf<JSONObject>()
+        for (i in 0 until goalsArray.length()) {
+            val g = goalsArray.getJSONObject(i)
+            // 완료되지 않은 목표만 필터링
+            if (!g.optBoolean("is_completed", false)) {
+                activeGoalsList.add(g)
+            }
+        }
+        // order 순으로 정렬
+        activeGoalsList.sortBy { it.optInt("order", 0) }
+
+        val goalsContext = if (activeGoalsList.isNotEmpty()) {
+            activeGoalsList.mapIndexed { index, g ->
+                "${index + 1}. 제목: ${g.optString("title")} / 설명: ${g.optString("description", "설명 없음")}"
+            }.joinToString("\n")
+        } else {
+            "현재 설정된 목표가 없습니다."
+        }
+
+        // ── MODE_CONFIGS 데이터 매핑 ──
+        val modeName: String
+        val weights: List<String>
+        val toneKeywords: String
+        val goalFocus: String
+
+        if (currentMode == "restore") {
+            modeName = "휴식과 치유 🌙"
+            weights = listOf(
+                "- western_astrology: high_priority (내면 날씨 - 달위상/행성각도)",
+                "- saju_myeongri: medium_priority (에너지 잔량 - 일간 강약)",
+                "- jamidusu: low_priority (관계성 - 복덕궁/노복궁)",
+                "- name_analysis: bonus (치유음 - 편안한 소리)"
+            )
+            toneKeywords = "편안함, 공감, 회복, 통찰, 자기이해"
+            goalFocus = "심리 케어, 우울 완화, 스트레스 해소, 관계 회복"
+        } else {
+            modeName = "성과와 성취 🔥"
+            weights = listOf(
+                "- saju_myeongri: high_priority (전장 파악 - 일진으로 방향 결정)",
+                "- jamidusu: medium_priority (전략 무기 - 명궁/관록궁 주성)",
+                "- western_astrology: low_priority (위험 회피 - 수성역행/Void of Course만)",
+                "- name_analysis: bonus (부적 - 초성/색상)"
+            )
+            toneKeywords = "효율, 결과, 리더십, 집중, 실행, 타이밍"
+            goalFocus = "비즈니스, 시험, 자기계발, 재물, 승진"
+        }
 
         // ── destiny summary_for_ai 읽기 ──────────────────────
         val destinySummaryRaw = prefs.getString("CAP_local-app_setting_destiny_summary", null)
@@ -73,7 +134,6 @@ class AlarmReceiver : BroadcastReceiver() {
             ?: ""
 
         // ── 날짜·시간대 ──────────────────────────────────────
-        val today = getKSTDateString()
         val hour = Calendar.getInstance(TimeZone.getTimeZone("Asia/Seoul"))
             .get(Calendar.HOUR_OF_DAY)
         val timeSlot = when {
@@ -103,16 +163,28 @@ class AlarmReceiver : BroadcastReceiver() {
 
             [사용자 요청]
             너는 HADA 앱의 일일 리딩 엔진이다.
-            사용자: $fullName
-            목표: $goal
-            시간대: $timeSlot
-            모드: $currentMode
-            오늘 날짜: $today
+            사용자의 목표 리스트를 분석하여 오늘 하루의 방향성을 제시하라.
+            
+            === $modeName (${currentMode} MODE) ===
+            분석 위계:
+            ${weights.joinToString("\n")}
 
-            [작성 규칙]
-            1. today_hint: 오늘 사용자에게 건네는 한 줄 인사말. 16자 이내. 줄바꿈 금지.
-            2. mode_card.card_title: '활동 모드' 또는 '회복 모드' 둘 중 하나 추천.
-            오늘의 핵심 키워드 또는 짧은 응원 문구와 함께. 20자 이내. 줄바꿈 금지.
+            톤앤매너 키워드: $toneKeywords
+            목표 영역: $goalFocus
+            오늘 날짜: $today, 시간대: $timeSlot
+            모드: $currentMode 
+
+            [사용자의 현재 목표 리스트]
+            $goalsContext
+
+              [작성 규칙 — 글자 수는 방향 지시, 초과 시 코드 truncate]
+              1. today_hint: 헤더 인사말. 사용자의 목표들 중 오늘 가장 집중하면 좋을 키워드를 녹여낼 것.
+                16자 이내(text-xl 기준 iPhone SE 1줄). 줄바꿈 금지.
+              2. welcome_subtitle: 전체 목표의 맥락과 연결된 동기부여 문구.
+                20자 이내(text-base 기준). 줄바꿈 금지.
+              3. base_stats: 위 목표들을 달성하기 위한 오늘 사용자의 기운/능력치 (0~100 정수).
+              4. mode_card.suggested_mode : action 또는 restore 하나 선택.
+              5. mode_card.card_body: 사용자의 목표 리스트 중 하나를 언급하며 구체적인 조언을 제공할 것
 
             [출력 규칙]
             - 반드시 JSON만 반환한다
@@ -128,16 +200,33 @@ class AlarmReceiver : BroadcastReceiver() {
             put("type", "object")
             put("properties", JSONObject().apply {
                 put("today_hint", JSONObject().apply { put("type", "string") })
+                put("welcome_subtitle", JSONObject().apply { put("type", "string") })
+
+                // base_stats 객체 추가
+                put("base_stats", JSONObject().apply {
+                    put("type", "object")
+                    put("properties", JSONObject().apply {
+                        put("work_efficiency", JSONObject().apply { put("type", "number") })
+                        put("creativity", JSONObject().apply { put("type", "number") })
+                        put("communication", JSONObject().apply { put("type", "number") })
+                        put("focus", JSONObject().apply { put("type", "number") })
+                        put("fortune", JSONObject().apply { put("type", "number") })
+                    })
+                })
+
+                // mode_card 객체 확장
                 put("mode_card", JSONObject().apply {
                     put("type", "object")
                     put("properties", JSONObject().apply {
+                        put("suggested_mode", JSONObject().apply { put("type", "string") })
                         put("card_title", JSONObject().apply { put("type", "string") })
+                        put("card_body", JSONObject().apply { put("type", "string") })
                     })
                 })
             })
         }
 
-        // ── Gemini API 호출 ───────────────────────────────────
+        // ── Gemini API 호출 설정 수정 ──
         val requestBody = JSONObject().apply {
             put("contents", JSONArray().apply {
                 put(JSONObject().apply {
@@ -150,7 +239,7 @@ class AlarmReceiver : BroadcastReceiver() {
                 put("response_mime_type", "application/json")
                 put("responseSchema", schema)
                 put("temperature", 0.6)
-                put("maxOutputTokens", 256) // 두 필드만 필요하므로 최소화
+                put("maxOutputTokens", 8192) // 스키마가 커졌으므로 토큰 제한 상향
             })
         }
 
@@ -207,8 +296,11 @@ class AlarmReceiver : BroadcastReceiver() {
             put("id", UUID.randomUUID().toString())
             put("date", today)
             put("today_hint", result.optString("today_hint", ""))
+            put("welcome_subtitle", result.optString("welcome_subtitle", ""))
+            put("base_stats", result.optJSONObject("base_stats") ?: JSONObject())
             put("mode_card", result.optJSONObject("mode_card") ?: JSONObject())
-            put("created_at", System.currentTimeMillis().toString())
+            put("recommended_mode", result.optJSONObject("mode_card")?.optString("suggested_mode", ""))
+            put("created_at", System.currentTimeMillis())
         }
         newArray.put(newReading)
 

@@ -114,11 +114,11 @@ class DailyAlarmPlugin : Plugin() {
         fun rescheduleOneDayAfterWeek(context: Context, dayOffset: Int) {
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
-            // 7일 뒤 같은 시간으로 밀어서 재예약
+            // 30일 뒤 같은 시간으로 밀어서 재예약
             val calendar = Calendar.getInstance(TimeZone.getTimeZone("Asia/Seoul")).apply {
-                add(Calendar.DAY_OF_YEAR, 7)
-                set(Calendar.HOUR_OF_DAY, 7)
-                set(Calendar.MINUTE, 50)
+                add(Calendar.DAY_OF_YEAR, 30)
+                set(Calendar.HOUR_OF_DAY, 8)
+                set(Calendar.MINUTE, 0)
                 set(Calendar.SECOND, 0)
                 set(Calendar.MILLISECOND, 0)
             }

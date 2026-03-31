@@ -59,7 +59,8 @@ async function generateAICharm(profile) {
   const allGoals = await base44.entities.Goal.list();
   const activeGoals = allGoals
     .filter((g) => g.user_profile_id === profile.id && !g.is_completed)
-    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+    .slice(0, 10);
 
   const goalsContext =
     activeGoals.length > 0
@@ -106,11 +107,13 @@ async function generateAICharm(profile) {
 
             [반환 필드 규칙]
             - name: 10자 이내. 일상에서 당장 구할 수 있는 일반적인 물건.
-            - emoji: 해당 물건에 가장 잘 어울리는 이모지 한 개.
+            - emoji: 위 물건과 가장 잘 어울리는 이모지 기호 딱 1개. (예: 🔑, ☕) 다른 텍스트 포함 금지.
             - effect: 30자 이내. "어떤 목표"와 연관된 효과인지 명시하여 작성.
             - description: 100자 이내. 사용법·의미. 줄바꿈 금지.
-              사용자 정보 다음 6개 중 구체적으로 어떻게 기반하여 풀이한 것인지 근거 제시. 
-              사주 4주 8자 / 명리학 오행 / 자미두수 / 동양 점성술 / 서양 점성술 / 성명학`,
+              사주 4주 8자 / 명리학 오행 / 자미두수 / 동양 점성술 / 서양 점성술 / 성명학 분석에서 도출한 자연어로 녹여 제시. 
+              예시: "금의 기운을 타고난 당신은~", "화성의 에너지가 강한 지금~","이름에 담긴 수리가 변화를 암시하므로~".
+              절대 금지: "명리학", "오행", "자미두수", "점성술", "성명학", "사주" 단어를 그대로 출력하지 말 것.
+              분석 카테고리명이 아니라 그 카테고리에서 나온 결과값(기운·색·방향·수·행성 등)만 문장에 담을 것.`,
     response_json_schema: {
       type: "object",
       properties: {
@@ -537,7 +540,7 @@ export default function Cheering() {
     setShowAdForCharm(false);
     try {
       const charm = await charmPromiseRef.current;
-      if (!charm) return;
+      if (!charm || !charm.name || !charm.emoji) return;
 
       await base44.storage.set("lastCharmDate", today);
       await base44.storage.set("cachedCharm", charm);
@@ -549,6 +552,8 @@ export default function Cheering() {
 
       setDailyCharm(charm);
       // 저장 버튼 없이 그냥 화면에 표시 (revealedCharm 팝업 사용 안 함)
+
+      setShowCharmDetail(true);
     } catch (e) {
       console.error(e);
     } finally {
@@ -612,9 +617,11 @@ export default function Cheering() {
                 - greeting: 15자 이내. 사용자에게 직접 말을 거는 첫 인사. 줄바꿈 금지.
                 - empathy: 60자 이내. 고민에 깊이 공감하는 내용. "~하시죠" "~하실 수 있어요" 형식. 줄바꿈 금지.
                 - core_message: 60자 이내. 핵심 응원 메시지. 목표와 연결된 진심. 줄바꿈 금지.
-                - advice: 100자 이내. 고민을 극복할 수 있는 구체적이고 따뜻한 조언. 줄바꿈 금지.
-                  사용자 정보 다음 6개 중 구체적으로 어떻게 기반하여 풀이한 것인지 근거 제시. 
-                  사주 4주 8자 / 명리학 오행 / 자미두수 / 동양 점성술 / 서양 점성술 / 성명학.
+                - advice: 120자 이내. 고민을 극복할 수 있는 구체적이고 따뜻한 조언. 줄바꿈 금지.
+                  사주 4주 8자 / 명리학 오행 / 자미두수 / 동양 점성술 / 서양 점성술 / 성명학 분석에서 도출한 자연어로 녹여 조언. 
+                  예시: "금의 기운을 타고난 당신은~", "화성의 에너지가 강한 지금~","이름에 담긴 수리가 변화를 암시하므로~".
+                  절대 금지: "명리학", "오행", "자미두수", "점성술", "성명학", "사주" 단어를 그대로 출력하지 말 것.
+                  분석 카테고리명이 아니라 그 카테고리에서 나온 결과값(기운·색·방향·수·행성 등)만 문장에 담을 것.
                 - closing: 30자 이내. 마무리 응원 한 줄. 줄바꿈 금지.
 
                 전문 용어 금지. 비교·경쟁 표현 금지. 존댓말. 따뜻하고 진심 어린 톤.`,
@@ -954,7 +961,7 @@ export default function Cheering() {
                   </div>
 
                   <p className="text-xs font-bold text-purple-700 dark:text-purple-300 mb-1">
-                    🎯 {savedLetterMeta.goalTitle}
+                    {savedLetterMeta.goalTitle}
                   </p>
                   <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-3">
                     {savedLetterMeta.concern} · {savedLetterMeta.subConcern}
@@ -962,7 +969,7 @@ export default function Cheering() {
 
                   {/* 핵심 메시지 미리보기 */}
                   <p className="text-sm font-bold text-gray-800 dark:text-gray-200 leading-relaxed line-clamp-2">
-                    💜 {savedLetter.core_message}
+                    {savedLetter.core_message}
                   </p>
                 </button>
               </motion.div>
