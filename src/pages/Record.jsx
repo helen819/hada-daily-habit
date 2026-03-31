@@ -144,7 +144,7 @@ function DayPopup({ date, badges, goalTodos, goals, onClose }) {
                         className="flex items-center gap-3 py-2.5"
                       >
                         <CheckCircle2 className="w-4 h-4 text-purple-400 flex-shrink-0" />
-                        <span className="text-sm line-through text-gray-400 flex-1">
+                        <span className="text-sm text-gray-400 flex-1">
                           {t.title}
                         </span>
                         <span className="text-[10px] font-bold text-purple-400">

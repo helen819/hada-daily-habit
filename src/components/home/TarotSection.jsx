@@ -227,7 +227,7 @@ function MiniTarotCard({
   const handleAdd = (e) => {
     e?.stopPropagation();
     if (!isAlreadyAdded) {
-      onAddToTodo(action.micro_action);
+      onAddToTodo(action);
       setAdded(true);
     }
   };

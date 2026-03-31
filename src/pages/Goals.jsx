@@ -563,7 +563,7 @@ function GoalRow({ goal, index, isSelected, onSelect, onComplete, onDelete }) {
             <span
               className={`text-sm font-bold block truncate ${
                 isCompleted
-                  ? "line-through text-gray-400"
+                  ? "text-gray-400"
                   : "text-gray-800 dark:text-gray-100"
               }`}
             >
@@ -773,7 +773,7 @@ export default function Goals() {
 
       <div className="px-5 space-y-3">
         {/* 진행 중 */}
-        <div className="bg-white dark:bg-[#2E3447] rounded-[32px] p-5 shadow-[0_8px_40px_rgba(120,50,255,0.06)] border border-purple-50 dark:border-gray-800">
+        <div className="bg-white dark:bg-gray-900 rounded-[32px] p-5 shadow-[0_8px_40px_rgba(120,50,255,0.06)] border border-purple-50 dark:border-gray-800">
           <div className="flex items-center gap-2.5 mb-4">
             <div className="w-2 h-6 bg-purple-500 rounded-full shadow-[0_0_12px_rgba(168,85,247,0.25)]" />
             <p className="text-sm font-black text-gray-800 dark:text-gray-100">
@@ -843,7 +843,7 @@ export default function Goals() {
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white dark:bg-[#2E3447] rounded-[32px] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.04)] border border-gray-50 dark:border-gray-800"
+            className="bg-white dark:bg-gray-900 rounded-[32px] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.04)] border border-gray-50 dark:border-gray-800"
           >
             <div className="flex items-center gap-2.5 mb-4">
               <div className="w-2 h-6 bg-emerald-400 rounded-full" />
@@ -881,7 +881,7 @@ export default function Goals() {
             icon={<AlertTriangle className="w-6 h-6 text-amber-500" />}
             iconBg="bg-amber-50 dark:bg-amber-900/30"
             title="최소 1개의 진행 중인 목표가 필요해요"
-            description={`HADA의 분석과 실천 리스트를 이용하기 위해\n최소 1개의 진행 중인 목표가 유지되어야 합니다.\n\n새로운 목표를 추가한 뒤에\n기존 목표를 삭제하거나 달성 완료해 주세요.`}
+            description={`HADA의 분석과 할일 목록 이용하기 위해\n최소 1개의 진행 중인 목표가 유지되어야 합니다.\n\n새로운 목표를 추가한 뒤에\n기존 목표를 삭제하거나 달성 완료해 주세요.`}
             confirmLabel="확인"
             confirmStyle="bg-gray-900 dark:bg-gray-700"
             onConfirm={() => setShowCannotDelete(false)}

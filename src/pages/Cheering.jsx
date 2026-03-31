@@ -244,7 +244,7 @@ function CheeringLetterModal({
           {letter.empathy && (
             <div className="mb-4">
               <p className="text-[10px] font-black text-purple-400 uppercase tracking-widest mb-1.5">
-                공감
+                잘하고 있어요
               </p>
               <p className="text-sm text-gray-700 dark:text-gray-200 leading-relaxed">
                 {letter.empathy}
@@ -265,7 +265,7 @@ function CheeringLetterModal({
           {letter.advice && (
             <div className="mb-4">
               <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1.5">
-                실천 조언
+                이렇게 해보세요
               </p>
               <p className="text-sm text-gray-700 dark:text-gray-200 leading-relaxed">
                 {letter.advice}

@@ -253,6 +253,12 @@ export const base44 = {
         //   title           : 할일 제목
         //   completed       : 완료 여부
         //   date            : 날짜 "YYYY-MM-DD"
+        //   --- ✅ 행운 카드 관련 필드 추가 ---
+        //   is_from_card    : 행운 실천 카드에서 추가되었는지 여부 (boolean)
+        //   card_keyword    : 카드의 키워드 (string)
+        //   card_how        : 카드의 실천 방법 (string)
+        //   card_fortune    : 카드의 행운 메시지 (string)
+        //   stat_focus      : 카드의 스탯 테마 (색상 결정용)
         GoalTodo: createEntity("GoalTodo"),
     },
 
@@ -381,14 +387,14 @@ export const base44 = {
 // Goal.xp_reset_week 와 비교해 초기화 여부를 판단할 때 사용.
 // import { getWeekKey } from "@/api/base44Client"; 로 불러와 쓰세요.
 export function getWeekKey() {
-  const now = new Date();
-  const dayOfWeek = now.getDay(); // 0=일, 1=월 ... 6=토
-  const sunday = new Date(now);
-  sunday.setDate(now.getDate() - dayOfWeek);
-  const year = sunday.getFullYear();
-  const startOfYear = new Date(year, 0, 1);
-  const weekNum = Math.ceil(
-    ((sunday - startOfYear) / 86400000 + startOfYear.getDay() + 1) / 7,
-  );
-  return `${year}-W${String(weekNum).padStart(2, "0")}`;
+    const now = new Date();
+    const dayOfWeek = now.getDay(); // 0=일, 1=월 ... 6=토
+    const sunday = new Date(now);
+    sunday.setDate(now.getDate() - dayOfWeek);
+    const year = sunday.getFullYear();
+    const startOfYear = new Date(year, 0, 1);
+    const weekNum = Math.ceil(
+        ((sunday - startOfYear) / 86400000 + startOfYear.getDay() + 1) / 7,
+    );
+    return `${year}-W${String(weekNum).padStart(2, "0")}`;
 }

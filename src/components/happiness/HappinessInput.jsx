@@ -63,7 +63,7 @@ export default function HappinessInput({ onSubmit, isSubmitting }) {
   return (
     <div
       ref={listRef}
-      className="rounded-3xl bg-white dark:bg-[#2E3447] p-5 border border-gray-100 dark:border-[#424B63] shadow-md dark:shadow-[0_2px_12px_rgba(0,0,0,0.4)]"
+      className="rounded-3xl bg-white dark:bg-gray-900 p-5 border border-gray-100 dark:border-[#424B63] shadow-md dark:shadow-[0_2px_12px_rgba(0,0,0,0.4)]"
     >
       {/* 헤더 */}
       <div className="flex items-center gap-2 mb-4">

@@ -10,6 +10,10 @@ import {
   Sparkles,
   Target,
   X,
+  Palette,
+  MessageCircle,
+  Clover,
+  Check,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -46,6 +50,42 @@ const GOAL_THEMES = [
     bar: "bg-sky-400",
   },
 ];
+
+const statIcons = {
+  work_efficiency: Target,
+  creativity: Palette,
+  communication: MessageCircle,
+  focus: Sparkles,
+  fortune: Clover,
+};
+
+const cardBackGradients = {
+  work_efficiency: "from-purple-400 to-violet-500",
+  creativity: "from-fuchsia-400 to-purple-500",
+  communication: "from-pink-400 to-rose-500",
+  focus: "from-blue-400 to-sky-500",
+  fortune: "from-amber-400 to-yellow-500",
+};
+
+const borderColors = {
+  work_efficiency: "border-purple-400",
+  creativity: "border-fuchsia-400",
+  communication: "border-pink-400",
+  focus: "border-blue-400",
+  fortune: "border-amber-400",
+};
+
+const buttonAddedColors = {
+  work_efficiency:
+    "bg-purple-100 dark:bg-purple-800/50 text-purple-600 dark:text-purple-300",
+  creativity:
+    "bg-fuchsia-100 dark:bg-fuchsia-800/50 text-fuchsia-600 dark:text-fuchsia-300",
+  communication:
+    "bg-pink-100 dark:bg-pink-800/50 text-pink-600 dark:text-pink-300",
+  focus: "bg-blue-100 dark:bg-blue-800/50 text-blue-600 dark:text-blue-300",
+  fortune:
+    "bg-amber-100 dark:bg-amber-800/50 text-amber-600 dark:text-amber-300",
+};
 
 // ─── 목표 XP 바 컴포넌트 ─────────────────────────────────────────
 function GoalBar({ goal, isSelected, onClick, index }) {
@@ -116,6 +156,7 @@ function GoalBar({ goal, isSelected, onClick, index }) {
 function GoalTodoPanel({ goalId, today, profile, todos = [], queryClient }) {
   const [tab, setTab] = useState("ongoing");
   const [newTodo, setNewTodo] = useState("");
+  const [selectedCard, setSelectedCard] = useState(null); // ✅ 추가: 팝업용 상태
 
   useEffect(() => {
     setTab("ongoing");
@@ -234,12 +275,22 @@ function GoalTodoPanel({ goalId, today, profile, todos = [], queryClient }) {
             <span
               className={`text-sm flex-1 ${
                 todo.completed
-                  ? "line-through text-gray-400"
+                  ? "text-gray-400"
                   : "text-gray-700 dark:text-gray-200"
               }`}
             >
               {todo.title}
             </span>
+
+            {/* ✅ 카드 정보가 있는 경우 반짝이 버튼 표시 */}
+            {todo.is_from_card && (
+              <button
+                onClick={() => setSelectedCard(todo)}
+                className="p-1.5 rounded-lg bg-purple-50 dark:bg-purple-900/30 text-purple-500 active:scale-95 transition-transform"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
         ))}
         {(tab === "ongoing" ? ongoing : done).length === 0 && (
@@ -265,6 +316,89 @@ function GoalTodoPanel({ goalId, today, profile, todos = [], queryClient }) {
           </button>
         </div>
       </div>
+      {/* ✅ 상세 카드 모달 (카드 열린 상태 디자인 적용) */}
+      <AnimatePresence>
+        {selectedCard &&
+          (() => {
+            // 디자인 테마 매핑
+            const Icon = statIcons[selectedCard.stat_focus] || Sparkles;
+            const backGradient =
+              cardBackGradients[selectedCard.stat_focus] ||
+              "from-purple-400 to-indigo-500";
+            const borderColor =
+              borderColors[selectedCard.stat_focus] || "border-purple-400";
+            const buttonAddedColor =
+              buttonAddedColors[selectedCard.stat_focus] ||
+              "bg-purple-100 dark:bg-purple-800/50 text-purple-600 dark:text-purple-300";
+
+            return (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm p-5 touch-none"
+                onClick={() => setSelectedCard(null)}
+              >
+                <motion.div
+                  initial={{ scale: 0.85, opacity: 0, y: 20 }}
+                  animate={{ scale: 1, opacity: 1, y: 0 }}
+                  exit={{ scale: 0.85, opacity: 0, y: 20 }}
+                  onClick={(e) => e.stopPropagation()}
+                  className={`relative bg-white dark:bg-[#2E3447] rounded-3xl w-full max-w-sm border-l-4 ${borderColor} overflow-hidden shadow-2xl`}
+                >
+                  {/* 헤더 */}
+                  <div
+                    className={`bg-gradient-to-r ${backGradient} p-5 flex items-center justify-between`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-white/30 flex items-center justify-center">
+                        <Icon
+                          className="w-5 h-5 text-white"
+                          strokeWidth={1.5}
+                        />
+                      </div>
+                      <p className="text-white/80 text-xs font-semibold uppercase tracking-widest">
+                        {selectedCard.card_keyword}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setSelectedCard(null)}
+                      className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center"
+                    >
+                      <X className="w-4 h-4 text-white" strokeWidth={1.5} />
+                    </button>
+                  </div>
+
+                  {/* 본문 */}
+                  <div className="p-6 space-y-5 bg-white dark:bg-[#2E3447]">
+                    <p className="text-xl font-black text-gray-800 dark:text-white leading-snug break-keep">
+                      {selectedCard.title}
+                    </p>
+                    <div className="bg-gray-50 dark:bg-[#1A1F2E] rounded-2xl p-4 border border-gray-100 dark:border-[#424B63]">
+                      <p className="text-sm text-gray-600 dark:text-slate-300 leading-relaxed break-keep">
+                        {selectedCard.card_how}
+                        {selectedCard.card_fortune && (
+                          <span className="block mt-2 text-purple-600 dark:text-purple-300 font-medium">
+                            ✨ {selectedCard.card_fortune}
+                          </span>
+                        )}
+                      </p>
+                    </div>
+
+                    {/* 리스트에 있는 항목이므로 기본적으로 '추가됨' 상태 버튼 표시 */}
+                    <button
+                      disabled={true}
+                      className={`w-full py-4 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 transition-all ${buttonAddedColor}`}
+                    >
+                      <Check className="w-4 h-4" />
+                      할일에 추가됨
+                    </button>
+                  </div>
+                </motion.div>
+              </motion.div>
+            );
+          })()}
+      </AnimatePresence>
     </div>
   );
 }
@@ -427,14 +561,22 @@ function GoalDetailPanel({
           onViewed={() =>
             queryClient.invalidateQueries({ queryKey: ["allGoalActions"] })
           }
-          onAddToTodo={async (title) => {
+          onAddToTodo={async (card) => {
             await base44.entities.GoalTodo.create({
               goal_id: goal.id,
               user_profile_id: profile?.id,
-              title,
+              title: card.micro_action, // 투두 제목은 카드의 행동 내용으로
               completed: false,
               date: today,
+
+              // ✅ 카드 상세 정보를 함께 저장
+              is_from_card: true,
+              card_keyword: card.keyword,
+              card_how: card.how,
+              card_fortune: card.fortune,
+              stat_focus: card.stat_focus,
             });
+
             queryClient.invalidateQueries({
               queryKey: ["allGoalTodos", today],
             });
@@ -443,7 +585,7 @@ function GoalDetailPanel({
       </div>
       <div className="px-1">
         <p className="text-[12px] font-black text-gray-800 dark:text-gray-100 uppercase tracking-widest mb-3">
-          오늘의 실천 리스트
+          오늘의 할일 목록
         </p>
         <GoalTodoPanel
           goalId={goal.id}
@@ -508,7 +650,11 @@ export default function Home() {
     const allGoals = await base44.entities.Goal.list();
     const activeGoals = allGoals
       .filter((g) => g.user_profile_id === profile.id && !g.is_completed)
-      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+      .sort((a, b) => {
+        if (a.order == null) return 1;
+        if (b.order == null) return -1;
+        return a.order - b.order;
+      });
 
     const goalsContext =
       activeGoals.length > 0
@@ -645,7 +791,11 @@ export default function Home() {
       return all
         .filter((g) => g.user_profile_id === profile.id)
         .filter((g) => !g.is_completed)
-        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+        .sort((a, b) => {
+          if (a.order == null) return 1;
+          if (b.order == null) return -1;
+          return a.order - b.order;
+        });
     },
     enabled: !!profile?.id,
   });
@@ -824,23 +974,24 @@ export default function Home() {
           </motion.div>
         </div>
 
-        <div className="px-5">
-          <div className="bg-white dark:bg-[#2E3447] rounded-[45px] p-8 shadow-[0_20px_60px_rgba(120,50,255,0.06)] border border-purple-50 dark:border-gray-800 transition-all">
-            <div className="flex items-center justify-between mb-8">
+        <div className="px-5 space-y-6">
+          {/* 1. 이번 주 실천도 섹션 */}
+          <div className="bg-white dark:bg-gray-900 rounded-[32px] p-6 shadow-[0_8px_30px_rgba(120,50,255,0.04)] border border-purple-50/50 dark:border-gray-800">
+            <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
-                <div className="w-2.5 h-8 bg-purple-500 rounded-full shadow-[0_0_15px_rgba(168,85,247,0.3)]" />
+                <div className="w-2.5 h-8 bg-purple-500 rounded-full shadow-[0_0_15px_rgba(168,85,247,0.2)]" />
                 <h2 className="text-lg font-black text-gray-800 dark:text-gray-100 tracking-tight">
                   이번 주 실천도
                 </h2>
               </div>
-              <div className="bg-purple-50 dark:bg-purple-900/40 px-3.5 py-1.5 rounded-2xl">
+              <div className="bg-purple-50 dark:bg-purple-900/40 px-3 py-1.5 rounded-2xl">
                 <span className="text-[10px] font-black text-purple-600 dark:text-purple-400 tracking-wider">
                   할일 +10 XP
                 </span>
               </div>
             </div>
 
-            <div className="space-y-3 mb-10">
+            <div className="space-y-3">
               {goals.map((goal, index) => (
                 <GoalBar
                   key={goal.id}
@@ -851,30 +1002,29 @@ export default function Home() {
                 />
               ))}
             </div>
-
-            <div className="min-h-[500px]">
-              <AnimatePresence mode="wait" initial={false}>
-                {currentGoal && (
-                  <motion.div
-                    key={currentGoal.id}
-                    initial={{ opacity: 0, y: 15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -15 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <GoalDetailPanel
-                      goal={currentGoal}
-                      profile={profile}
-                      today={today}
-                      actions={currentActions}
-                      todos={currentTodos}
-                      queryClient={queryClient}
-                    />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
           </div>
+
+          {/* 목표 상세 내용 (카드 2 & 카드 3 포함) */}
+          <AnimatePresence mode="wait" initial={false}>
+            {currentGoal && (
+              <motion.div
+                key={currentGoal.id}
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.3 }}
+              >
+                <GoalDetailPanel
+                  goal={currentGoal}
+                  profile={profile}
+                  today={today}
+                  actions={currentActions}
+                  todos={currentTodos}
+                  queryClient={queryClient}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </>

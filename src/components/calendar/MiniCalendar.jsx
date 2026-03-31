@@ -42,7 +42,7 @@ export default function MiniCalendar({
   const isSelected = (d) => dateKey(d) === selectedDate;
 
   return (
-    <div className="bg-white dark:bg-[#2E3447] rounded-3xl border border-gray-100 dark:border-[#424B63] p-4 shadow-md dark:shadow-[0_2px_12px_rgba(0,0,0,0.4)]">
+    <div className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-[#424B63] p-4 shadow-md dark:shadow-[0_2px_12px_rgba(0,0,0,0.4)]">
       {/* 헤더 */}
       <div className="flex items-center justify-between mb-3">
         <button
