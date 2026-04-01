@@ -527,6 +527,8 @@ export default function Profile() {
   const [showResetModal, setShowResetModal] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [showTraitsModal, setShowTraitsModal] = useState(false); // ✅ 특성 팝업 상태
+  // ─── 탭 상태 ────────────────────────────────
+  const [activeTab, setActiveTab] = useState("level");
 
   // 다크모드 감지
   const [isDark, setIsDark] = useState(() =>
@@ -661,6 +663,12 @@ export default function Profile() {
   const currentLevel = profile.level || 1;
   const nextLevel = currentLevel + 1;
 
+  // ─── 탭 설정 ────────────────────────────────
+  const TABS = [
+    { key: "level", label: "레벨", icon: Star },
+    { key: "fortune", label: "운세", icon: Sparkles },
+  ];
+
   return (
     <div className="min-h-screen bg-[#FDFCFE] dark:bg-gray-950 pb-32 transition-colors duration-300">
       {/* 광고 모달들 */}
@@ -720,245 +728,316 @@ export default function Profile() {
         </motion.div>
       </div>
 
-      <div className="px-5 space-y-5">
-        {/* ── 레벨 카드 ─────────────────────────────────────────── */}
+      {/* ── 탭 토글 ──────────────────────────── */}
+      <div className="px-5 mb-5">
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-br from-purple-400 to-blue-400 dark:bg-transparent rounded-3xl p-6 text-white dark:text-purple-300 shadow-lg dark:border dark:border-purple-500/50 relative overflow-hidden"
+          transition={{ delay: 0.05 }}
+          className="flex bg-gray-100 dark:bg-gray-800/60 rounded-2xl p-1 gap-1"
         >
-          <div className="absolute inset-0 hidden dark:block rounded-3xl bg-[#121212]" />
-          <div
-            className="absolute inset-0 hidden dark:block rounded-3xl"
-            style={{
-              boxShadow:
-                "inset 0 0 30px rgba(167,139,250,0.1), 0 0 30px rgba(167,139,250,0.15)",
-            }}
-          />
-
-          <div className="relative z-10">
-            {/* 레벨 + XP */}
-            <div className="flex items-center justify-between mb-5">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-white/20 dark:bg-purple-500/20 dark:border dark:border-purple-500/40 flex items-center justify-center">
-                  <Star
-                    className="w-6 h-6 text-white dark:text-purple-300"
-                    strokeWidth={2}
-                  />
-                </div>
-                <div>
-                  <p className="text-xs font-medium uppercase tracking-wide opacity-90">
-                    레벨
-                  </p>
-                  <motion.span
-                    key={currentLevel}
-                    initial={{ scale: 0.7, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    className="text-4xl font-black dark:text-purple-200"
-                  >
-                    {currentLevel}
-                  </motion.span>
-                </div>
-              </div>
-              <span className="text-sm font-bold opacity-95 dark:text-purple-300">
-                {profile.xp || 0} XP
-              </span>
-            </div>
-
-            {/* XP 바 — filling 단계에서 현재값→100% 호로록 */}
-            <div className="h-3 bg-white/20 dark:bg-purple-900/40 rounded-full overflow-hidden mb-4">
-              <motion.div
-                className="h-full rounded-full"
-                animate={{
-                  width: xpBarPhase === "filling" ? "100%" : `${xpProgress}%`,
-                  background:
-                    xpBarPhase === "filling"
-                      ? ["#fef08a", "#facc15", "#fbbf24", "#facc15"]
-                      : "#fef08a",
-                }}
-                transition={{
-                  width: { duration: 0.8, ease: "easeInOut" },
-                  background: {
-                    duration: 0.6,
-                    repeat: xpBarPhase === "filling" ? Infinity : 0,
-                  },
-                }}
-              />
-            </div>
-            <p className="text-xs font-medium opacity-90 dark:text-purple-300 mb-4">
-              {xpBarPhase === "filling"
-                ? "레벨업 중! ✨"
-                : `다음 레벨까지 ${100 - xpProgress} XP`}
-            </p>
-
-            {/* 레벨업 부스트 버튼
-                라이트: 골드/오렌지
-                다크:   퍼플 (응원 버튼과 동일) */}
-            <motion.button
-              whileTap={{ scale: 0.96 }}
-              onClick={handleBoostClick}
-              disabled={xpBarPhase === "filling"}
-              className={`w-full h-14 rounded-2xl font-black text-sm flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.98] transition-transform ${
-                isDark
-                  ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-900/30"
-                  : ""
+          {TABS.map(({ key, label, icon: Icon }) => (
+            <button
+              key={key}
+              onClick={() => setActiveTab(key)}
+              className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-black transition-all duration-200 ${
+                activeTab === key
+                  ? "bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-sm"
+                  : "text-gray-400 dark:text-gray-500"
               }`}
-              style={
-                !isDark
-                  ? {
-                      background:
-                        "linear-gradient(135deg, #facc15 0%, #f59e0b 100%)",
-                      color: "#78350f",
-                      boxShadow:
-                        "0 4px 16px rgba(245,158,11,0.45), 0 1px 3px rgba(0,0,0,0.1)",
-                    }
-                  : undefined
-              }
             >
-              <Zap
+              <Icon
                 className={`w-4 h-4 ${
-                  xpBarPhase === "filling" ? "animate-bounce" : ""
+                  activeTab === key
+                    ? key === "fortune"
+                      ? "text-amber-400"
+                      : "text-purple-500"
+                    : ""
                 }`}
               />
-              {xpBarPhase === "filling" ? "부스트 적용 중..." : "레벨업 부스트"}
-            </motion.button>
-
-            {/* 다음 레벨 잠금 해제 문구 */}
-            <p className="text-[11px] text-white/60 dark:text-purple-400/60 text-center mt-2.5 font-semibold">
-              레벨 {nextLevel}이 되면 추가 기능이 해제됩니다 ✨
-            </p>
-          </div>
+              {label}
+            </button>
+          ))}
         </motion.div>
+      </div>
 
-        {/* ── 기본 에너지 ───────────────────────────────────────── */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.08 }}
-          className="bg-white dark:bg-gray-900 rounded-[32px] border border-gray-100 dark:border-gray-800 p-6 shadow-[0_4px_20px_rgba(0,0,0,0.04)]"
-        >
-          <div className="flex items-center gap-2.5 mb-4">
-            <div className="w-2 h-6 bg-purple-500 rounded-full shadow-[0_0_12px_rgba(168,85,247,0.25)]" />
-            <h3 className="text-sm font-black text-gray-800 dark:text-gray-100">
-              오늘의 에너지
-            </h3>
-          </div>
-          <StatsRadar stats={profile.base_stats} />
-        </motion.div>
-
-        {/* ── 운세 섹션 ─────────────────────────────────────────── */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.16 }}
-          className="bg-white dark:bg-gray-900 rounded-[32px] border border-gray-100 dark:border-gray-800 p-5 shadow-[0_4px_20px_rgba(0,0,0,0.04)] space-y-4"
-        >
-          {/* 오늘의 운세 배너 */}
-          <div>
-            <div className="flex items-center gap-2.5 mb-3">
-              <div className="w-2 h-6 bg-amber-400 rounded-full" />
-              <h3 className="text-sm font-black text-gray-800 dark:text-gray-100">
-                오늘의 운세
-              </h3>
-            </div>
-
-            <div
-              className="rounded-2xl overflow-hidden dark:border dark:border-amber-500/40"
-              style={{
-                background: "linear-gradient(135deg, #FDE68A 0%, #FCD34D 100%)",
-              }}
+      <div className="px-5 space-y-5">
+        <AnimatePresence mode="wait">
+          {activeTab === "level" && (
+            <motion.div
+              key="level"
+              initial={{ opacity: 0, x: -16 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -16 }}
+              transition={{ duration: 0.2 }}
+              className="space-y-5"
             >
-              <div className="px-5 py-4 flex items-center gap-3">
-                <Sun className="w-7 h-7 text-amber-600" strokeWidth={1.5} />
-                <div className="flex-1">
-                  <p className="text-sm font-bold text-amber-900">
-                    오늘의 운세
-                  </p>
-                  <p className="text-xs text-amber-700/70">오늘 전체 흐름</p>
-                </div>
-              </div>
-              <div className="bg-white dark:bg-[#1A1F2E] border-t border-amber-100 dark:border-amber-500/20 px-5 py-4 space-y-3">
-                {loadingDailyPreview ? (
-                  <div className="flex items-center gap-2">
-                    <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-400" />
-                    <p className="text-xs text-gray-400">운세 요약 중...</p>
-                  </div>
-                ) : dailyPreview ? (
-                  <div className="space-y-1">
-                    <p className="text-sm text-gray-700 dark:text-gray-200 leading-relaxed">
-                      ☀️ {dailyPreview.line1}
-                    </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-                      ✨ {dailyPreview.line2}
-                    </p>
-                  </div>
-                ) : (
-                  <p className="text-xs text-gray-400">
-                    오늘의 운세를 불러오는 중이에요...
-                  </p>
-                )}
-                <motion.button
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() => handleCategoryClick(FORTUNE_DAILY)}
-                  disabled={loadingFortune && selectedCategory?.id === "daily"}
-                  className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-yellow-400 dark:bg-amber-500/20 dark:border dark:border-amber-500/50 hover:bg-yellow-500 text-white dark:text-amber-300 text-sm font-black transition-all"
-                  style={{ boxShadow: "0 2px 8px rgba(180,140,0,0.25)" }}
-                >
-                  {loadingFortune && selectedCategory?.id === "daily" ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>분석 중...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>자세히 보기</span>
-                      <ChevronRight className="w-4 h-4" strokeWidth={2} />
-                    </>
-                  )}
-                </motion.button>
-              </div>
-            </div>
-          </div>
-
-          {/* 상세 운세 */}
-          <div>
-            <div className="flex items-center gap-2.5 mb-3">
-              <div className="w-2 h-6 bg-violet-400 rounded-full" />
-              <h3 className="text-sm font-black text-gray-800 dark:text-gray-100">
-                상세 운세
-              </h3>
-            </div>
-            <div className="flex flex-col gap-2">
-              {FORTUNE_DETAILED.map((cat) => (
-                <FortuneListItem
-                  key={cat.id}
-                  category={cat}
-                  onClick={handleCategoryClick}
-                  isLoading={loadingFortune && selectedCategory?.id === cat.id}
+              {/* ── 레벨 카드 ─────────────────────────────────────────── */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-gradient-to-br from-purple-400 to-blue-400 dark:bg-transparent rounded-3xl p-6 text-white dark:text-purple-300 shadow-lg dark:border dark:border-purple-500/50 relative overflow-hidden"
+              >
+                <div className="absolute inset-0 hidden dark:block rounded-3xl bg-[#121212]" />
+                <div
+                  className="absolute inset-0 hidden dark:block rounded-3xl"
+                  style={{
+                    boxShadow:
+                      "inset 0 0 30px rgba(167,139,250,0.1), 0 0 30px rgba(167,139,250,0.15)",
+                  }}
                 />
-              ))}
-            </div>
-          </div>
-        </motion.div>
 
-        {/* ── 초기화 버튼 ──────────────────────────────────────── */}
-        <div className="pt-2 pb-4">
-          <button
-            onClick={() => setShowResetModal(true)}
-            disabled={resetting}
-            className="w-full py-3.5 rounded-2xl border-2 border-red-100 dark:border-red-900/50 text-red-400 text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50 transition-colors hover:bg-red-50 dark:hover:bg-red-900/10"
-          >
-            {resetting ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Trash2 className="w-4 h-4" />
-            )}
-            {resetting ? "초기화 중..." : "데이터 초기화"}
-          </button>
-          <p className="text-center text-[10px] text-gray-300 dark:text-gray-700 mt-2">
-            모든 데이터가 삭제되고 처음부터 시작됩니다
-          </p>
-        </div>
+                <div className="relative z-10">
+                  {/* 레벨 + XP */}
+                  <div className="flex items-center justify-between mb-5">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-white/20 dark:bg-purple-500/20 dark:border dark:border-purple-500/40 flex items-center justify-center">
+                        <Star
+                          className="w-6 h-6 text-white dark:text-purple-300"
+                          strokeWidth={2}
+                        />
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium uppercase tracking-wide opacity-90">
+                          레벨
+                        </p>
+                        <motion.span
+                          key={currentLevel}
+                          initial={{ scale: 0.7, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          className="text-4xl font-black dark:text-purple-200"
+                        >
+                          {currentLevel}
+                        </motion.span>
+                      </div>
+                    </div>
+                    <span className="text-sm font-bold opacity-95 dark:text-purple-300">
+                      {profile.xp || 0} XP
+                    </span>
+                  </div>
+
+                  {/* XP 바 — filling 단계에서 현재값→100% 호로록 */}
+                  <div className="h-3 bg-white/20 dark:bg-purple-900/40 rounded-full overflow-hidden mb-4">
+                    <motion.div
+                      className="h-full rounded-full"
+                      animate={{
+                        width:
+                          xpBarPhase === "filling" ? "100%" : `${xpProgress}%`,
+                        background:
+                          xpBarPhase === "filling"
+                            ? ["#fef08a", "#facc15", "#fbbf24", "#facc15"]
+                            : "#fef08a",
+                      }}
+                      transition={{
+                        width: { duration: 0.8, ease: "easeInOut" },
+                        background: {
+                          duration: 0.6,
+                          repeat: xpBarPhase === "filling" ? Infinity : 0,
+                        },
+                      }}
+                    />
+                  </div>
+                  <p className="text-xs font-medium opacity-90 dark:text-purple-300 mb-4">
+                    {xpBarPhase === "filling"
+                      ? "레벨업 중! ✨"
+                      : `다음 레벨까지 ${100 - xpProgress} XP`}
+                  </p>
+
+                  {/* 레벨업 부스트 버튼
+                라이트: 골드/오렌지
+                다크:   퍼플 (응원 버튼과 동일) */}
+                  <motion.button
+                    whileTap={{ scale: 0.96 }}
+                    onClick={handleBoostClick}
+                    disabled={xpBarPhase === "filling"}
+                    className={`w-full h-14 rounded-2xl font-black text-sm flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.98] transition-transform ${
+                      isDark
+                        ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-900/30"
+                        : ""
+                    }`}
+                    style={
+                      !isDark
+                        ? {
+                            background:
+                              "linear-gradient(135deg, #facc15 0%, #f59e0b 100%)",
+                            color: "#78350f",
+                            boxShadow:
+                              "0 4px 16px rgba(245,158,11,0.45), 0 1px 3px rgba(0,0,0,0.1)",
+                          }
+                        : undefined
+                    }
+                  >
+                    <Zap
+                      className={`w-4 h-4 ${
+                        xpBarPhase === "filling" ? "animate-bounce" : ""
+                      }`}
+                    />
+                    {xpBarPhase === "filling"
+                      ? "부스트 적용 중..."
+                      : "레벨업 부스트"}
+                  </motion.button>
+
+                  {/* 다음 레벨 잠금 해제 문구 */}
+                  <p className="text-[11px] text-white/60 dark:text-purple-400/60 text-center mt-2.5 font-semibold">
+                    레벨 {nextLevel}이 되면 추가 기능이 해제됩니다 ✨
+                  </p>
+                </div>
+              </motion.div>
+
+              {/* ── 기본 에너지 ───────────────────────────────────────── */}
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.08 }}
+                className="bg-white dark:bg-gray-900 rounded-[32px] border border-gray-100 dark:border-gray-800 p-6 shadow-[0_4px_20px_rgba(0,0,0,0.04)]"
+              >
+                <div className="flex items-center gap-2.5 mb-4">
+                  <div className="w-2 h-6 bg-purple-500 rounded-full shadow-[0_0_12px_rgba(168,85,247,0.25)]" />
+                  <h3 className="text-sm font-black text-gray-800 dark:text-gray-100">
+                    오늘의 에너지
+                  </h3>
+                </div>
+                <StatsRadar stats={profile.base_stats} />
+              </motion.div>
+
+              {/* ── 초기화 버튼 ──────────────────────────────────────── */}
+              <div className="pt-2 pb-4">
+                <button
+                  onClick={() => setShowResetModal(true)}
+                  disabled={resetting}
+                  className="w-full py-3.5 rounded-2xl border-2 border-red-100 dark:border-red-900/50 text-red-400 text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50 transition-colors hover:bg-red-50 dark:hover:bg-red-900/10"
+                >
+                  {resetting ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="w-4 h-4" />
+                  )}
+                  {resetting ? "초기화 중..." : "데이터 초기화"}
+                </button>
+                <p className="text-center text-[10px] text-gray-300 dark:text-gray-700 mt-2">
+                  모든 데이터가 삭제되고 처음부터 시작됩니다
+                </p>
+              </div>
+            </motion.div>
+          )}
+          {activeTab === "fortune" && (
+            <motion.div
+              key="fortune"
+              initial={{ opacity: 0, x: 16 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 16 }}
+              transition={{ duration: 0.2 }}
+              className="space-y-5"
+            >
+              {/* ── 운세 섹션 ─────────────────────────────────────────── */}
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.16 }}
+                className="bg-white dark:bg-gray-900 rounded-[32px] border border-gray-100 dark:border-gray-800 p-5 shadow-[0_4px_20px_rgba(0,0,0,0.04)] space-y-4"
+              >
+                {/* 오늘의 운세 배너 */}
+                <div>
+                  <div className="flex items-center gap-2.5 mb-3">
+                    <div className="w-2 h-6 bg-amber-400 rounded-full" />
+                    <h3 className="text-sm font-black text-gray-800 dark:text-gray-100">
+                      오늘의 운세
+                    </h3>
+                  </div>
+
+                  <div
+                    className="rounded-2xl overflow-hidden dark:border dark:border-amber-500/40"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, #FDE68A 0%, #FCD34D 100%)",
+                    }}
+                  >
+                    <div className="px-5 py-4 flex items-center gap-3">
+                      <Sun
+                        className="w-7 h-7 text-amber-600"
+                        strokeWidth={1.5}
+                      />
+                      <div className="flex-1">
+                        <p className="text-sm font-bold text-amber-900">
+                          오늘의 운세
+                        </p>
+                        <p className="text-xs text-amber-700/70">
+                          오늘 전체 흐름
+                        </p>
+                      </div>
+                    </div>
+                    <div className="bg-white dark:bg-[#1A1F2E] border-t border-amber-100 dark:border-amber-500/20 px-5 py-4 space-y-3">
+                      {loadingDailyPreview ? (
+                        <div className="flex items-center gap-2">
+                          <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-400" />
+                          <p className="text-xs text-gray-400">
+                            운세 요약 중...
+                          </p>
+                        </div>
+                      ) : dailyPreview ? (
+                        <div className="space-y-1">
+                          <p className="text-sm text-gray-700 dark:text-gray-200 leading-relaxed">
+                            ☀️ {dailyPreview.line1}
+                          </p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+                            ✨ {dailyPreview.line2}
+                          </p>
+                        </div>
+                      ) : (
+                        <p className="text-xs text-gray-400">
+                          오늘의 운세를 불러오는 중이에요...
+                        </p>
+                      )}
+                      <motion.button
+                        whileTap={{ scale: 0.97 }}
+                        onClick={() => handleCategoryClick(FORTUNE_DAILY)}
+                        disabled={
+                          loadingFortune && selectedCategory?.id === "daily"
+                        }
+                        className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-yellow-400 dark:bg-amber-500/20 dark:border dark:border-amber-500/50 hover:bg-yellow-500 text-white dark:text-amber-300 text-sm font-black transition-all"
+                        style={{ boxShadow: "0 2px 8px rgba(180,140,0,0.25)" }}
+                      >
+                        {loadingFortune && selectedCategory?.id === "daily" ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <span>분석 중...</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>자세히 보기</span>
+                            <ChevronRight className="w-4 h-4" strokeWidth={2} />
+                          </>
+                        )}
+                      </motion.button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 상세 운세 */}
+                <div>
+                  <div className="flex items-center gap-2.5 mb-3">
+                    <div className="w-2 h-6 bg-violet-400 rounded-full" />
+                    <h3 className="text-sm font-black text-gray-800 dark:text-gray-100">
+                      상세 운세
+                    </h3>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    {FORTUNE_DETAILED.map((cat) => (
+                      <FortuneListItem
+                        key={cat.id}
+                        category={cat}
+                        onClick={handleCategoryClick}
+                        isLoading={
+                          loadingFortune && selectedCategory?.id === cat.id
+                        }
+                      />
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
