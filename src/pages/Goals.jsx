@@ -14,7 +14,25 @@ import {
   Trophy,
   RotateCcw,
   AlertTriangle,
+  GripVertical,
 } from "lucide-react";
+
+// ─── dnd-kit imports ─────────────────────────────────────────────
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 const GOAL_THEMES = [
   { dot: "bg-indigo-400" },
@@ -505,7 +523,7 @@ function GoalDetail({ goal, allTodos, onEdit }) {
           </p>
         </div>
 
-        {/* HADA 분석 버튼 — 크고 임팩트 있게 */}
+        {/* HADA 분석 버튼 */}
         <button
           onClick={() => setShowAnalysis(true)}
           className="w-full h-16 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-black text-base flex items-center justify-center gap-2.5 shadow-xl shadow-purple-200 dark:shadow-purple-900/40 active:scale-[0.98] transition-transform"
@@ -528,38 +546,77 @@ function GoalDetail({ goal, allTodos, onEdit }) {
   );
 }
 
-// ─── 목표 행 ──────────────────────────────────────────────────────
-function GoalRow({ goal, index, isSelected, onSelect, onComplete, onDelete }) {
-  const theme = GOAL_THEMES[index % GOAL_THEMES.length];
+// ─── 드래그 가능한 목표 행 ────────────────────────────────────────
+function SortableGoalRow({
+  goal,
+  index,
+  isSelected,
+  onSelect,
+  onComplete,
+  onDelete,
+  isDragDisabled,
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: goal.id, disabled: isDragDisabled });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 50 : "auto",
+    position: isDragging ? "relative" : "static",
+  };
+
+  // goal.id 기반으로 색상 고정 — 순서가 바뀌어도 항상 같은 색
+  const idHash = goal.id
+    ? goal.id.split("").reduce((acc, ch) => acc + ch.charCodeAt(0), 0)
+    : 0;
+  const theme = GOAL_THEMES[idHash % GOAL_THEMES.length];
   const isCompleted = goal.is_completed;
 
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-      transition={{ duration: 0.22 }}
-    >
+    <div ref={setNodeRef} style={style}>
       <div
         className={`rounded-2xl border-2 transition-all duration-200 ${
-          isSelected
+          isDragging
+            ? "bg-white dark:bg-gray-800 border-purple-300 dark:border-purple-600 shadow-2xl opacity-95 scale-[1.02]"
+            : isSelected
             ? "bg-white dark:bg-gray-800 border-purple-300 dark:border-purple-600 shadow-md"
             : isCompleted
             ? "bg-gray-50 dark:bg-gray-900 border-gray-100 dark:border-gray-800 opacity-60"
             : "bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800"
         }`}
       >
-        <div
-          className="flex items-center gap-3 px-4 py-4 cursor-pointer"
-          onClick={() => !isCompleted && onSelect(goal.id)}
-        >
+        <div className="flex items-center gap-3 px-4 py-4">
+          {/* 드래그 핸들 — 완료된 목표는 숨김 */}
+          {!isCompleted && (
+            <button
+              {...attributes}
+              {...listeners}
+              className="flex-shrink-0 touch-none p-1 -ml-1 text-gray-300 dark:text-gray-600 hover:text-gray-400 cursor-grab active:cursor-grabbing"
+              aria-label="순서 변경"
+            >
+              <GripVertical className="w-4 h-4" />
+            </button>
+          )}
+
+          {/* 색상 점 */}
           <div
             className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
               isCompleted ? "bg-gray-300 dark:bg-gray-600" : theme.dot
             }`}
           />
-          <div className="flex-1 min-w-0">
+
+          {/* 제목 영역 — 클릭으로 상세 열기 */}
+          <div
+            className="flex-1 min-w-0 cursor-pointer"
+            onClick={() => !isCompleted && onSelect(goal.id)}
+          >
             <span
               className={`text-sm font-bold block truncate ${
                 isCompleted
@@ -573,6 +630,8 @@ function GoalRow({ goal, index, isSelected, onSelect, onComplete, onDelete }) {
               <span className="text-[9px] font-bold text-gray-400">완료됨</span>
             )}
           </div>
+
+          {/* 액션 버튼들 */}
           <div className="flex items-center gap-1.5 flex-shrink-0">
             <button
               onClick={(e) => {
@@ -601,18 +660,20 @@ function GoalRow({ goal, index, isSelected, onSelect, onComplete, onDelete }) {
               <Trash2 className="w-3.5 h-3.5" />
             </button>
             {!isCompleted && (
-              <ChevronDown
-                className={`w-4 h-4 transition-transform duration-200 ${
-                  isSelected
-                    ? "rotate-180 text-purple-400"
-                    : "text-gray-300 dark:text-gray-600"
-                }`}
-              />
+              <div onClick={() => onSelect(goal.id)} className="cursor-pointer">
+                <ChevronDown
+                  className={`w-4 h-4 transition-transform duration-200 ${
+                    isSelected
+                      ? "rotate-180 text-purple-400"
+                      : "text-gray-300 dark:text-gray-600"
+                  }`}
+                />
+              </div>
             )}
           </div>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -624,9 +685,23 @@ export default function Goals() {
   const [selectedGoalId, setSelectedGoalId] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingGoal, setEditingGoal] = useState(null);
-  const [completeConfirm, setCompleteConfirm] = useState(null); // goal 객체 (진행중일 때만)
-  const [deleteConfirm, setDeleteConfirm] = useState(null); // goalId
+  const [completeConfirm, setCompleteConfirm] = useState(null);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [showCannotDelete, setShowCannotDelete] = useState(false);
+  // ─── dnd-kit sensors (마우스 + 터치 모두 지원) ───────────────
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 6, // 6px 이상 움직여야 드래그 시작 (탭과 구분)
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 200,    // 200ms 길게 눌러야 드래그 시작
+        tolerance: 8,  // 8px 내 움직임은 허용
+      },
+    }),
+  );
 
   const { data: profiles = [] } = useQuery({
     queryKey: ["userProfile"],
@@ -638,9 +713,22 @@ export default function Goals() {
     queryKey: ["goals", profile?.id],
     queryFn: async () => {
       const all = await base44.entities.Goal.list();
-      return all
-        .filter((g) => g.user_profile_id === profile.id)
-        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+      const mine = all.filter((g) => g.user_profile_id === profile.id);
+
+      // order가 하나라도 없으면 created_at 순으로 order를 일괄 부여 (마이그레이션)
+      const needsMigration = mine.some((g) => g.order == null);
+      if (needsMigration) {
+        const sorted = [...mine].sort(
+          (a, b) => new Date(a.created_at) - new Date(b.created_at),
+        );
+        for (let i = 0; i < sorted.length; i++) {
+          await base44.entities.Goal.update(sorted[i].id, { order: i });
+          sorted[i] = { ...sorted[i], order: i };
+        }
+        return sorted;
+      }
+
+      return mine.sort((a, b) => a.order - b.order);
     },
     enabled: !!profile?.id,
   });
@@ -657,7 +745,42 @@ export default function Goals() {
   const activeGoals = goals.filter((g) => !g.is_completed);
   const completedGoals = goals.filter((g) => g.is_completed);
 
-  // ─── 추가 (제한 없음) ────────────────────────────────────────
+  // ─── 드래그 종료: order 업데이트 ────────────────────────────
+  const handleDragEnd = async (event) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = activeGoals.findIndex((g) => g.id === active.id);
+    const newIndex = activeGoals.findIndex((g) => g.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const reordered = arrayMove(activeGoals, oldIndex, newIndex);
+
+    // order 값을 인덱스 기준으로 명시적으로 부여
+    const reorderedWithOrder = reordered.map((goal, idx) => ({
+      ...goal,
+      order: idx,
+    }));
+
+    // 1. 낙관적 업데이트: 캐시 즉시 반영
+    queryClient.setQueryData(["goals", profile.id], [
+      ...reorderedWithOrder,
+      ...completedGoals,
+    ]);
+
+    // 2. 로컬 스토리지에 순서 저장 — 직렬 순차 실행으로 쓰기 충돌 방지
+    //    (base44 로컬 스토리지는 read-modify-write 구조라 병렬 실행 시 덮어쓰기 발생)
+    for (let idx = 0; idx < reorderedWithOrder.length; idx++) {
+      await base44.entities.Goal.update(reorderedWithOrder[idx].id, {
+        order: idx,
+      });
+    }
+
+    // 3. 저장 완료 후 invalidate → queryFn의 sort()가 올바른 order로 재정렬
+    await queryClient.invalidateQueries({ queryKey: ["goals", profile.id] });
+  };
+
+  // ─── 추가 ────────────────────────────────────────────────────
   const handleAdd = async ({ title, description }) => {
     await base44.entities.Goal.create({
       user_profile_id: profile.id,
@@ -688,7 +811,6 @@ export default function Goals() {
   // ─── 완료 버튼 클릭 ─────────────────────────────────────────
   const handleCompleteClick = (goal) => {
     if (goal.is_completed) {
-      // 되돌리기는 확인 없이 바로
       doComplete(goal);
     } else {
       if (activeGoals.length <= 1) {
@@ -709,17 +831,12 @@ export default function Goals() {
     await queryClient.invalidateQueries({ queryKey: ["goals", profile.id] });
   };
 
-  // 삭제 버튼 클릭 핸들러 수정
   const handleDeleteClick = (goalId) => {
     const targetGoal = goals.find((g) => g.id === goalId);
-
-    // 진행 중인 목표이고, 전체 진행 중인 목표가 1개 이하일 때
     if (targetGoal && !targetGoal.is_completed && activeGoals.length <= 1) {
       setShowCannotDelete(true);
       return;
     }
-
-    // 그 외(달성한 목표 삭제 혹은 진행 중 목표가 여러 개일 때)는 정상 진행
     setDeleteConfirm(goalId);
   };
 
@@ -799,42 +916,53 @@ export default function Goals() {
               </p>
             </div>
           ) : (
-            <div className="space-y-2">
-              <AnimatePresence>
-                {activeGoals.map((goal, index) => (
-                  <div key={goal.id}>
-                    <GoalRow
-                      goal={goal}
-                      index={index}
-                      isSelected={selectedGoalId === goal.id}
-                      onSelect={(id) =>
-                        setSelectedGoalId((p) => (p === id ? null : id))
-                      }
-                      onComplete={handleCompleteClick}
-                      onDelete={(id) => handleDeleteClick(id)}
-                    />
-                    <AnimatePresence>
-                      {selectedGoalId === goal.id && (
-                        <motion.div
-                          key={`detail-${goal.id}`}
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: "auto" }}
-                          exit={{ opacity: 0, height: 0 }}
-                          transition={{ duration: 0.28, ease: "easeOut" }}
-                          className="overflow-hidden"
-                        >
-                          <GoalDetail
-                            goal={goal}
-                            allTodos={allTodos}
-                            onEdit={(g) => setEditingGoal(g)}
-                          />
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                ))}
-              </AnimatePresence>
-            </div>
+            // ─── DndContext + SortableContext 래핑 ──────────────
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={activeGoals.map((g) => g.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className="space-y-2">
+                  {activeGoals.map((goal, index) => (
+                    <div key={goal.id}>
+                      <SortableGoalRow
+                        goal={goal}
+                        index={index}
+                        isSelected={selectedGoalId === goal.id}
+                        onSelect={(id) =>
+                          setSelectedGoalId((p) => (p === id ? null : id))
+                        }
+                        onComplete={handleCompleteClick}
+                        onDelete={handleDeleteClick}
+                        isDragDisabled={false}
+                      />
+                      <AnimatePresence>
+                        {selectedGoalId === goal.id && (
+                          <motion.div
+                            key={`detail-${goal.id}`}
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.28, ease: "easeOut" }}
+                            className="overflow-hidden"
+                          >
+                            <GoalDetail
+                              goal={goal}
+                              allTodos={allTodos}
+                              onEdit={(g) => setEditingGoal(g)}
+                            />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
           )}
         </div>
 
@@ -857,7 +985,7 @@ export default function Goals() {
             <div className="space-y-2">
               <AnimatePresence>
                 {completedGoals.map((goal, index) => (
-                  <GoalRow
+                  <SortableGoalRow
                     key={goal.id}
                     goal={goal}
                     index={index}
@@ -865,6 +993,7 @@ export default function Goals() {
                     onSelect={() => {}}
                     onComplete={handleCompleteClick}
                     onDelete={(id) => setDeleteConfirm(id)}
+                    isDragDisabled={true}
                   />
                 ))}
               </AnimatePresence>
@@ -906,8 +1035,6 @@ export default function Goals() {
             onClose={() => setEditingGoal(null)}
           />
         )}
-
-        {/* 달성 확인 팝업 */}
         {completeConfirm && (
           <ConfirmModal
             key="complete-confirm"
@@ -924,8 +1051,6 @@ export default function Goals() {
             onClose={() => setCompleteConfirm(null)}
           />
         )}
-
-        {/* 삭제 확인 팝업 */}
         {deleteConfirm && (
           <ConfirmModal
             key="delete-confirm"
