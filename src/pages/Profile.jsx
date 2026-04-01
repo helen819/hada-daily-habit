@@ -15,6 +15,7 @@ import {
   Leaf,
   ChevronRight,
   X,
+  Sparkles,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import StatsRadar from "@/components/home/StatsRadar";
@@ -318,6 +319,111 @@ async function loadDailyPreview(profile) {
   }
 }
 
+// ─── 나의 특성 팝업 (고민 선택 팝업 스타일) ──────────────────────
+function TraitsModal({ traits, onClose }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-sm"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <motion.div
+        initial={{ y: 80, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 80, opacity: 0 }}
+        transition={{ type: "spring", damping: 28, stiffness: 320 }}
+        className="w-full max-w-lg bg-white dark:bg-gray-900 rounded-t-[32px] px-6 pt-5 pb-12 shadow-2xl max-h-[85vh] overflow-y-auto"
+      >
+        <div className="w-10 h-1 rounded-full bg-gray-200 dark:bg-gray-700 mx-auto mb-6" />
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center">
+              <Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+            </div>
+            <h2 className="text-lg font-black text-gray-900 dark:text-white">
+              나의 운명적 특성
+            </h2>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-500"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="space-y-8">
+          {/* 강점 */}
+          {traits.strengths?.length > 0 && (
+            <div>
+              <p className="text-[11px] font-black text-teal-500 uppercase tracking-widest mb-3 px-1">
+                💪 타고난 강점
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {traits.strengths.map((s, i) => (
+                  <span
+                    key={i}
+                    className="px-4 py-2 bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 rounded-2xl text-sm font-bold border border-teal-100 dark:border-teal-800/50"
+                  >
+                    {s}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 잠재력 */}
+          {traits.potentials?.length > 0 && (
+            <div>
+              <p className="text-[11px] font-black text-purple-500 uppercase tracking-widest mb-3 px-1">
+                ✨ 숨겨진 잠재력
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {traits.potentials.map((p, i) => (
+                  <span
+                    key={i}
+                    className="px-4 py-2 bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-2xl text-sm font-bold border border-purple-100 dark:border-purple-800/50"
+                  >
+                    {p}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 성장 포인트 */}
+          {traits.weaknesses?.length > 0 && (
+            <div>
+              <p className="text-[11px] font-black text-orange-500 uppercase tracking-widest mb-3 px-1">
+                🌱 성장 포인트
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {traits.weaknesses.map((w, i) => (
+                  <span
+                    key={i}
+                    className="px-4 py-2 bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 rounded-2xl text-sm font-bold border border-orange-100 dark:border-orange-800/50"
+                  >
+                    {w}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <button
+          onClick={onClose}
+          className="w-full h-14 mt-10 rounded-2xl bg-gray-900 dark:bg-white dark:text-gray-900 text-white font-black text-sm active:scale-[0.98] transition-transform"
+        >
+          확인했습니다
+        </button>
+      </motion.div>
+    </motion.div>
+  );
+}
+
 // ─── 초기화 확인 팝업 ────────────────────────────────────────────
 function ResetConfirmModal({ onConfirm, onCancel }) {
   return (
@@ -363,76 +469,6 @@ function ResetConfirmModal({ onConfirm, onCancel }) {
           </div>
         </div>
       </motion.div>
-    </motion.div>
-  );
-}
-
-// ─── 레벨업 폭죽 애니메이션 ──────────────────────────────────────
-function LevelUpEffect({ level, onDone }) {
-  useEffect(() => {
-    const t = setTimeout(onDone, 2200);
-    return () => clearTimeout(t);
-  }, []);
-
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[70] flex items-center justify-center pointer-events-none"
-    >
-      {/* 배경 글로우 */}
-      <motion.div
-        initial={{ scale: 0, opacity: 0 }}
-        animate={{ scale: [0, 1.8, 1.4], opacity: [0, 0.3, 0] }}
-        transition={{ duration: 1.2 }}
-        className="absolute w-64 h-64 rounded-full bg-purple-400"
-        style={{ filter: "blur(40px)" }}
-      />
-      {/* 레벨 숫자 */}
-      <motion.div
-        initial={{ scale: 0.4, opacity: 0, y: 20 }}
-        animate={{ scale: [0.4, 1.3, 1], opacity: [0, 1, 1], y: [20, -10, 0] }}
-        transition={{ duration: 0.7, ease: "easeOut" }}
-        className="text-center"
-      >
-        <motion.p
-          animate={{ y: [0, -8, 0] }}
-          transition={{ duration: 0.5, delay: 0.7, repeat: 2 }}
-          className="text-7xl font-black text-white drop-shadow-2xl"
-          style={{ textShadow: "0 0 40px rgba(168,85,247,0.8)" }}
-        >
-          {level}
-        </motion.p>
-        <motion.p
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="text-lg font-black text-purple-200 mt-2 tracking-widest uppercase"
-        >
-          Level Up! ✨
-        </motion.p>
-      </motion.div>
-      {/* 파티클 */}
-      {Array.from({ length: 14 }).map((_, i) => (
-        <motion.div
-          key={i}
-          initial={{ opacity: 1, x: 0, y: 0, scale: 1 }}
-          animate={{
-            opacity: 0,
-            x: Math.cos((i / 14) * Math.PI * 2) * (80 + Math.random() * 60),
-            y: Math.sin((i / 14) * Math.PI * 2) * (80 + Math.random() * 60),
-            scale: 0,
-          }}
-          transition={{ duration: 1.0 + Math.random() * 0.5, delay: 0.2 }}
-          className="absolute w-3 h-3 rounded-full"
-          style={{
-            background: ["#a855f7", "#f59e0b", "#ec4899", "#6366f1", "#10b981"][
-              i % 5
-            ],
-          }}
-        />
-      ))}
     </motion.div>
   );
 }
@@ -490,6 +526,7 @@ export default function Profile() {
 
   const [showResetModal, setShowResetModal] = useState(false);
   const [resetting, setResetting] = useState(false);
+  const [showTraitsModal, setShowTraitsModal] = useState(false); // ✅ 특성 팝업 상태
 
   // 다크모드 감지
   const [isDark, setIsDark] = useState(() =>
@@ -647,6 +684,13 @@ export default function Profile() {
             onCancel={() => setShowResetModal(false)}
           />
         )}
+        {/* ✅ 특성 모달 추가 */}
+        {showTraitsModal && profile.traits && (
+          <TraitsModal
+            traits={profile.traits}
+            onClose={() => setShowTraitsModal(false)}
+          />
+        )}
       </AnimatePresence>
 
       {/* ── 헤더 ──────────────────────────────────────────────── */}
@@ -658,9 +702,18 @@ export default function Profile() {
           <p className="text-[10px] font-black text-purple-500 uppercase tracking-[0.3em] mb-2">
             HADA
           </p>
-          <h1 className="text-2xl font-black text-gray-900 dark:text-white leading-tight">
-            프로필
-          </h1>
+          {/* ✅ 클릭 가능한 타이틀 */}
+          <button
+            onClick={() => setShowTraitsModal(true)}
+            className="group flex items-center gap-2 text-left active:opacity-60 transition-opacity"
+          >
+            <h1 className="text-2xl font-black text-gray-900 dark:text-white leading-tight">
+              프로필
+            </h1>
+            <div className="flex items-center justify-center w-5 h-5 rounded-full bg-purple-100 dark:bg-purple-900/40 mt-1">
+              <ChevronRight className="w-3 h-3 text-purple-600 dark:text-purple-400" />
+            </div>
+          </button>
           <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 font-semibold">
             6대 운명학 기반 알고리즘 계산
           </p>
@@ -792,75 +845,6 @@ export default function Profile() {
           </div>
           <StatsRadar stats={profile.base_stats} />
         </motion.div>
-
-        {/* ── 특성 태그 ────────────────────────────────────────── */}
-        {profile.traits && (
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.12 }}
-            className="bg-white dark:bg-gray-900 rounded-[32px] border border-gray-100 dark:border-gray-800 p-6 shadow-[0_4px_20px_rgba(0,0,0,0.04)] space-y-4"
-          >
-            <div className="flex items-center gap-2.5 mb-1">
-              <div className="w-2 h-6 bg-indigo-400 rounded-full" />
-              <h3 className="text-sm font-black text-gray-800 dark:text-gray-100">
-                나의 특성
-              </h3>
-            </div>
-
-            {profile.traits.strengths?.length > 0 && (
-              <div>
-                <p className="text-[11px] font-black text-teal-500 uppercase tracking-widest mb-2">
-                  💪 강점
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {profile.traits.strengths.map((s, i) => (
-                    <span
-                      key={i}
-                      className="px-3 py-1.5 bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 rounded-full text-xs font-bold border border-teal-100 dark:border-teal-800/50"
-                    >
-                      {s}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-            {profile.traits.potentials?.length > 0 && (
-              <div>
-                <p className="text-[11px] font-black text-purple-500 uppercase tracking-widest mb-2">
-                  ✨ 잠재력
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {profile.traits.potentials.map((p, i) => (
-                    <span
-                      key={i}
-                      className="px-3 py-1.5 bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full text-xs font-bold border border-purple-100 dark:border-purple-800/50"
-                    >
-                      {p}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-            {profile.traits.weaknesses?.length > 0 && (
-              <div>
-                <p className="text-[11px] font-black text-orange-500 uppercase tracking-widest mb-2">
-                  🌱 성장 포인트
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {profile.traits.weaknesses.map((w, i) => (
-                    <span
-                      key={i}
-                      className="px-3 py-1.5 bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 rounded-full text-xs font-bold border border-orange-100 dark:border-orange-800/50"
-                    >
-                      {w}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </motion.div>
-        )}
 
         {/* ── 운세 섹션 ─────────────────────────────────────────── */}
         <motion.div
