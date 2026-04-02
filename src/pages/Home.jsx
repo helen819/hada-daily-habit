@@ -21,6 +21,7 @@ import ModeCard from "@/components/home/ModeCard";
 import { MODE_CONFIGS } from "@/components/home/modeConfig";
 import TarotSection from "@/components/home/TarotSection";
 import { getKSTDateString } from "@/utils/date";
+import { differenceInCalendarDays, parseISO } from "date-fns";
 
 // ─── 목표별 파스텔 테마 정의 ─────────────────────────────────────
 const GOAL_THEMES = [
@@ -87,6 +88,25 @@ const buttonAddedColors = {
     "bg-amber-100 dark:bg-amber-800/50 text-amber-600 dark:text-amber-300",
 };
 
+// ─── D-day 계산 유틸 ──────────────────────────────────────────────
+function getDday(deadline) {
+  if (!deadline) return null;
+  const diff = differenceInCalendarDays(parseISO(deadline), new Date());
+  if (diff < 0) return null; // 이미 지난 마감은 표시 안 함
+  if (diff === 0) return "D-day";
+  return `D-${diff}`;
+}
+
+// ─── D-day 뱃지 스타일 ────────────────────────────────────────────
+function getDdayStyle(deadline) {
+  if (!deadline) return "";
+  const diff = differenceInCalendarDays(parseISO(deadline), new Date());
+  if (diff <= 3)  return "bg-red-100 text-red-500 dark:bg-red-900/40 dark:text-red-400";
+  if (diff <= 7)  return "bg-orange-100 text-orange-500 dark:bg-orange-900/40 dark:text-orange-400";
+  if (diff <= 30) return "bg-yellow-100 text-yellow-600 dark:bg-yellow-900/40 dark:text-yellow-400";
+  return "bg-gray-100 text-gray-400 dark:bg-gray-700/50 dark:text-gray-500";
+}
+
 // ─── 목표 XP 바 컴포넌트 ─────────────────────────────────────────
 function GoalBar({ goal, isSelected, onClick, index }) {
   const currentWeek = getWeekKey();
@@ -94,6 +114,9 @@ function GoalBar({ goal, isSelected, onClick, index }) {
   const xp = needsReset ? 0 : goal.xp || 0;
   const pct = Math.min((xp / 100) * 100, 100);
   const theme = GOAL_THEMES[index % GOAL_THEMES.length];
+
+  const dday = getDday(goal.deadline);
+  const ddayStyle = goal.deadline ? getDdayStyle(goal.deadline) : "";
 
   return (
     <motion.button
@@ -106,9 +129,9 @@ function GoalBar({ goal, isSelected, onClick, index }) {
       }`}
     >
       <div className="flex items-center justify-between mb-2.5">
-        <div className="flex items-center gap-3 min-w-0">
+        <div className="flex items-center gap-2 min-w-0">
           <div
-            className={`p-1.5 rounded-lg ${
+            className={`p-1.5 rounded-lg flex-shrink-0 ${
               isSelected
                 ? "bg-purple-100 dark:bg-purple-900/40 text-purple-600"
                 : "bg-white/50 dark:bg-black/20"
@@ -123,8 +146,16 @@ function GoalBar({ goal, isSelected, onClick, index }) {
           >
             {goal.title}
           </span>
+          {/* D-day 뱃지 */}
+          {dday && (
+            <span
+              className={`flex-shrink-0 text-[10px] font-black px-1.5 py-0.5 rounded-md leading-none ${ddayStyle}`}
+            >
+              {dday}
+            </span>
+          )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0 ml-2">
           <span
             className={`text-[11px] font-black ${
               isSelected ? "text-purple-600" : "opacity-60"
@@ -156,13 +187,12 @@ function GoalBar({ goal, isSelected, onClick, index }) {
 function GoalTodoPanel({ goalId, today, profile, todos = [], queryClient }) {
   const [tab, setTab] = useState("ongoing");
   const [newTodo, setNewTodo] = useState("");
-  const [selectedCard, setSelectedCard] = useState(null); // ✅ 추가: 팝업용 상태
+  const [selectedCard, setSelectedCard] = useState(null);
 
   useEffect(() => {
     setTab("ongoing");
   }, [goalId]);
 
-  // 안전하게 데이터 필터링 (undefined 방지)
   const ongoing = (todos || []).filter((t) => !Boolean(t.completed));
   const done = (todos || []).filter((t) => Boolean(t.completed));
 
@@ -184,22 +214,17 @@ function GoalTodoPanel({ goalId, today, profile, todos = [], queryClient }) {
     const isCompleting = !todo.completed;
 
     try {
-      // 1. [Optimistic Update] 화면에 즉시 반영 (가장 중요!)
-      // 서버 응답을 기다리지 않고 캐시 데이터를 먼저 수정해서 탭 이동을 즉시 시킵니다.
       queryClient.setQueryData(["allGoalTodos", today], (old = []) =>
         old.map((t) =>
           t.id === todo.id ? { ...t, completed: isCompleting } : t,
         ),
       );
 
-      // 2. 서버 업데이트 수행
       await base44.entities.GoalTodo.update(todo.id, {
         completed: isCompleting,
       });
 
-      // 3. 완료 처리된 경우에만 XP 추가 로직 실행
       if (isCompleting && profile?.id) {
-        // 캐시에서 현재 목표 찾기
         const goalsCache = queryClient.getQueryData(["goals", profile.id]);
         const currentGoal = goalsCache?.find((g) => g.id === goalId);
 
@@ -221,8 +246,6 @@ function GoalTodoPanel({ goalId, today, profile, todos = [], queryClient }) {
         });
       }
 
-      // 4. [동기화] 서버 데이터와 화면 데이터 최종 맞추기
-      // 키 이름을 ["allGoalTodos", today]로 정확히 맞춰야 합니다.
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["allGoalTodos", today] }),
         queryClient.invalidateQueries({ queryKey: ["goals", profile?.id] }),
@@ -230,7 +253,6 @@ function GoalTodoPanel({ goalId, today, profile, todos = [], queryClient }) {
       ]);
     } catch (e) {
       console.error("업데이트 실패:", e);
-      // 에러 발생 시 원래 상태로 복구하기 위해 다시 불러옴
       queryClient.invalidateQueries({ queryKey: ["allGoalTodos", today] });
       alert("처리에 실패했습니다.");
     }
@@ -282,7 +304,6 @@ function GoalTodoPanel({ goalId, today, profile, todos = [], queryClient }) {
               {todo.title}
             </span>
 
-            {/* ✅ 카드 정보가 있는 경우 반짝이 버튼 표시 */}
             {todo.is_from_card && (
               <button
                 onClick={() => setSelectedCard(todo)}
@@ -316,11 +337,9 @@ function GoalTodoPanel({ goalId, today, profile, todos = [], queryClient }) {
           </button>
         </div>
       </div>
-      {/* ✅ 상세 카드 모달 (카드 열린 상태 디자인 적용) */}
       <AnimatePresence>
         {selectedCard &&
           (() => {
-            // 디자인 테마 매핑
             const Icon = statIcons[selectedCard.stat_focus] || Sparkles;
             const backGradient =
               cardBackGradients[selectedCard.stat_focus] ||
@@ -346,16 +365,12 @@ function GoalTodoPanel({ goalId, today, profile, todos = [], queryClient }) {
                   onClick={(e) => e.stopPropagation()}
                   className={`relative bg-white dark:bg-[#2E3447] rounded-3xl w-full max-w-sm border-l-4 ${borderColor} overflow-hidden shadow-2xl`}
                 >
-                  {/* 헤더 */}
                   <div
                     className={`bg-gradient-to-r ${backGradient} p-5 flex items-center justify-between`}
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 rounded-xl bg-white/30 flex items-center justify-center">
-                        <Icon
-                          className="w-5 h-5 text-white"
-                          strokeWidth={1.5}
-                        />
+                        <Icon className="w-5 h-5 text-white" strokeWidth={1.5} />
                       </div>
                       <p className="text-white/80 text-xs font-semibold uppercase tracking-widest">
                         {selectedCard.card_keyword}
@@ -369,7 +384,6 @@ function GoalTodoPanel({ goalId, today, profile, todos = [], queryClient }) {
                     </button>
                   </div>
 
-                  {/* 본문 */}
                   <div className="p-6 space-y-5 bg-white dark:bg-[#2E3447]">
                     <p className="text-xl font-black text-gray-800 dark:text-white leading-snug break-keep">
                       {selectedCard.title}
@@ -385,7 +399,6 @@ function GoalTodoPanel({ goalId, today, profile, todos = [], queryClient }) {
                       </p>
                     </div>
 
-                    {/* 리스트에 있는 항목이므로 기본적으로 '추가됨' 상태 버튼 표시 */}
                     <button
                       disabled={true}
                       className={`w-full py-4 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 transition-all ${buttonAddedColor}`}
@@ -484,9 +497,7 @@ function GoalDetailPanel({
                 ${recentComplete.length ? recentComplete.join(", ") : "없음"}
 
                 [최근 미완료 행동들]
-                ${
-                  recentIncomplete.length ? recentIncomplete.join(", ") : "없음"
-                }
+                ${recentIncomplete.length ? recentIncomplete.join(", ") : "없음"}
 
                 [카드 생성 규칙]
                 - 위 맥락을 기반으로 오늘 실행할 수 있는 "행운 실천 카드" 5개를 생성하라.
@@ -565,11 +576,9 @@ function GoalDetailPanel({
             await base44.entities.GoalTodo.create({
               goal_id: goal.id,
               user_profile_id: profile?.id,
-              title: card.micro_action, // 투두 제목은 카드의 행동 내용으로
+              title: card.micro_action,
               completed: false,
               date: today,
-
-              // ✅ 카드 상세 정보를 함께 저장
               is_from_card: true,
               card_keyword: card.keyword,
               card_how: card.how,
@@ -621,7 +630,6 @@ export default function Home() {
   });
   const profile = profiles?.[0];
 
-  // ─── generateDailyReading ─────────────────────────────────
   const generateDailyReading = async (modeOverride) => {
     const currentMode = modeOverride || profile?.current_mode || "action";
     const config = MODE_CONFIGS[currentMode] || MODE_CONFIGS["action"];
@@ -637,7 +645,6 @@ export default function Home() {
         ? "저녁"
         : "밤";
 
-    // ─── traits가 없을 때만 프롬프트에 추가 ───
     const needsTraits = !profile?.traits?.strengths?.length;
     const traitsPrompt = needsTraits
       ? `
@@ -718,7 +725,6 @@ export default function Home() {
               card_body: { type: "string" },
             },
           },
-          // ─── traits는 needsTraits일 때만 스키마에 포함 ───
           ...(needsTraits && {
             traits: {
               type: "object",
@@ -753,7 +759,6 @@ export default function Home() {
           mode_card: res.mode_card,
         });
 
-    // ─── traits 저장: 응답에 있고 아직 없을 때만 ───
     const updatePayload = { base_stats: res.base_stats };
     if (needsTraits && res.traits?.strengths?.length) {
       updatePayload.traits = res.traits;
@@ -802,8 +807,6 @@ export default function Home() {
 
   useEffect(() => {
     if (goals.length > 0) {
-      // 리스트의 첫 번째(index 0) 목표의 ID를 기본값으로 설정
-      // 만약 이미 선택된 ID가 있더라도, 그 ID가 현재 리스트에 없다면 첫 번째로 리셋
       const isStillValid = goals.some((g) => g.id === selectedGoalId);
       if (!selectedGoalId || !isStillValid) {
         setSelectedGoalId(goals[0].id);
@@ -850,7 +853,6 @@ export default function Home() {
     checkPopup();
   }, [profile, reading?.mode_card, today]);
 
-  // 목표 전환 시 필터링 (데이터가 로딩 중일 때도 빈 배열을 반환해 에러 방지)
   const currentGoal = useMemo(
     () => goals.find((g) => g.id === selectedGoalId),
     [goals, selectedGoalId],
@@ -864,13 +866,11 @@ export default function Home() {
     [allTodos, selectedGoalId],
   );
 
-  // ─── 레이아웃 모드 변경 감지 ──────────────────────────────
   useEffect(() => {
     const handleExternalModeChange = async (e) => {
       const newMode = e.detail;
       if (!newMode || newMode === profile?.current_mode) return;
 
-      // handleModeSelect와 동일한 로직 실행
       isModeChanging.current = true;
       hasGeneratedReading.current = false;
       hasGeneratedActions.current = false;
@@ -886,7 +886,7 @@ export default function Home() {
     window.addEventListener("modeChanged", handleExternalModeChange);
     return () =>
       window.removeEventListener("modeChanged", handleExternalModeChange);
-  }, [profile]); // profile 의존성 필요
+  }, [profile]);
 
   const handleModeSelect = async (mode) => {
     setShowModeCard(false);
@@ -918,14 +918,12 @@ export default function Home() {
 
       const lastInit = await base44.storage.get("homeInitDate");
 
-      // 👉 이미 오늘 했으면 skip
       if (lastInit === today) {
         setIsAppReady(true);
         setIsInitializing(false);
         return;
       }
 
-      // 👉 daily reading만 생성 (actions는 자동 생성됨)
       await generateDailyReading();
 
       await base44.storage.set("homeInitDate", today);
@@ -1004,7 +1002,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* 목표 상세 내용 (카드 2 & 카드 3 포함) */}
+          {/* 목표 상세 내용 */}
           <AnimatePresence mode="wait" initial={false}>
             {currentGoal && (
               <motion.div

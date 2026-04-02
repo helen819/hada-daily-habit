@@ -220,6 +220,20 @@ export const base44 = {
         //   is_primary      : 대표 목표 여부 (profile.goal 호환용)
         //   is_completed    : 달성 여부
         //   completed_at    : 달성 일시 (선택)
+        //
+        //   ── 기간 관련 필드 ──────────────────────────────────
+        //   duration_type   : 기간 유형
+        //                     "no_limit"   → 기한 없이 꾸준히 (deadline: null)
+        //                     "this_month" → 이번 달 말까지 (자동 계산)
+        //                     "this_year"  → 올해 말까지 (자동 계산)
+        //                     "monthly"    → N개월 후 말까지 (duration_months 참조)
+        //                     "custom"     → 날짜 직접 지정
+        //   duration_months : duration_type === "monthly" 일 때 개월 수 (number|null)
+        //   deadline        : 마감 날짜 "yyyy-MM-dd"
+        //                     no_limit이면 null, 나머지는 온보딩 시 계산해서 저장
+        //                     → D-day 표시, 진행률 계산, 완료 판정 등에 활용
+        //
+        //   ── XP 관련 필드 ────────────────────────────────────
         //   xp              : 이번 주 획득 경험치 (홈 화면 표시용)
         //   xp_reset_week   : 마지막 초기화 기준 주 식별자 "YYYY-WW"
         //                     (일요일 기준. 현재 주와 다르면 xp=0 으로 초기화)
