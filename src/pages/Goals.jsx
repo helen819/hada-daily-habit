@@ -166,7 +166,9 @@ function DurationSelector({ value, durationMonths, customDate, onChange }) {
                     }
                   >
                     {customDate
-                      ? format(new Date(customDate), "MM.dd", { locale: ko })
+                      ? format(new Date(customDate), "yyyy.MM.dd", {
+                          locale: ko,
+                        })
                       : "날짜 선택"}
                   </span>
                 </Button>
@@ -175,7 +177,7 @@ function DurationSelector({ value, durationMonths, customDate, onChange }) {
                 className="w-[260px] p-0 rounded-3xl shadow-2xl border-none overflow-hidden"
                 align="end"
               >
-                <div className="p-4 bg-white">
+                <div className="p-4 bg-white dark:bg-gray-900">
                   <div className="flex items-center justify-between mb-4 px-1">
                     <Button
                       variant="ghost"
@@ -193,7 +195,7 @@ function DurationSelector({ value, durationMonths, customDate, onChange }) {
                             setYear(customMonth, parseInt(e.target.value)),
                           )
                         }
-                        className="bg-purple-50 text-purple-700 font-bold text-sm rounded-lg px-2 py-1 border-none focus:ring-0 appearance-none cursor-pointer"
+                        className="bg-purple-50 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 font-bold text-sm rounded-lg px-2 py-1 border-none focus:ring-0 appearance-none cursor-pointer"
                       >
                         {Array.from(
                           { length: 10 },
@@ -238,6 +240,8 @@ function DurationSelector({ value, durationMonths, customDate, onChange }) {
                     .rdp-cell { text-align: center !important; padding: 0 !important; }
                     .rdp-day { width: 40px !important; height: 40px !important; margin: auto !important; display: flex !important; align-items: center !important; justify-content: center !important; }
                     .rdp-day_selected { background-color: #a855f7 !important; color: white !important; border-radius: 12px !important; }
+                    .dark .rdp-day { color: #e5e7eb; }
+                    .dark .rdp-head_cell { color: #9ca3af; }
                   `}</style>
                   <Calendar
                     mode="single"
