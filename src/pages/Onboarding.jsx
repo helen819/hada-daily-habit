@@ -102,7 +102,7 @@ function DurationSelector({ value, durationMonths, customDate, onChange }) {
           <select
             value={value}
             onChange={(e) => onChange("durationType", e.target.value)}
-            className="w-full h-10 pl-3 pr-7 rounded-xl bg-purple-50 border border-purple-100 text-sm font-semibold text-purple-700 appearance-none focus:outline-none focus:ring-2 focus:ring-purple-200 cursor-pointer"
+            className="w-full h-10 pl-3 pr-7 rounded-xl bg-gray-50 border-gray-200 border text-sm font-semibold text-gray-700 appearance-none focus:outline-none focus:ring-2 focus:ring-purple-200 cursor-pointer"
           >
             {DURATION_TYPES.map((t) => (
               <option key={t.value} value={t.value}>
@@ -263,7 +263,7 @@ function DurationSelector({ value, durationMonths, customDate, onChange }) {
 
       {/* 마감일 요약 — 한 줄 */}
       {value !== "no_limit" && (
-        <p className="text-[11px] text-purple-400 ml-1">
+        <p className="text-[11px] text-gray-400 ml-1">
           {value === "this_month" &&
             `마감 ${format(endOfMonth(new Date()), "yyyy.MM.dd")}`}
           {value === "this_year" &&
@@ -346,9 +346,6 @@ function GoalItem({ goal, index, onChange, onDelete, canDelete }) {
 
       {/* 기간 선택 */}
       <div>
-        <label className="text-[11px] font-bold text-purple-400 uppercase ml-1 mb-1.5 block">
-          목표 기간
-        </label>
         <DurationSelector
           value={goal.durationType}
           durationMonths={goal.durationMonths}

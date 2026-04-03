@@ -7,6 +7,8 @@ import {
   Trash2,
   CheckCircle2,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Pencil,
   Sparkles,
   Loader2,
@@ -15,7 +17,28 @@ import {
   RotateCcw,
   AlertTriangle,
   GripVertical,
+  Calendar as CalendarIcon,
 } from "lucide-react";
+import {
+  format,
+  addMonths,
+  subMonths,
+  setYear,
+  setMonth as setDateMonth,
+  endOfMonth,
+  endOfYear,
+  addMonths as addM,
+  differenceInCalendarDays,
+  parseISO,
+} from "date-fns";
+import { ko } from "date-fns/locale";
+import { Calendar } from "@/components/ui/calendar";
+import { Button } from "@/components/ui/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 // ─── dnd-kit imports ─────────────────────────────────────────────
 import {
@@ -43,6 +66,231 @@ const GOAL_THEMES = [
   { dot: "bg-violet-400" },
   { dot: "bg-pink-400" },
 ];
+
+// ─── 기간 유형 정의 ────────────────────────────────────────────────
+const DURATION_TYPES = [
+  { value: "no_limit", label: "꾸준히" },
+  { value: "this_month", label: "이번 달" },
+  { value: "this_year", label: "올해" },
+  { value: "monthly", label: "N개월" },
+  { value: "custom", label: "날짜 입력" },
+];
+
+// ─── deadline 계산 유틸 ────────────────────────────────────────────
+function calcDeadline(durationType, durationMonths, customDate) {
+  const now = new Date();
+  switch (durationType) {
+    case "no_limit":
+      return null;
+    case "this_month":
+      return format(endOfMonth(now), "yyyy-MM-dd");
+    case "this_year":
+      return format(endOfYear(now), "yyyy-MM-dd");
+    case "monthly":
+      return format(
+        endOfMonth(addM(now, parseInt(durationMonths || 1))),
+        "yyyy-MM-dd",
+      );
+    case "custom":
+      return customDate || null;
+    default:
+      return null;
+  }
+}
+
+// ─── 기간 선택 컴포넌트 ────────────────────────────────────────────
+function DurationSelector({ value, durationMonths, customDate, onChange }) {
+  const [customCalOpen, setCustomCalOpen] = useState(false);
+  const [customMonth, setCustomMonth] = useState(new Date());
+
+  return (
+    <div className="space-y-1.5">
+      <div className="flex gap-2">
+        {/* 유형 드롭다운 */}
+        <div className="relative flex-1">
+          <select
+            value={value}
+            onChange={(e) => onChange("durationType", e.target.value)}
+            className="w-full h-11 pl-3 pr-7 rounded-2xl bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 border-2 text-sm font-semibold text-gray-700 dark:text-gray-200 appearance-none focus:outline-none focus:ring-2 focus:ring-purple-200 cursor-pointer"
+          >
+            {DURATION_TYPES.map((t) => (
+              <option key={t.value} value={t.value}>
+                {t.label}
+              </option>
+            ))}
+          </select>
+          <ChevronRight className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-purple-400 rotate-90 pointer-events-none" />
+        </div>
+
+        {/* monthly: 개월 수 */}
+        {value === "monthly" && (
+          <motion.div
+            initial={{ opacity: 0, x: -6 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="relative flex-1"
+          >
+            <select
+              value={durationMonths}
+              onChange={(e) => onChange("durationMonths", e.target.value)}
+              className="w-full h-11 pl-3 pr-7 rounded-2xl bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 text-sm font-semibold text-gray-700 dark:text-gray-200 appearance-none focus:outline-none focus:ring-2 focus:ring-purple-200 cursor-pointer"
+            >
+              {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+                <option key={m} value={String(m)}>
+                  {m}개월
+                </option>
+              ))}
+            </select>
+            <ChevronRight className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 rotate-90 pointer-events-none" />
+          </motion.div>
+        )}
+
+        {/* custom: 날짜 피커 */}
+        {value === "custom" && (
+          <motion.div
+            initial={{ opacity: 0, x: -6 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="flex-1"
+          >
+            <Popover open={customCalOpen} onOpenChange={setCustomCalOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full h-11 justify-start text-left font-semibold rounded-2xl border-2 border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-sm px-3 gap-1.5"
+                >
+                  <CalendarIcon className="h-3.5 w-3.5 text-purple-400 flex-shrink-0" />
+                  <span
+                    className={
+                      customDate
+                        ? "text-gray-700 dark:text-gray-200"
+                        : "text-gray-400"
+                    }
+                  >
+                    {customDate
+                      ? format(new Date(customDate), "MM.dd", { locale: ko })
+                      : "날짜 선택"}
+                  </span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent
+                className="w-[260px] p-0 rounded-3xl shadow-2xl border-none overflow-hidden"
+                align="end"
+              >
+                <div className="p-4 bg-white">
+                  <div className="flex items-center justify-between mb-4 px-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-purple-500"
+                      onClick={() => setCustomMonth(subMonths(customMonth, 1))}
+                    >
+                      <ChevronLeft size={20} />
+                    </Button>
+                    <div className="flex gap-1">
+                      <select
+                        value={customMonth.getFullYear()}
+                        onChange={(e) =>
+                          setCustomMonth(
+                            setYear(customMonth, parseInt(e.target.value)),
+                          )
+                        }
+                        className="bg-purple-50 text-purple-700 font-bold text-sm rounded-lg px-2 py-1 border-none focus:ring-0 appearance-none cursor-pointer"
+                      >
+                        {Array.from(
+                          { length: 10 },
+                          (_, i) => new Date().getFullYear() + i,
+                        ).map((y) => (
+                          <option key={y} value={y}>
+                            {y}년
+                          </option>
+                        ))}
+                      </select>
+                      <select
+                        value={customMonth.getMonth()}
+                        onChange={(e) =>
+                          setCustomMonth(
+                            setDateMonth(customMonth, parseInt(e.target.value)),
+                          )
+                        }
+                        className="bg-purple-50 text-purple-700 font-bold text-sm rounded-lg px-2 py-1 border-none focus:ring-0 appearance-none cursor-pointer"
+                      >
+                        {Array.from({ length: 12 }, (_, i) => i).map((m) => (
+                          <option key={m} value={m}>
+                            {m + 1}월
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-purple-500"
+                      onClick={() => setCustomMonth(addMonths(customMonth, 1))}
+                    >
+                      <ChevronRight size={20} />
+                    </Button>
+                  </div>
+                  <style>{`
+                    .rdp-vhidden, .rdp-caption_label, .rdp-caption { display: none !important; }
+                    .rdp { margin: 0 !important; width: 100% !important; }
+                    .rdp-months { justify-content: center !important; width: 100% !important; }
+                    .rdp-month { width: 100% !important; }
+                    .rdp-table { width: 100% !important; max-width: none !important; }
+                    .rdp-cell { text-align: center !important; padding: 0 !important; }
+                    .rdp-day { width: 40px !important; height: 40px !important; margin: auto !important; display: flex !important; align-items: center !important; justify-content: center !important; }
+                    .rdp-day_selected { background-color: #a855f7 !important; color: white !important; border-radius: 12px !important; }
+                  `}</style>
+                  <Calendar
+                    mode="single"
+                    selected={customDate ? new Date(customDate) : undefined}
+                    onSelect={(d) => {
+                      if (d) onChange("customDate", format(d, "yyyy-MM-dd"));
+                    }}
+                    month={customMonth}
+                    onMonthChange={setCustomMonth}
+                    locale={ko}
+                    disableNavigation
+                    disabled={{ before: new Date() }}
+                    className="p-0 border-none"
+                    classNames={{
+                      caption_label: "hidden",
+                      caption: "flex justify-center relative items-center h-0",
+                    }}
+                  />
+                  <Button
+                    onClick={() => setCustomCalOpen(false)}
+                    className="w-full h-12 mt-4 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-2xl shadow-lg"
+                  >
+                    선택 완료
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
+          </motion.div>
+        )}
+      </div>
+
+      {/* 마감일 요약 */}
+      {value !== "no_limit" && (
+        <p className="text-[11px] text-gray-400 dark:text-gray-500 ml-1">
+          {value === "this_month" &&
+            `마감 ${format(endOfMonth(new Date()), "yyyy.MM.dd")}`}
+          {value === "this_year" &&
+            `마감 ${format(endOfYear(new Date()), "yyyy.MM.dd")}`}
+          {value === "monthly" &&
+            durationMonths &&
+            `마감 ${format(
+              endOfMonth(addM(new Date(), parseInt(durationMonths))),
+              "yyyy.MM.dd",
+            )}`}
+          {value === "custom" &&
+            customDate &&
+            `마감 ${customDate.replace(/-/g, ".")}`}
+          {value === "custom" && !customDate && "날짜를 선택해주세요"}
+        </p>
+      )}
+    </div>
+  );
+}
 
 // ─── 공통 확인 팝업 ──────────────────────────────────────────────
 function ConfirmModal({
@@ -101,20 +349,48 @@ function ConfirmModal({
 }
 
 // ─── 목표 추가/수정 팝업 ──────────────────────────────────────────
-function GoalFormModal({
-  mode = "add",
-  initial = { title: "", description: "" },
-  onConfirm,
-  onClose,
-}) {
-  const [title, setTitle] = useState(initial.title);
-  const [description, setDescription] = useState(initial.description);
+function GoalFormModal({ mode = "add", initial = {}, onConfirm, onClose }) {
+  const [title, setTitle] = useState(initial.title || "");
+  const [description, setDescription] = useState(initial.description || "");
+  const [durationType, setDurationType] = useState(
+    initial.duration_type || "no_limit",
+  );
+  const [durationMonths, setDurationMonths] = useState(
+    String(initial.duration_months || "3"),
+  );
+  const [customDate, setCustomDate] = useState(
+    initial.deadline && initial.duration_type === "custom"
+      ? initial.deadline
+      : "",
+  );
+
   const titleCount = title.length;
   const isTitleOver = titleCount > 10;
+
+  const handleDurationChange = (field, val) => {
+    if (field === "durationType") setDurationType(val);
+    if (field === "durationMonths") setDurationMonths(val);
+    if (field === "customDate") setCustomDate(val);
+  };
+
   const canSubmit =
     title.trim().length > 0 &&
     title.trim().length <= 10 &&
-    description.trim().length > 0;
+    description.trim().length > 0 &&
+    !(durationType === "custom" && !customDate);
+
+  const handleConfirm = () => {
+    if (!canSubmit) return;
+    const deadline = calcDeadline(durationType, durationMonths, customDate);
+    onConfirm({
+      title: title.trim(),
+      description: description.trim(),
+      duration_type: durationType,
+      duration_months:
+        durationType === "monthly" ? parseInt(durationMonths) : null,
+      deadline,
+    });
+  };
 
   return (
     <motion.div
@@ -143,7 +419,9 @@ function GoalFormModal({
             <X className="w-4 h-4" />
           </button>
         </div>
-        <div className="space-y-4">
+
+        <div className="space-y-5">
+          {/* 제목 */}
           <div>
             <label className="text-[11px] font-bold text-purple-500 uppercase tracking-widest mb-2 block">
               목표 제목
@@ -177,6 +455,8 @@ function GoalFormModal({
               </p>
             )}
           </div>
+
+          {/* 설명 */}
           <div>
             <label className="text-[11px] font-bold text-purple-500 uppercase tracking-widest mb-2 block">
               목표 설명
@@ -189,14 +469,22 @@ function GoalFormModal({
               className="w-full rounded-2xl bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 focus:border-purple-300 dark:focus:border-purple-600 px-4 py-3.5 text-sm resize-none outline-none transition-colors dark:text-white dark:placeholder:text-gray-600"
             />
           </div>
+
+          {/* 기간 */}
+          <div>
+            <label className="text-[11px] font-bold text-purple-500 uppercase tracking-widest mb-2 block">
+              목표 기간
+            </label>
+            <DurationSelector
+              value={durationType}
+              durationMonths={durationMonths}
+              customDate={customDate}
+              onChange={handleDurationChange}
+            />
+          </div>
+
           <button
-            onClick={() =>
-              canSubmit &&
-              onConfirm({
-                title: title.trim(),
-                description: description.trim(),
-              })
-            }
+            onClick={handleConfirm}
             disabled={!canSubmit}
             className="w-full h-14 rounded-2xl bg-purple-600 text-white font-black text-sm disabled:opacity-30 disabled:cursor-not-allowed active:scale-[0.98] transition-transform shadow-lg shadow-purple-200 dark:shadow-purple-900/30"
           >
@@ -465,6 +753,15 @@ function GoalDetail({ goal, allTodos, onEdit }) {
   const progressPct =
     totalCount === 0 ? 0 : Math.round((doneCount / totalCount) * 100);
 
+  // D-day 표시 (deadline 있을 때만)
+  const ddayText = useMemo(() => {
+    if (!goal.deadline) return null;
+    const diff = differenceInCalendarDays(parseISO(goal.deadline), new Date());
+    if (diff < 0) return `마감 ${goal.deadline.replace(/-/g, ".")} (종료)`;
+    if (diff === 0) return "오늘 마감";
+    return `마감까지 ${diff}일`;
+  }, [goal.deadline]);
+
   return (
     <>
       <motion.div
@@ -501,7 +798,7 @@ function GoalDetail({ goal, allTodos, onEdit }) {
         </div>
 
         {/* 목표 설명 */}
-        <div className="mb-5">
+        <div className="mb-4">
           <div className="flex items-center justify-between mb-2">
             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
               목표 설명
@@ -521,6 +818,16 @@ function GoalDetail({ goal, allTodos, onEdit }) {
               </span>
             )}
           </p>
+        </div>
+
+        {/* 기간 정보 — 설명 바로 아래, 항상 표시 */}
+        <div className="mb-5 flex items-center gap-1.5">
+          <CalendarIcon className="w-3.5 h-3.5 text-purple-400 flex-shrink-0" />
+          <span className="text-xs font-bold text-gray-500 dark:text-gray-400">
+            {goal.duration_type === "no_limit" || !goal.duration_type
+              ? "꾸준히 (기한 없음)"
+              : ddayText}
+          </span>
         </div>
 
         {/* HADA 분석 버튼 */}
@@ -572,7 +879,6 @@ function SortableGoalRow({
     position: isDragging ? "relative" : "static",
   };
 
-  // goal.id 기반으로 색상 고정 — 순서가 바뀌어도 항상 같은 색
   const idHash = goal.id
     ? goal.id.split("").reduce((acc, ch) => acc + ch.charCodeAt(0), 0)
     : 0;
@@ -593,7 +899,6 @@ function SortableGoalRow({
         }`}
       >
         <div className="flex items-center gap-3 px-4 py-4">
-          {/* 드래그 핸들 — 완료된 목표는 숨김 */}
           {!isCompleted && (
             <button
               {...attributes}
@@ -605,14 +910,12 @@ function SortableGoalRow({
             </button>
           )}
 
-          {/* 색상 점 */}
           <div
             className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
               isCompleted ? "bg-gray-300 dark:bg-gray-600" : theme.dot
             }`}
           />
 
-          {/* 제목 영역 — 클릭으로 상세 열기 */}
           <div
             className="flex-1 min-w-0 cursor-pointer"
             onClick={() => !isCompleted && onSelect(goal.id)}
@@ -631,7 +934,6 @@ function SortableGoalRow({
             )}
           </div>
 
-          {/* 액션 버튼들 */}
           <div className="flex items-center gap-1.5 flex-shrink-0">
             <button
               onClick={(e) => {
@@ -688,18 +990,11 @@ export default function Goals() {
   const [completeConfirm, setCompleteConfirm] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [showCannotDelete, setShowCannotDelete] = useState(false);
-  // ─── dnd-kit sensors (마우스 + 터치 모두 지원) ───────────────
+
   const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 6, // 6px 이상 움직여야 드래그 시작 (탭과 구분)
-      },
-    }),
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(TouchSensor, {
-      activationConstraint: {
-        delay: 200,    // 200ms 길게 눌러야 드래그 시작
-        tolerance: 8,  // 8px 내 움직임은 허용
-      },
+      activationConstraint: { delay: 200, tolerance: 8 },
     }),
   );
 
@@ -715,7 +1010,6 @@ export default function Goals() {
       const all = await base44.entities.Goal.list();
       const mine = all.filter((g) => g.user_profile_id === profile.id);
 
-      // order가 하나라도 없으면 created_at 순으로 order를 일괄 부여 (마이그레이션)
       const needsMigration = mine.some((g) => g.order == null);
       if (needsMigration) {
         const sorted = [...mine].sort(
@@ -727,7 +1021,6 @@ export default function Goals() {
         }
         return sorted;
       }
-
       return mine.sort((a, b) => a.order - b.order);
     },
     enabled: !!profile?.id,
@@ -745,7 +1038,6 @@ export default function Goals() {
   const activeGoals = goals.filter((g) => !g.is_completed);
   const completedGoals = goals.filter((g) => g.is_completed);
 
-  // ─── 드래그 종료: order 업데이트 ────────────────────────────
   const handleDragEnd = async (event) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
@@ -755,33 +1047,32 @@ export default function Goals() {
     if (oldIndex === -1 || newIndex === -1) return;
 
     const reordered = arrayMove(activeGoals, oldIndex, newIndex);
-
-    // order 값을 인덱스 기준으로 명시적으로 부여
     const reorderedWithOrder = reordered.map((goal, idx) => ({
       ...goal,
       order: idx,
     }));
 
-    // 1. 낙관적 업데이트: 캐시 즉시 반영
-    queryClient.setQueryData(["goals", profile.id], [
-      ...reorderedWithOrder,
-      ...completedGoals,
-    ]);
+    queryClient.setQueryData(
+      ["goals", profile.id],
+      [...reorderedWithOrder, ...completedGoals],
+    );
 
-    // 2. 로컬 스토리지에 순서 저장 — 직렬 순차 실행으로 쓰기 충돌 방지
-    //    (base44 로컬 스토리지는 read-modify-write 구조라 병렬 실행 시 덮어쓰기 발생)
     for (let idx = 0; idx < reorderedWithOrder.length; idx++) {
       await base44.entities.Goal.update(reorderedWithOrder[idx].id, {
         order: idx,
       });
     }
-
-    // 3. 저장 완료 후 invalidate → queryFn의 sort()가 올바른 order로 재정렬
     await queryClient.invalidateQueries({ queryKey: ["goals", profile.id] });
   };
 
-  // ─── 추가 ────────────────────────────────────────────────────
-  const handleAdd = async ({ title, description }) => {
+  // ─── 추가 (기간 필드 포함) ──────────────────────────────────
+  const handleAdd = async ({
+    title,
+    description,
+    duration_type,
+    duration_months,
+    deadline,
+  }) => {
     await base44.entities.Goal.create({
       user_profile_id: profile.id,
       title,
@@ -791,15 +1082,30 @@ export default function Goals() {
       is_completed: false,
       xp: 0,
       xp_reset_week: getWeekKey(),
+      duration_type,
+      duration_months,
+      deadline,
     });
     await queryClient.invalidateQueries({ queryKey: ["goals", profile.id] });
     setShowAddModal(false);
   };
 
-  // ─── 수정 ───────────────────────────────────────────────────
-  const handleEdit = async ({ title, description }) => {
+  // ─── 수정 (기간 필드 포함) ──────────────────────────────────
+  const handleEdit = async ({
+    title,
+    description,
+    duration_type,
+    duration_months,
+    deadline,
+  }) => {
     if (!editingGoal) return;
-    await base44.entities.Goal.update(editingGoal.id, { title, description });
+    await base44.entities.Goal.update(editingGoal.id, {
+      title,
+      description,
+      duration_type,
+      duration_months,
+      deadline,
+    });
     if (editingGoal.is_primary && profile) {
       await base44.entities.UserProfile.update(profile.id, { goal: title });
       queryClient.invalidateQueries({ queryKey: ["userProfile"] });
@@ -808,7 +1114,6 @@ export default function Goals() {
     setEditingGoal(null);
   };
 
-  // ─── 완료 버튼 클릭 ─────────────────────────────────────────
   const handleCompleteClick = (goal) => {
     if (goal.is_completed) {
       doComplete(goal);
@@ -840,7 +1145,6 @@ export default function Goals() {
     setDeleteConfirm(goalId);
   };
 
-  // ─── 삭제 ───────────────────────────────────────────────────
   const handleDeleteConfirmed = async () => {
     const goalId = deleteConfirm;
     setDeleteConfirm(null);
@@ -916,7 +1220,6 @@ export default function Goals() {
               </p>
             </div>
           ) : (
-            // ─── DndContext + SortableContext 래핑 ──────────────
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
@@ -1027,10 +1330,7 @@ export default function Goals() {
         {editingGoal && (
           <GoalFormModal
             mode="edit"
-            initial={{
-              title: editingGoal.title,
-              description: editingGoal.description,
-            }}
+            initial={editingGoal}
             onConfirm={handleEdit}
             onClose={() => setEditingGoal(null)}
           />
