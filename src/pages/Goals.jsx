@@ -520,6 +520,20 @@ function AnalysisModal({ goal, allTodos, onClose }) {
                     [목표]
                     제목: ${goal.title}
                     설명: ${goal.description || "없음"}
+                    기간 유형: ${
+                      goal.duration_type === "no_limit" || !goal.duration_type
+                        ? "꾸준히 (기한 없음)"
+                        : goal.duration_type === "this_month"
+                        ? "이번 달"
+                        : goal.duration_type === "this_year"
+                        ? "올해"
+                        : goal.duration_type === "monthly"
+                        ? `${goal.duration_months}개월`
+                        : "날짜 지정"
+                    }
+                    마감일: ${
+                      goal.deadline ? goal.deadline.replace(/-/g, ".") : "없음"
+                    }
 
                     [완료한 실천 항목 (${doneTodos.length}개)]
                     ${
@@ -541,7 +555,7 @@ function AnalysisModal({ goal, allTodos, onClose }) {
                     - summary: 전체적인 실천 현황과 노력에 대한 따뜻한 종합 평가. 100자 이내.
                     - strengths: 잘 하고 있는 점 2가지. 각 30자 이내.
                     - suggestions: 앞으로 더 발전할 수 있는 구체적 제안 2가지. 각 40자 이내.
-                    - encouragement: 응원 메시지. 100자 이내.
+                    - encouragement: 응원 메시지. 남은 기간(마감일 기준)을 고려하여 지금 페이스가 적절한지 언급할 것. 100자 이내.
                       사주 4주 8자 / 명리학 오행 / 자미두수 / 동양 점성술 / 서양 점성술 / 성명학 분석에서 도출한 자연어로 녹여 제시. 
                       예시: "금의 기운을 타고난 당신은~", "화성의 에너지가 강한 지금~","이름에 담긴 수리가 변화를 암시하므로~".
                       절대 금지: "명리학", "오행", "자미두수", "점성술", "성명학", "사주" 단어를 그대로 출력하지 말 것.

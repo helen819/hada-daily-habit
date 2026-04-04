@@ -482,7 +482,7 @@ function GoalDetailPanel({
 
         const res = await base44.integrations.Core.InvokeLLM({
           prompt: `
-          너는 HADA 앱의 마이크로 액션 생성 엔진이다.
+                너는 HADA 앱의 마이크로 액션 생성 엔진이다.
 
                 === ${config.name} (${currentMode.toUpperCase()} MODE) ===
                 분석 위계:
@@ -499,6 +499,22 @@ function GoalDetailPanel({
 
                 [사용자의 목표 설명]
                 ${goal.description}
+
+                [목표 기간]
+                ${
+                  goal.duration_type === "no_limit" || !goal.duration_type
+                    ? "꾸준히 (기한 없음)"
+                    : goal.duration_type === "this_month"
+                    ? "이번 달"
+                    : goal.duration_type === "this_year"
+                    ? "올해"
+                    : goal.duration_type === "monthly"
+                    ? `${goal.duration_months}개월`
+                    : "날짜 지정"
+                }
+                마감일: ${
+                  goal.deadline ? goal.deadline.replace(/-/g, ".") : "없음"
+                }
 
                 [현재 날짜]
                 ${today}

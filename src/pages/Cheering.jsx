@@ -283,7 +283,7 @@ function CheeringLetterModal({
 
         {/* 오늘 하루만 라벨 */}
         <p className="text-[10px] text-gray-400 text-center mt-4">
-          이 응원은 오늘 자정에 사라져요 · 새로 받으면 기존 메시지가 대체돼요
+          이 응원은 오늘 자정에 사라져요
         </p>
       </motion.div>
     </motion.div>
@@ -593,6 +593,20 @@ export default function Cheering() {
               [사용자 정보 및 고민]
               - 목표 제목: ${goal.title}
               - 목표 설명: ${goal.description || "없음"}
+              - 목표 기간: ${
+                goal.duration_type === "no_limit" || !goal.duration_type
+                  ? "꾸준히 (기한 없음)"
+                  : goal.duration_type === "this_month"
+                  ? "이번 달"
+                  : goal.duration_type === "this_year"
+                  ? "올해"
+                  : goal.duration_type === "monthly"
+                  ? `${goal.duration_months}개월`
+                  : "날짜 지정"
+              }
+              - 마감일: ${
+                goal.deadline ? goal.deadline.replace(/-/g, ".") : "없음"
+              }
               - 고민 분류: ${category.label}
               - 구체적 고민: ${subConcern}
 
@@ -617,7 +631,8 @@ export default function Cheering() {
                 - greeting: 15자 이내. 사용자에게 직접 말을 거는 첫 인사. 줄바꿈 금지.
                 - empathy: 60자 이내. 고민에 깊이 공감하는 내용. "~하시죠" "~하실 수 있어요" 형식. 줄바꿈 금지.
                 - core_message: 60자 이내. 핵심 응원 메시지. 목표와 연결된 진심. 줄바꿈 금지.
-                - advice: 120자 이내. 고민을 극복할 수 있는 구체적이고 따뜻한 조언. 줄바꿈 금지.
+                - advice: 120자 이내. 고민을 극복할 수 있는 구체적이고 따뜻한 조언. 
+                  마감일이 있다면 남은 기간을 고려해 지금 페이스가 적절한지 언급할 것. 줄바꿈 금지.
                   사주 4주 8자 / 명리학 오행 / 자미두수 / 동양 점성술 / 서양 점성술 / 성명학 분석에서 도출한 자연어로 녹여 조언. 
                   예시: "금의 기운을 타고난 당신은~", "화성의 에너지가 강한 지금~","이름에 담긴 수리가 변화를 암시하므로~".
                   절대 금지: "명리학", "오행", "자미두수", "점성술", "성명학", "사주" 단어를 그대로 출력하지 말 것.
@@ -759,7 +774,7 @@ export default function Cheering() {
 
           {/* 새로 뽑으면 사라진다는 안내 */}
           <p className="text-[10px] text-gray-400 dark:text-gray-600 text-center mt-2">
-            새로 뽑으면 이전 행운이 대체돼요 · 자정에 초기화
+            새로 뽑으면 이전 행운이 사라져요 · 자정에 초기화
           </p>
 
           {/* 오늘의 행운 카드 — 미리보기 스타일 */}
@@ -928,7 +943,7 @@ export default function Cheering() {
 
             {/* 안내 */}
             <p className="text-[10px] text-gray-400 text-center mt-3">
-              새로 받으면 이전 메시지가 대체돼요 · 자정에 초기화
+              새로 받으면 이전 메시지가 사라져요 · 자정에 초기화
             </p>
           </div>
 

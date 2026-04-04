@@ -1012,7 +1012,13 @@ export default function Profile() {
                     </div>
                   </div>
                 </div>
-
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.16 }}
+                className="bg-white dark:bg-gray-900 rounded-[32px] border border-gray-100 dark:border-gray-800 p-5 shadow-[0_4px_20px_rgba(0,0,0,0.04)] space-y-4"
+              >
                 {/* 상세 운세 */}
                 <div>
                   <div className="flex items-center gap-2.5 mb-3">
