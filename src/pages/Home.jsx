@@ -23,32 +23,37 @@ import TarotSection from "@/components/home/TarotSection";
 import { getKSTDateString } from "@/utils/date";
 import { differenceInCalendarDays, parseISO } from "date-fns";
 
-// ─── 목표별 파스텔 테마 정의 ─────────────────────────────────────
+// ─── 목표별 파스텔 테마 정의 (유리 효과 보강) ─────────────────────────────────────
 const GOAL_THEMES = [
   {
     light: "bg-indigo-50 border-indigo-100 text-indigo-600",
-    dark: "dark:bg-indigo-900/20 dark:border-indigo-800 dark:text-indigo-400",
+    dark: "dark:bg-indigo-500/10 dark:border-indigo-500/20 dark:text-indigo-300",
     bar: "bg-indigo-400",
+    glow: "dark:shadow-[0_0_15px_rgba(99,102,241,0.15)]",
   },
   {
     light: "bg-rose-50 border-rose-100 text-rose-600",
-    dark: "dark:bg-rose-900/20 dark:border-rose-800 dark:text-rose-400",
+    dark: "dark:bg-rose-500/10 dark:border-rose-500/20 dark:text-rose-300",
     bar: "bg-rose-400",
+    glow: "dark:shadow-[0_0_15px_rgba(244,63,94,0.15)]",
   },
   {
     light: "bg-amber-50 border-amber-100 text-amber-600",
-    dark: "dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-400",
+    dark: "dark:bg-amber-500/10 dark:border-amber-500/20 dark:text-amber-300",
     bar: "bg-amber-400",
+    glow: "dark:shadow-[0_0_15px_rgba(245,158,11,0.15)]",
   },
   {
     light: "bg-emerald-50 border-emerald-100 text-emerald-600",
-    dark: "dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-400",
+    dark: "dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-300",
     bar: "bg-emerald-400",
+    glow: "dark:shadow-[0_0_15px_rgba(16,185,129,0.15)]",
   },
   {
     light: "bg-sky-50 border-sky-100 text-sky-600",
-    dark: "dark:bg-sky-900/20 dark:border-sky-800 dark:text-sky-400",
+    dark: "dark:bg-sky-500/10 dark:border-sky-500/20 dark:text-sky-300",
     bar: "bg-sky-400",
+    glow: "dark:shadow-[0_0_15px_rgba(14,165,233,0.15)]",
   },
 ];
 
@@ -101,9 +106,12 @@ function getDday(deadline) {
 function getDdayStyle(deadline) {
   if (!deadline) return "";
   const diff = differenceInCalendarDays(parseISO(deadline), new Date());
-  if (diff <= 3)  return "bg-red-100 text-red-500 dark:bg-red-900/40 dark:text-red-400";
-  if (diff <= 7)  return "bg-orange-100 text-orange-500 dark:bg-orange-900/40 dark:text-orange-400";
-  if (diff <= 30) return "bg-yellow-100 text-yellow-600 dark:bg-yellow-900/40 dark:text-yellow-400";
+  if (diff <= 3)
+    return "bg-red-100 text-red-500 dark:bg-red-900/40 dark:text-red-400";
+  if (diff <= 7)
+    return "bg-orange-100 text-orange-500 dark:bg-orange-900/40 dark:text-orange-400";
+  if (diff <= 30)
+    return "bg-yellow-100 text-yellow-600 dark:bg-yellow-900/40 dark:text-yellow-400";
   return "bg-gray-100 text-gray-400 dark:bg-gray-700/50 dark:text-gray-500";
 }
 
@@ -122,19 +130,19 @@ function GoalBar({ goal, isSelected, onClick, index }) {
     <motion.button
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className={`w-full text-left rounded-2xl px-5 py-4 transition-all duration-300 border-2 ${
+      className={`w-full text-left rounded-2xl px-5 py-4 transition-all duration-300 border-2 backdrop-blur-md ${
         isSelected
-          ? `bg-white dark:bg-gray-800 border-purple-400 dark:border-purple-500 shadow-lg`
+          ? `bg-white dark:bg-purple-500/20 border-purple-400 dark:border-purple-400/60 shadow-lg ${theme.glow}`
           : `${theme.light} ${theme.dark} border-transparent opacity-60 hover:opacity-100`
       }`}
     >
       <div className="flex items-center justify-between mb-2.5">
         <div className="flex items-center gap-2 min-w-0">
           <div
-            className={`p-1.5 rounded-lg flex-shrink-0 ${
+            className={`p-1.5 rounded-lg flex-shrink-0 transition-colors ${
               isSelected
-                ? "bg-purple-100 dark:bg-purple-900/40 text-purple-600"
-                : "bg-white/50 dark:bg-black/20"
+                ? "bg-purple-100 dark:bg-purple-400/30 text-purple-600 dark:text-purple-200"
+                : "bg-white/50 dark:bg-white/5"
             }`}
           >
             <Target className="w-3.5 h-3.5" />
@@ -149,7 +157,7 @@ function GoalBar({ goal, isSelected, onClick, index }) {
           {/* D-day 뱃지 */}
           {dday && (
             <span
-              className={`flex-shrink-0 text-[10px] font-black px-1.5 py-0.5 rounded-md leading-none ${ddayStyle}`}
+              className={`flex-shrink-0 text-[10px] font-black px-1.5 py-0.5 rounded-md leading-none shadow-sm ${ddayStyle}`}
             >
               {dday}
             </span>
@@ -158,14 +166,16 @@ function GoalBar({ goal, isSelected, onClick, index }) {
         <div className="flex items-center gap-2 flex-shrink-0 ml-2">
           <span
             className={`text-[11px] font-black ${
-              isSelected ? "text-purple-600" : "opacity-60"
+              isSelected ? "text-purple-600 dark:text-purple-300" : "opacity-60"
             }`}
           >
             {xp} XP
           </span>
           <ChevronRight
             className={`w-3.5 h-3.5 transition-transform ${
-              isSelected ? "rotate-90 text-purple-500" : "opacity-30"
+              isSelected
+                ? "rotate-90 text-purple-500 dark:text-purple-300"
+                : "opacity-30"
             }`}
           />
         </div>
@@ -174,8 +184,8 @@ function GoalBar({ goal, isSelected, onClick, index }) {
         <motion.div
           initial={{ width: 0 }}
           animate={{ width: `${pct}%` }}
-          className={`h-full rounded-full ${
-            isSelected ? "bg-purple-500" : theme.bar
+          className={`h-full rounded-full transition-colors ${
+            isSelected ? "bg-purple-500 dark:bg-purple-400" : theme.bar
           }`}
         />
       </div>
@@ -370,7 +380,10 @@ function GoalTodoPanel({ goalId, today, profile, todos = [], queryClient }) {
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 rounded-xl bg-white/30 flex items-center justify-center">
-                        <Icon className="w-5 h-5 text-white" strokeWidth={1.5} />
+                        <Icon
+                          className="w-5 h-5 text-white"
+                          strokeWidth={1.5}
+                        />
                       </div>
                       <p className="text-white/80 text-xs font-semibold uppercase tracking-widest">
                         {selectedCard.card_keyword}
@@ -497,7 +510,9 @@ function GoalDetailPanel({
                 ${recentComplete.length ? recentComplete.join(", ") : "없음"}
 
                 [최근 미완료 행동들]
-                ${recentIncomplete.length ? recentIncomplete.join(", ") : "없음"}
+                ${
+                  recentIncomplete.length ? recentIncomplete.join(", ") : "없음"
+                }
 
                 [카드 생성 규칙]
                 - 위 맥락을 기반으로 오늘 실행할 수 있는 "행운 실천 카드" 5개를 생성하라.
