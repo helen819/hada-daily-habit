@@ -3,29 +3,29 @@ import { motion } from "framer-motion";
 
 const PASTEL_COLORS = [
   {
-    bg: "bg-pink-50 dark:bg-pink-900/30",
-    border: "border-pink-200 dark:border-pink-700/60",
-    text: "text-pink-600 dark:text-pink-300",
+    bg: "bg-pink-50 dark:bg-pink-950/50",
+    border: "border-pink-200 dark:border-pink-900/60",
+    text: "text-pink-500 dark:text-pink-400",
   },
   {
-    bg: "bg-rose-50 dark:bg-rose-900/30",
-    border: "border-rose-200 dark:border-rose-700/60",
-    text: "text-rose-600 dark:text-rose-300",
+    bg: "bg-violet-50 dark:bg-violet-950/50",
+    border: "border-violet-200 dark:border-violet-900/60",
+    text: "text-violet-500 dark:text-violet-400",
   },
   {
-    bg: "bg-orange-50 dark:bg-orange-900/30",
-    border: "border-orange-200 dark:border-orange-700/60",
-    text: "text-orange-600 dark:text-orange-300",
+    bg: "bg-sky-50 dark:bg-sky-950/50",
+    border: "border-sky-200 dark:border-sky-900/60",
+    text: "text-sky-500 dark:text-sky-400",
   },
   {
-    bg: "bg-purple-50 dark:bg-purple-900/30",
-    border: "border-purple-200 dark:border-purple-700/60",
-    text: "text-purple-600 dark:text-purple-300",
+    bg: "bg-purple-50 dark:bg-purple-950/50",
+    border: "border-purple-200 dark:border-purple-900/60",
+    text: "text-purple-500 dark:text-purple-400",
   },
   {
-    bg: "bg-sky-50 dark:bg-sky-900/30",
-    border: "border-sky-200 dark:border-sky-700/60",
-    text: "text-sky-600 dark:text-sky-300",
+    bg: "bg-rose-50 dark:bg-rose-950/50",
+    border: "border-rose-200 dark:border-rose-900/60",
+    text: "text-rose-500 dark:text-rose-400",
   },
 ];
 
@@ -56,7 +56,7 @@ export default function HappinessCard({ record, index }) {
             {record.date ||
               new Date(record.created_date).toLocaleDateString("ko-KR")}
           </p>
-          <p className="text-sm text-gray-700 dark:text-slate-200 leading-relaxed break-words">
+          <p className="text-sm text-gray-700 dark:text-gray-200 leading-relaxed break-words">
             {record.text}
           </p>
         </div>

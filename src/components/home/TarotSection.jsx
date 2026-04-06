@@ -36,81 +36,86 @@ const cardBackGradients = {
   fortune: "from-amber-400 to-yellow-500",
 };
 
-// 950→800으로 올려서 배경 대비 확실히 밝게
 const cardFrontColors = {
   work_efficiency:
-    "from-purple-50 to-violet-50 border-purple-200 dark:from-purple-800/40 dark:to-violet-800/40 dark:border-purple-500/60",
+    "from-violet-50 to-purple-50 border-violet-200 dark:from-violet-950/50 dark:to-purple-950/50 dark:border-violet-800/50",
   creativity:
-    "from-fuchsia-50 to-purple-50 border-fuchsia-200 dark:from-fuchsia-800/40 dark:to-purple-800/40 dark:border-fuchsia-500/60",
+    "from-fuchsia-50 to-purple-50 border-fuchsia-200 dark:from-fuchsia-950/50 dark:to-purple-950/50 dark:border-fuchsia-800/50",
   communication:
-    "from-pink-50 to-rose-50 border-pink-200 dark:from-pink-800/40 dark:to-rose-800/40 dark:border-pink-500/60",
+    "from-pink-50 to-rose-50 border-pink-200 dark:from-pink-950/50 dark:to-rose-950/50 dark:border-pink-800/50",
   focus:
-    "from-blue-50 to-sky-50 border-blue-200 dark:from-blue-800/40 dark:to-sky-800/40 dark:border-blue-500/60",
+    "from-sky-50 to-blue-50 border-sky-200 dark:from-sky-950/50 dark:to-blue-950/50 dark:border-sky-800/50",
   fortune:
-    "from-amber-50 to-yellow-50 border-amber-200 dark:from-amber-800/40 dark:to-yellow-800/40 dark:border-amber-500/60",
+    "from-amber-50 to-yellow-50 border-amber-200 dark:from-amber-950/50 dark:to-yellow-950/50 dark:border-amber-800/50",
 };
 
 const iconColors = {
-  work_efficiency: "text-purple-600 dark:text-purple-300",
-  creativity: "text-fuchsia-600 dark:text-fuchsia-300",
-  communication: "text-pink-600 dark:text-pink-300",
-  focus: "text-blue-600 dark:text-blue-300",
-  fortune: "text-amber-600 dark:text-amber-300",
+  work_efficiency: "text-violet-500 dark:text-violet-400",
+  creativity: "text-fuchsia-500 dark:text-fuchsia-400",
+  communication: "text-pink-500 dark:text-pink-400",
+  focus: "text-sky-500 dark:text-sky-400",
+  fortune: "text-amber-500 dark:text-amber-400",
 };
 
 const borderColors = {
-  work_efficiency: "border-purple-400",
-  creativity: "border-fuchsia-400",
-  communication: "border-pink-400",
-  focus: "border-blue-400",
-  fortune: "border-amber-400",
+  work_efficiency: "border-violet-300",
+  creativity: "border-fuchsia-300",
+  communication: "border-pink-300",
+  focus: "border-sky-300",
+  fortune: "border-amber-300",
 };
 
+// 파스텔 버튼 색상 — 연한 배경 + 어두운 텍스트
 const buttonColors = {
-  work_efficiency: "bg-purple-500 dark:bg-purple-600",
-  creativity: "bg-fuchsia-500 dark:bg-fuchsia-600",
-  communication: "bg-pink-500 dark:bg-pink-600",
-  focus: "bg-blue-500 dark:bg-blue-600",
-  fortune: "bg-amber-500 dark:bg-amber-600",
+  work_efficiency:
+    "bg-violet-200 hover:bg-violet-300 dark:bg-violet-800/60 dark:hover:bg-violet-700/60 text-violet-900 dark:text-violet-200",
+  creativity:
+    "bg-fuchsia-200 hover:bg-fuchsia-300 dark:bg-fuchsia-800/60 dark:hover:bg-fuchsia-700/60 text-fuchsia-900 dark:text-fuchsia-200",
+  communication:
+    "bg-pink-200 hover:bg-pink-300 dark:bg-pink-800/60 dark:hover:bg-pink-700/60 text-pink-900 dark:text-pink-200",
+  focus:
+    "bg-sky-200 hover:bg-sky-300 dark:bg-sky-800/60 dark:hover:bg-sky-700/60 text-sky-900 dark:text-sky-200",
+  fortune:
+    "bg-amber-200 hover:bg-amber-300 dark:bg-amber-800/60 dark:hover:bg-amber-700/60 text-amber-900 dark:text-amber-200",
 };
 
 const buttonAddedColors = {
   work_efficiency:
-    "bg-purple-100 dark:bg-purple-800/50 text-purple-600 dark:text-purple-300",
+    "bg-violet-100 dark:bg-violet-900/40 text-violet-500 dark:text-violet-400",
   creativity:
-    "bg-fuchsia-100 dark:bg-fuchsia-800/50 text-fuchsia-600 dark:text-fuchsia-300",
+    "bg-fuchsia-100 dark:bg-fuchsia-900/40 text-fuchsia-500 dark:text-fuchsia-400",
   communication:
-    "bg-pink-100 dark:bg-pink-800/50 text-pink-600 dark:text-pink-300",
-  focus: "bg-blue-100 dark:bg-blue-800/50 text-blue-600 dark:text-blue-300",
+    "bg-pink-100 dark:bg-pink-900/40 text-pink-500 dark:text-pink-400",
+  focus:
+    "bg-sky-100 dark:bg-sky-900/40 text-sky-500 dark:text-sky-400",
   fortune:
-    "bg-amber-100 dark:bg-amber-800/50 text-amber-600 dark:text-amber-300",
+    "bg-amber-100 dark:bg-amber-900/40 text-amber-500 dark:text-amber-400",
 };
 
 const buttonBgColors = {
   work_efficiency:
-    "bg-purple-100 dark:bg-purple-700/50 text-purple-500 dark:text-purple-200 hover:bg-purple-200",
+    "bg-violet-100 dark:bg-violet-900/40 text-violet-500 dark:text-violet-300 hover:bg-violet-200 dark:hover:bg-violet-800/60",
   creativity:
-    "bg-fuchsia-100 dark:bg-fuchsia-700/50 text-fuchsia-500 dark:text-fuchsia-200 hover:bg-fuchsia-200",
+    "bg-fuchsia-100 dark:bg-fuchsia-900/40 text-fuchsia-500 dark:text-fuchsia-300 hover:bg-fuchsia-200 dark:hover:bg-fuchsia-800/60",
   communication:
-    "bg-pink-100 dark:bg-pink-700/50 text-pink-500 dark:text-pink-200 hover:bg-pink-200",
+    "bg-pink-100 dark:bg-pink-900/40 text-pink-500 dark:text-pink-300 hover:bg-pink-200 dark:hover:bg-pink-800/60",
   focus:
-    "bg-blue-100 dark:bg-blue-700/50 text-blue-500 dark:text-blue-200 hover:bg-blue-200",
+    "bg-sky-100 dark:bg-sky-900/40 text-sky-500 dark:text-sky-300 hover:bg-sky-200 dark:hover:bg-sky-800/60",
   fortune:
-    "bg-amber-100 dark:bg-amber-700/50 text-amber-500 dark:text-amber-200 hover:bg-amber-200",
+    "bg-amber-100 dark:bg-amber-900/40 text-amber-500 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-800/60",
 };
 
 function TarotDetailModal({ action, onClose, onAdd, added }) {
   const Icon = statIcons[action.stat_focus] || Sparkles;
   const backGradient =
     cardBackGradients[action.stat_focus] || "from-purple-400 to-indigo-500";
-  const borderColor = borderColors[action.stat_focus] || "border-purple-400";
-
-  // 변수 추가
+  const borderColor = borderColors[action.stat_focus] || "border-violet-300";
   const buttonColor =
-    buttonColors[action.stat_focus] || "bg-purple-500 dark:bg-purple-600";
+    buttonColors[action.stat_focus] ||
+    "bg-violet-200 hover:bg-violet-300 dark:bg-violet-800/60 text-violet-900 dark:text-violet-200";
   const buttonAddedColor =
     buttonAddedColors[action.stat_focus] ||
-    "bg-purple-100 dark:bg-purple-800/50 text-purple-600 dark:text-purple-300";
+    "bg-violet-100 dark:bg-violet-900/40 text-violet-500 dark:text-violet-400";
 
   useEffect(() => {
     document.body.classList.add("modal-open");
@@ -122,7 +127,7 @@ function TarotDetailModal({ action, onClose, onAdd, added }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm p-5 touch-none"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-5 touch-none"
       onClick={onClose}
       onTouchStart={(e) => e.stopPropagation()}
       onTouchMove={(e) => e.stopPropagation()}
@@ -132,7 +137,7 @@ function TarotDetailModal({ action, onClose, onAdd, added }) {
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.85, opacity: 0, y: 20 }}
         onClick={(e) => e.stopPropagation()}
-        className={`relative bg-white dark:bg-[#2E3447] rounded-3xl w-full max-w-sm border-l-4 ${borderColor} overflow-hidden shadow-2xl`}
+        className={`relative bg-white dark:bg-gray-900 rounded-3xl w-full max-w-sm border-l-4 ${borderColor} overflow-hidden shadow-2xl`}
       >
         {/* 헤더 */}
         <div
@@ -142,7 +147,7 @@ function TarotDetailModal({ action, onClose, onAdd, added }) {
             <div className="w-9 h-9 rounded-xl bg-white/30 flex items-center justify-center">
               <Icon className="w-5 h-5 text-white" strokeWidth={1.5} />
             </div>
-            <p className="text-white/80 text-xs font-semibold uppercase tracking-widest">
+            <p className="text-white/90 text-xs font-semibold uppercase tracking-widest">
               {action.keyword}
             </p>
           </div>
@@ -155,15 +160,15 @@ function TarotDetailModal({ action, onClose, onAdd, added }) {
         </div>
 
         {/* 본문 */}
-        <div className="p-6 space-y-5 bg-white dark:bg-[#2E3447]">
-          <p className="text-xl font-black text-gray-800 dark:text-white leading-snug">
+        <div className="p-6 space-y-5 bg-white dark:bg-gray-900">
+          <p className="text-xl font-black text-gray-800 dark:text-gray-100 leading-snug">
             {action.micro_action}
           </p>
-          <div className="bg-gray-50 dark:bg-[#1A1F2E] rounded-2xl p-4 border border-gray-100 dark:border-[#424B63]">
-            <p className="text-sm text-gray-600 dark:text-slate-300 leading-relaxed break-keep">
+          <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-4 border border-gray-100 dark:border-gray-700">
+            <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed break-keep">
               {action.how}
               {action.fortune && (
-                <span className="block mt-2 text-purple-600 dark:text-purple-300 font-medium">
+                <span className="block mt-2 text-violet-500 dark:text-violet-400 font-medium">
                   ✨ {action.fortune}
                 </span>
               )}
@@ -175,8 +180,8 @@ function TarotDetailModal({ action, onClose, onAdd, added }) {
               onClose();
             }}
             disabled={added}
-            className={`w-full py-4 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 transition-all ${
-              added ? buttonAddedColor : `${buttonColor} text-white shadow-lg`
+            className={`w-full py-4 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-sm ${
+              added ? buttonAddedColor : buttonColor
             }`}
           >
             {added ? (
@@ -192,7 +197,6 @@ function TarotDetailModal({ action, onClose, onAdd, added }) {
   );
 }
 
-// ─── canFlip prop 추가, 뒤집을 때 viewed 업데이트 ───
 function MiniTarotCard({
   action,
   onAddToTodo,
@@ -200,17 +204,17 @@ function MiniTarotCard({
   onNext,
   onPrev,
   canFlip,
-  onViewed, // ← 추가
+  onViewed,
 }) {
   const [flipped, setFlipped] = useState(false);
   const [added, setAdded] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
   const buttonBg =
     buttonBgColors[action.stat_focus] ||
-    "bg-purple-100 dark:bg-purple-700/50 text-purple-500";
+    "bg-violet-100 dark:bg-violet-900/40 text-violet-500";
   const buttonAdded =
     buttonAddedColors[action.stat_focus] ||
-    "bg-purple-100 dark:bg-purple-800/50 text-purple-600";
+    "bg-violet-100 dark:bg-violet-900/40 text-violet-500";
 
   const Icon = statIcons[action.stat_focus] || Sparkles;
   const backGradient =
@@ -321,24 +325,24 @@ function MiniTarotCard({
           >
             <div className="flex items-start gap-1.5 flex-1 min-h-0 overflow-hidden">
               <div
-                className={`w-5 h-5 rounded-md bg-white/70 dark:bg-white/15 flex items-center justify-center flex-shrink-0 mt-0.5 ${iconColor}`}
+                className={`w-5 h-5 rounded-md bg-white/70 dark:bg-white/10 flex items-center justify-center flex-shrink-0 mt-0.5 ${iconColor}`}
               >
                 <Icon className="w-3 h-3" strokeWidth={1.5} />
               </div>
-              <p className="text-[11px] font-black text-gray-800 dark:text-white leading-snug flex-1 line-clamp-4 overflow-hidden break-keep">
+              <p className="text-[11px] font-black text-gray-800 dark:text-gray-100 leading-snug flex-1 line-clamp-4 overflow-hidden break-keep">
                 {action.micro_action}
               </p>
             </div>
-            <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-200/60 dark:border-white/15 flex-shrink-0">
+            <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-200/60 dark:border-white/10 flex-shrink-0">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   setShowDetail(true);
                 }}
-                className="flex items-center justify-center w-7 h-7 rounded-lg bg-white/60 dark:bg-white/15 hover:bg-white dark:hover:bg-white/25 active:scale-90 transition-all"
+                className="flex items-center justify-center w-7 h-7 rounded-lg bg-white/60 dark:bg-white/10 hover:bg-white dark:hover:bg-white/20 active:scale-90 transition-all"
               >
                 <Maximize2
-                  className="w-3.5 h-3.5 text-gray-500 dark:text-slate-300"
+                  className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400"
                   strokeWidth={1.5}
                 />
               </button>
@@ -510,8 +514,8 @@ function InfiniteCardCarousel({
                     todos={todos}
                     onNext={goRight}
                     onPrev={goLeft}
-                    canFlip={canFlip} // ← 전달
-                    onViewed={onViewed} // ← 전달
+                    canFlip={canFlip}
+                    onViewed={onViewed}
                   />
                 </motion.div>
               );
@@ -529,7 +533,7 @@ export default function TarotSection({
   todos,
   isLoading,
   canFlip,
-  onViewed, // ← 추가
+  onViewed,
 }) {
   const today = getKSTDateString();
   const storageKey = `tarotCollapsed_${today}`;
@@ -551,34 +555,31 @@ export default function TarotSection({
 
   const list = useMemo(() => {
     return [...(actions || [])]
-      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at)) // 최신순
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
       .slice(0, 9);
   }, [actions]);
 
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        {/* 아이콘과 텍스트를 하나로 묶음 */}
         <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-purple-400" />
-          <p className="text-[12px] font-black text-purple-500 uppercase tracking-widest">
+          <Sparkles className="w-4 h-4 text-violet-400" />
+          <p className="text-[12px] font-black text-violet-500 dark:text-violet-400 uppercase tracking-widest">
             오늘의 행운 실천 카드
           </p>
         </div>
-
-        {/* 토글 버튼만 우측 정렬 */}
         <button
           onClick={handleToggle}
-          className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-[#2E3447] transition-colors"
+          className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
         >
           {collapsed ? (
             <ChevronDown
-              className="w-4 h-4 text-gray-400 dark:text-slate-400"
+              className="w-4 h-4 text-gray-400 dark:text-gray-500"
               strokeWidth={1.5}
             />
           ) : (
             <ChevronUp
-              className="w-4 h-4 text-gray-400 dark:text-slate-400"
+              className="w-4 h-4 text-gray-400 dark:text-gray-500"
               strokeWidth={1.5}
             />
           )}
@@ -596,7 +597,7 @@ export default function TarotSection({
           >
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-6 gap-3">
-                <Loader2 className="w-8 h-8 text-purple-500 animate-spin drop-shadow-[0_0_8px_rgba(168,85,247,0.6)]" />
+                <Loader2 className="w-8 h-8 text-violet-400 animate-spin drop-shadow-[0_0_8px_rgba(167,139,250,0.4)]" />
                 <p className="text-xs text-gray-400 dark:text-gray-500 font-medium">
                   카드 생성 중...
                 </p>
@@ -606,11 +607,11 @@ export default function TarotSection({
                 actions={list}
                 onAddToTodo={onAddToTodo}
                 todos={todos}
-                canFlip={canFlip} // ← 전달
-                onViewed={onViewed} // ← 전달
+                canFlip={canFlip}
+                onViewed={onViewed}
               />
             ) : (
-              <div className="text-center py-6 text-xs text-gray-400">
+              <div className="text-center py-6 text-xs text-gray-400 dark:text-gray-600">
                 아직 생성된 카드가 없어요
               </div>
             )}

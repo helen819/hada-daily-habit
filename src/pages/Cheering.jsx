@@ -15,37 +15,10 @@ import AdModal from "@/components/shop/AdModal";
 import CharmReveal from "@/components/shop/CharmReveal";
 import { getKSTDateString } from "@/utils/date";
 
-// ─── 이모지 매핑 (Shop.jsx 동일) ────────────────────────────────
-// const EMOJI_MAP = {
-//   동전: "🪙",
-//   볼펜: "🖊️",
-//   돌: "🪨",
-//   반지: "💍",
-//   라벤더: "🌸",
-//   포스트잇: "📝",
-//   식물: "🌿",
-//   거울: "🪞",
-//   열쇠: "🗝️",
-//   컵: "☕",
-//   이어폰: "🎧",
-//   스티커: "🏷️",
-//   책: "📖",
-//   수첩: "📓",
-//   향: "🕯️",
-// };
-// const getEmoji = (name = "") => {
-//   for (const [key, emoji] of Object.entries(EMOJI_MAP)) {
-//     if (name.includes(key)) return emoji;
-//   }
-//   return "✨";
-// };
-
-// ─── 자정(KST) 기준 오늘 날짜 키 ────────────────────────────────
 function getTodayKey() {
   return getKSTDateString();
 }
 
-// ─── AI 부적 생성 ────────────────────────────────────────────────
 async function generateAICharm(profile) {
   const now = new Date();
   const dateStr = now.toLocaleDateString("ko-KR", {
@@ -55,7 +28,6 @@ async function generateAICharm(profile) {
     weekday: "long",
   });
 
-  // 1. 전체 목표 리스트 가져오기 (Home과 동일한 로직)
   const allGoals = await base44.entities.Goal.list();
   const activeGoals = allGoals
     .filter((g) => g.user_profile_id === profile.id && !g.is_completed)
@@ -67,14 +39,11 @@ async function generateAICharm(profile) {
       ? activeGoals
           .map(
             (g, i) =>
-              `${i + 1}. 제목: ${g.title} / 설명: ${
-                g.description || "설명 없음"
-              }`,
+              `${i + 1}. 제목: ${g.title} / 설명: ${g.description || "설명 없음"}`,
           )
           .join("\n")
       : "현재 설정된 목표가 없습니다.";
 
-  // 2. 최근 활동 내역 가져오기 (할일 기반)
   const allTodos = await base44.entities.GoalTodo.list();
   const userTodos = allTodos
     .filter((t) => t.user_profile_id === profile.id)
@@ -109,11 +78,7 @@ async function generateAICharm(profile) {
             - name: 10자 이내. 일상에서 당장 구할 수 있는 일반적인 물건.
             - emoji: 위 물건과 가장 잘 어울리는 이모지 기호 딱 1개. (예: 🔑, ☕) 다른 텍스트 포함 금지.
             - effect: 30자 이내. "어떤 목표"와 연관된 효과인지 명시하여 작성.
-            - description: 100자 이내. 사용법·의미. 줄바꿈 금지.
-              사주 4주 8자 / 명리학 오행 / 자미두수 / 동양 점성술 / 서양 점성술 / 성명학 분석에서 도출한 자연어로 녹여 제시. 
-              예시: "금의 기운을 타고난 당신은~", "화성의 에너지가 강한 지금~","이름에 담긴 수리가 변화를 암시하므로~".
-              절대 금지: "명리학", "오행", "자미두수", "점성술", "성명학", "사주" 단어를 그대로 출력하지 말 것.
-              분석 카테고리명이 아니라 그 카테고리에서 나온 결과값(기운·색·방향·수·행성 등)만 문장에 담을 것.`,
+            - description: 100자 이내. 사용법·의미. 줄바꿈 금지.`,
     response_json_schema: {
       type: "object",
       properties: {
@@ -126,7 +91,6 @@ async function generateAICharm(profile) {
   });
 }
 
-// ─── 고민 대분류 / 중분류 데이터 ────────────────────────────────
 const CONCERN_CATEGORIES = [
   {
     id: "motivation",
@@ -180,14 +144,7 @@ const CONCERN_CATEGORIES = [
   },
 ];
 
-// ─── 응원 편지 팝업 ──────────────────────────────────────────────
-function CheeringLetterModal({
-  letter,
-  goalTitle,
-  concern,
-  subConcern,
-  onClose,
-}) {
+function CheeringLetterModal({ letter, goalTitle, concern, subConcern, onClose }) {
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -205,45 +162,40 @@ function CheeringLetterModal({
       >
         <div className="w-10 h-1 rounded-full bg-gray-200 dark:bg-gray-700 mx-auto mb-6" />
 
-        {/* 헤더 */}
         <div className="flex items-start justify-between mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center flex-shrink-0 shadow-lg shadow-purple-200 dark:shadow-purple-900/30">
-              <Heart className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 rounded-2xl bg-fuchsia-100 dark:bg-fuchsia-950/50 flex items-center justify-center flex-shrink-0">
+              <Heart className="w-5 h-5 text-fuchsia-500 dark:text-fuchsia-400" />
             </div>
             <div>
-              <p className="text-[10px] font-black text-purple-500 uppercase tracking-widest">
+              <p className="text-[10px] font-black text-fuchsia-500 dark:text-fuchsia-400 uppercase tracking-widest">
                 HADA 응원
               </p>
               <p className="text-sm font-black text-gray-900 dark:text-white leading-tight">
                 {goalTitle}
               </p>
-              <p className="text-[11px] text-gray-400 mt-0.5">
+              <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5">
                 {concern} · {subConcern}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-500 flex-shrink-0"
+            className="p-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 flex-shrink-0"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* 편지 본문 */}
-        <div className="bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 rounded-3xl p-6 border border-purple-100 dark:border-purple-800/40">
-          {/* 인사말 */}
+        <div className="bg-fuchsia-50 dark:bg-fuchsia-950/30 rounded-3xl p-6 border border-fuchsia-100 dark:border-fuchsia-900/40">
           {letter.greeting && (
-            <p className="text-sm font-black text-purple-700 dark:text-purple-300 mb-4 leading-snug">
+            <p className="text-sm font-black text-fuchsia-700 dark:text-fuchsia-300 mb-4 leading-snug">
               {letter.greeting}
             </p>
           )}
-
-          {/* 공감 메시지 */}
           {letter.empathy && (
             <div className="mb-4">
-              <p className="text-[10px] font-black text-purple-400 uppercase tracking-widest mb-1.5">
+              <p className="text-[10px] font-black text-fuchsia-400 dark:text-fuchsia-500 uppercase tracking-widest mb-1.5">
                 잘하고 있어요
               </p>
               <p className="text-sm text-gray-700 dark:text-gray-200 leading-relaxed">
@@ -251,20 +203,16 @@ function CheeringLetterModal({
               </p>
             </div>
           )}
-
-          {/* 핵심 응원 */}
           {letter.core_message && (
-            <div className="mb-4 bg-white/60 dark:bg-white/5 rounded-2xl px-4 py-3 border border-purple-100 dark:border-purple-700/30">
-              <p className="text-sm font-bold text-purple-800 dark:text-purple-200 leading-relaxed">
+            <div className="mb-4 bg-white/70 dark:bg-white/5 rounded-2xl px-4 py-3 border border-fuchsia-100 dark:border-fuchsia-800/30">
+              <p className="text-sm font-bold text-fuchsia-800 dark:text-fuchsia-200 leading-relaxed">
                 {letter.core_message}
               </p>
             </div>
           )}
-
-          {/* 구체적 조언 */}
           {letter.advice && (
             <div className="mb-4">
-              <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1.5">
+              <p className="text-[10px] font-black text-violet-400 dark:text-violet-500 uppercase tracking-widest mb-1.5">
                 이렇게 해보세요
               </p>
               <p className="text-sm text-gray-700 dark:text-gray-200 leading-relaxed">
@@ -272,17 +220,14 @@ function CheeringLetterModal({
               </p>
             </div>
           )}
-
-          {/* 마무리 응원 */}
           {letter.closing && (
-            <p className="text-sm font-bold text-purple-600 dark:text-purple-300 text-center pt-2 leading-relaxed">
+            <p className="text-sm font-bold text-fuchsia-600 dark:text-fuchsia-300 text-center pt-2 leading-relaxed">
               ✨ {letter.closing}
             </p>
           )}
         </div>
 
-        {/* 오늘 하루만 라벨 */}
-        <p className="text-[10px] text-gray-400 text-center mt-4">
+        <p className="text-[10px] text-gray-400 dark:text-gray-600 text-center mt-4">
           이 응원은 오늘 자정에 사라져요
         </p>
       </motion.div>
@@ -290,7 +235,6 @@ function CheeringLetterModal({
   );
 }
 
-// ─── 고민 선택 팝업 ──────────────────────────────────────────────
 function ConcernSelectorModal({ goals, onConfirm, onClose }) {
   const [selectedGoalId, setSelectedGoalId] = useState(null);
   const [selectedCat, setSelectedCat] = useState(null);
@@ -322,15 +266,14 @@ function ConcernSelectorModal({ goals, onConfirm, onClose }) {
           </h2>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-500"
+            className="p-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* 목표 선택 */}
         <div className="mb-5">
-          <p className="text-[11px] font-black text-purple-500 uppercase tracking-widest mb-2">
+          <p className="text-[11px] font-black text-violet-500 dark:text-violet-400 uppercase tracking-widest mb-2">
             1. 어떤 목표에 대한 고민인가요?
           </p>
           <div className="space-y-2">
@@ -340,7 +283,7 @@ function ConcernSelectorModal({ goals, onConfirm, onClose }) {
                 onClick={() => setSelectedGoalId(goal.id)}
                 className={`w-full text-left px-4 py-3 rounded-2xl border-2 text-sm font-bold transition-all ${
                   selectedGoalId === goal.id
-                    ? "border-purple-400 bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300"
+                    ? "border-violet-300 dark:border-violet-600 bg-violet-50 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300"
                     : "border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300"
                 }`}
               >
@@ -350,15 +293,13 @@ function ConcernSelectorModal({ goals, onConfirm, onClose }) {
           </div>
         </div>
 
-        {/* 고민 대분류 + 중분류 */}
         <div className="mb-6">
-          <p className="text-[11px] font-black text-purple-500 uppercase tracking-widest mb-2">
+          <p className="text-[11px] font-black text-violet-500 dark:text-violet-400 uppercase tracking-widest mb-2">
             2. 어떤 부분이 힘드신가요?
           </p>
           <div className="space-y-2">
             {CONCERN_CATEGORIES.map((cat) => (
               <div key={cat.id}>
-                {/* 대분류 */}
                 <button
                   onClick={() => {
                     setOpenCatId(openCatId === cat.id ? null : cat.id);
@@ -369,7 +310,7 @@ function ConcernSelectorModal({ goals, onConfirm, onClose }) {
                   }}
                   className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl border-2 text-sm font-bold transition-all ${
                     selectedCat?.id === cat.id
-                      ? "border-purple-400 bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300"
+                      ? "border-violet-300 dark:border-violet-600 bg-violet-50 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300"
                       : "border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300"
                   }`}
                 >
@@ -381,7 +322,6 @@ function ConcernSelectorModal({ goals, onConfirm, onClose }) {
                   />
                 </button>
 
-                {/* 중분류 */}
                 <AnimatePresence>
                   {openCatId === cat.id && (
                     <motion.div
@@ -400,7 +340,7 @@ function ConcernSelectorModal({ goals, onConfirm, onClose }) {
                           }}
                           className={`w-full text-left px-4 py-2.5 rounded-xl border text-xs font-semibold transition-all ${
                             selectedSub === sub && selectedCat?.id === cat.id
-                              ? "border-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300"
+                              ? "border-indigo-200 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300"
                               : "border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
                           }`}
                         >
@@ -415,7 +355,6 @@ function ConcernSelectorModal({ goals, onConfirm, onClose }) {
           </div>
         </div>
 
-        {/* 확인 버튼 */}
         <button
           onClick={() =>
             canConfirm &&
@@ -426,7 +365,7 @@ function ConcernSelectorModal({ goals, onConfirm, onClose }) {
             })
           }
           disabled={!canConfirm}
-          className="w-full h-14 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-black text-sm disabled:opacity-30 disabled:cursor-not-allowed active:scale-[0.98] transition-transform shadow-lg shadow-purple-200 dark:shadow-purple-900/30 flex items-center justify-center gap-2"
+          className="w-full h-14 rounded-2xl bg-fuchsia-200 hover:bg-fuchsia-300 dark:bg-fuchsia-800/60 dark:hover:bg-fuchsia-700/60 text-fuchsia-900 dark:text-fuchsia-200 font-black text-sm disabled:opacity-30 disabled:cursor-not-allowed active:scale-[0.98] transition-all shadow-sm flex items-center justify-center gap-2"
         >
           <Heart className="w-4 h-4" />
           HADA의 응원 메시지 받기
@@ -436,14 +375,10 @@ function ConcernSelectorModal({ goals, onConfirm, onClose }) {
   );
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// Cheering 메인
-// ═══════════════════════════════════════════════════════════════════
 export default function Cheering() {
   const queryClient = useQueryClient();
   const today = getTodayKey();
 
-  // ─── 행운 상태 ──────────────────────────────────────────────
   const [showAdForCharm, setShowAdForCharm] = useState(false);
   const [revealedCharm, setRevealedCharm] = useState(null);
   const [dailyCharm, setDailyCharm] = useState(null);
@@ -453,14 +388,12 @@ export default function Cheering() {
   const charmPromiseRef = useRef(null);
   const [showCharmDetail, setShowCharmDetail] = useState(false);
 
-  // ─── 응원 상태 ──────────────────────────────────────────────
   const [showConcernSelector, setShowConcernSelector] = useState(false);
   const [loadingLetter, setLoadingLetter] = useState(false);
-  const [letterResult, setLetterResult] = useState(null); // 팝업 표시용
-  const [savedLetter, setSavedLetter] = useState(null); // 오늘 저장된 편지
-  const [savedLetterMeta, setSavedLetterMeta] = useState(null); // { goalTitle, concern, subConcern }
+  const [letterResult, setLetterResult] = useState(null);
+  const [savedLetter, setSavedLetter] = useState(null);
+  const [savedLetterMeta, setSavedLetterMeta] = useState(null);
 
-  // ─── 데이터 ─────────────────────────────────────────────────
   const { data: profiles = [] } = useQuery({
     queryKey: ["userProfile"],
     queryFn: () => base44.entities.UserProfile.list(),
@@ -478,7 +411,6 @@ export default function Cheering() {
     enabled: !!profile?.id,
   });
 
-  // ─── 행운 캐시 로드 ─────────────────────────────────────────
   useEffect(() => {
     if (!profile) return;
     const load = async () => {
@@ -506,7 +438,6 @@ export default function Cheering() {
     load();
   }, [profile, today]);
 
-  // ─── 응원 편지 캐시 로드 ────────────────────────────────────
   useEffect(() => {
     if (!profile) return;
     const load = async () => {
@@ -517,7 +448,6 @@ export default function Cheering() {
         setSavedLetter(cachedLetter);
         setSavedLetterMeta(cachedMeta);
       } else if (cachedDate && cachedDate !== today) {
-        // 자정 리셋
         await base44.storage.remove("cheeringLetterDate");
         await base44.storage.remove("cheeringLetter");
         await base44.storage.remove("cheeringLetterMeta");
@@ -528,7 +458,6 @@ export default function Cheering() {
     load();
   }, [profile, today]);
 
-  // ─── 행운 뽑기 ──────────────────────────────────────────────
   const handleCharmClick = () => {
     if (charmPickCount >= MAX_PICK_LIMIT) return;
     setShowAdForCharm(true);
@@ -551,8 +480,6 @@ export default function Cheering() {
       await base44.storage.set("lastPickDate", today);
 
       setDailyCharm(charm);
-      // 저장 버튼 없이 그냥 화면에 표시 (revealedCharm 팝업 사용 안 함)
-
       setShowCharmDetail(true);
     } catch (e) {
       console.error(e);
@@ -562,12 +489,10 @@ export default function Cheering() {
     }
   };
 
-  // ─── 응원 메시지 요청 ────────────────────────────────────────
   const handleConcernConfirm = async ({ goal, category, subConcern }) => {
     setShowConcernSelector(false);
     setLoadingLetter(true);
     try {
-      // 1. 해당 목표(goal.id)에 연관된 사용자의 모든 할일 가져오기 및 정렬
       const allTodos = await base44.entities.GoalTodo.list();
       const goalSpecificTodos = allTodos
         .filter(
@@ -575,7 +500,6 @@ export default function Cheering() {
         )
         .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
-      // 2. 완료된 할일과 미완료된 할일 각각 최대 20개씩 추출
       const recentGoalComplete = goalSpecificTodos
         .filter((t) => t.completed)
         .slice(0, 20)
@@ -593,53 +517,22 @@ export default function Cheering() {
               [사용자 정보 및 고민]
               - 목표 제목: ${goal.title}
               - 목표 설명: ${goal.description || "없음"}
-              - 목표 기간: ${
-                goal.duration_type === "no_limit" || !goal.duration_type
-                  ? "꾸준히 (기한 없음)"
-                  : goal.duration_type === "this_month"
-                  ? "이번 달"
-                  : goal.duration_type === "this_year"
-                  ? "올해"
-                  : goal.duration_type === "monthly"
-                  ? `${goal.duration_months}개월`
-                  : "날짜 지정"
-              }
-              - 마감일: ${
-                goal.deadline ? goal.deadline.replace(/-/g, ".") : "없음"
-              }
               - 고민 분류: ${category.label}
               - 구체적 고민: ${subConcern}
 
               [최근 해당 목표의 실천 기록 (완료 내역 - 최대 20개)]
-              ${
-                recentGoalComplete.length
-                  ? recentGoalComplete.join(", ")
-                  : "아직 완료된 기록이 없습니다."
-              }
+              ${recentGoalComplete.length ? recentGoalComplete.join(", ") : "아직 완료된 기록이 없습니다."}
 
               [최근 해당 목표의 미완료/진행 중 기록 (최대 20개)]
-              ${
-                recentGoalIncomplete.length
-                  ? recentGoalIncomplete.join(", ")
-                  : "기록이 없습니다."
-              }
+              ${recentGoalIncomplete.length ? recentGoalIncomplete.join(", ") : "기록이 없습니다."}
 
-                [응원 편지 작성 규칙]
-                실천 기록을 참고하여 사용자가 노력해온 점을 구체적으로 언급하며 격려할 것. 
-                다음 필드를 채워라.
-
-                - greeting: 15자 이내. 사용자에게 직접 말을 거는 첫 인사. 줄바꿈 금지.
-                - empathy: 60자 이내. 고민에 깊이 공감하는 내용. "~하시죠" "~하실 수 있어요" 형식. 줄바꿈 금지.
-                - core_message: 60자 이내. 핵심 응원 메시지. 목표와 연결된 진심. 줄바꿈 금지.
-                - advice: 120자 이내. 고민을 극복할 수 있는 구체적이고 따뜻한 조언. 
-                  마감일이 있다면 남은 기간을 고려해 지금 페이스가 적절한지 언급할 것. 줄바꿈 금지.
-                  사주 4주 8자 / 명리학 오행 / 자미두수 / 동양 점성술 / 서양 점성술 / 성명학 분석에서 도출한 자연어로 녹여 조언. 
-                  예시: "금의 기운을 타고난 당신은~", "화성의 에너지가 강한 지금~","이름에 담긴 수리가 변화를 암시하므로~".
-                  절대 금지: "명리학", "오행", "자미두수", "점성술", "성명학", "사주" 단어를 그대로 출력하지 말 것.
-                  분석 카테고리명이 아니라 그 카테고리에서 나온 결과값(기운·색·방향·수·행성 등)만 문장에 담을 것.
-                - closing: 30자 이내. 마무리 응원 한 줄. 줄바꿈 금지.
-
-                전문 용어 금지. 비교·경쟁 표현 금지. 존댓말. 따뜻하고 진심 어린 톤.`,
+              [응원 편지 작성 규칙]
+              - greeting: 15자 이내. 줄바꿈 금지.
+              - empathy: 60자 이내. 줄바꿈 금지.
+              - core_message: 60자 이내. 줄바꿈 금지.
+              - advice: 120자 이내. 줄바꿈 금지.
+              - closing: 30자 이내. 줄바꿈 금지.
+              전문 용어 금지. 비교·경쟁 표현 금지. 존댓말.`,
         response_json_schema: {
           type: "object",
           properties: {
@@ -660,7 +553,6 @@ export default function Cheering() {
         subConcern,
       };
 
-      // 캐싱 (새로 받으면 기존 덮어쓰기)
       await base44.storage.set("cheeringLetterDate", today);
       await base44.storage.set("cheeringLetter", res);
       await base44.storage.set("cheeringLetterMeta", meta);
@@ -679,16 +571,14 @@ export default function Cheering() {
 
   return (
     <div className="min-h-screen bg-[#FDFCFE] dark:bg-gray-950 pb-32 transition-colors duration-300">
-      {/* 행운 광고 모달 */}
       <AdModal visible={showAdForCharm} onClose={handleCharmAdClose} />
 
-      {/* ── 헤더 ──────────────────────────────────────────────── */}
       <div className="px-6 pt-12 pb-6">
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <p className="text-[10px] font-black text-purple-500 uppercase tracking-[0.3em] mb-2">
+          <p className="text-[10px] font-black text-violet-500 dark:text-violet-400 uppercase tracking-[0.3em] mb-2">
             HADA
           </p>
           <h1 className="text-2xl font-black text-gray-900 dark:text-white leading-tight">
@@ -701,16 +591,15 @@ export default function Cheering() {
       </div>
 
       <div className="px-5 space-y-6">
-        {/* ════ 오늘의 행운 섹션 ════ */}
+        {/* 오늘의 행운 */}
         <section>
           <div className="flex items-center gap-2.5 mb-3">
-            <div className="w-2 h-6 bg-amber-400 rounded-full" />
+            <div className="w-2 h-6 bg-amber-300 dark:bg-amber-500 rounded-full" />
             <p className="text-sm font-black text-gray-800 dark:text-gray-100">
               오늘의 행운
             </p>
           </div>
 
-          {/* 뽑기 버튼 */}
           <motion.button
             whileTap={remainingCharms > 0 ? { scale: 0.97 } : {}}
             onClick={handleCharmClick}
@@ -718,48 +607,29 @@ export default function Cheering() {
             className={`relative w-full rounded-3xl p-5 overflow-hidden text-center transition-all ${
               remainingCharms <= 0
                 ? "bg-gray-100 dark:bg-gray-800 cursor-not-allowed"
-                : "active:scale-[0.98]"
+                : "bg-amber-100 hover:bg-amber-200 dark:bg-amber-900/40 dark:hover:bg-amber-900/60 active:scale-[0.98]"
             }`}
-            style={
-              remainingCharms > 0
-                ? {
-                    background:
-                      "linear-gradient(135deg, rgba(251,191,36,0.9) 0%, rgba(249,115,22,0.8) 100%)",
-                  }
-                : {}
-            }
           >
-            {remainingCharms > 0 && (
-              <div className="absolute inset-0 overflow-hidden">
-                <div className="absolute -top-6 -right-6 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
-              </div>
-            )}
-            <div
-              className={`relative z-10 flex items-center justify-between ${
-                remainingCharms <= 0 ? "text-gray-400" : "text-white"
-              }`}
-            >
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div
                   className={`w-10 h-10 rounded-2xl flex items-center justify-center ${
                     remainingCharms > 0
-                      ? "bg-white/20"
+                      ? "bg-amber-200 dark:bg-amber-800/60"
                       : "bg-gray-200 dark:bg-gray-700"
                   }`}
                 >
                   {loadingCharm ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <Loader2 className="w-5 h-5 animate-spin text-amber-700 dark:text-amber-300" />
                   ) : (
-                    <ShoppingBag className="w-5 h-5" />
+                    <ShoppingBag className="w-5 h-5 text-amber-700 dark:text-amber-300" />
                   )}
                 </div>
                 <div className="text-left">
-                  <p className="text-sm font-black">
-                    {remainingCharms <= 0
-                      ? "내일 다시 뽑아주세요"
-                      : "행운 뽑기"}
+                  <p className={`text-sm font-black ${remainingCharms <= 0 ? "text-gray-400 dark:text-gray-500" : "text-amber-900 dark:text-amber-200"}`}>
+                    {remainingCharms <= 0 ? "내일 다시 뽑아주세요" : "행운 뽑기"}
                   </p>
-                  <p className="text-[11px] opacity-70 mt-0.5">
+                  <p className={`text-[11px] mt-0.5 ${remainingCharms <= 0 ? "text-gray-400 dark:text-gray-500" : "text-amber-700/70 dark:text-amber-400/60"}`}>
                     {loadingCharm
                       ? "운명 계산 중..."
                       : `오늘 남은 횟수 ${remainingCharms} / ${MAX_PICK_LIMIT}`}
@@ -767,17 +637,15 @@ export default function Cheering() {
                 </div>
               </div>
               {remainingCharms > 0 && !loadingCharm && (
-                <ChevronRight className="w-5 h-5 opacity-70" />
+                <ChevronRight className="w-5 h-5 text-amber-600 dark:text-amber-400 opacity-70" />
               )}
             </div>
           </motion.button>
 
-          {/* 새로 뽑으면 사라진다는 안내 */}
           <p className="text-[10px] text-gray-400 dark:text-gray-600 text-center mt-2">
             새로 뽑으면 이전 행운이 사라져요 · 자정에 초기화
           </p>
 
-          {/* 오늘의 행운 카드 — 미리보기 스타일 */}
           <AnimatePresence>
             {!loadingCharm && dailyCharm && (
               <motion.div
@@ -789,22 +657,19 @@ export default function Cheering() {
               >
                 <button
                   onClick={() => setShowCharmDetail(true)}
-                  className="w-full bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-[24px] p-5 border border-amber-100 dark:border-amber-800/40 text-left active:scale-[0.98] transition-transform"
+                  className="w-full bg-amber-50 dark:bg-amber-950/30 rounded-[24px] p-5 border border-amber-100 dark:border-amber-900/40 text-left active:scale-[0.98] transition-transform"
                 >
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
-                      <span className="text-base">
-                        {dailyCharm.emoji || "✨"}
-                      </span>
+                      <span className="text-base">{dailyCharm.emoji || "✨"}</span>
                       <p className="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-widest">
                         오늘의 행운
                       </p>
                     </div>
-                    <span className="text-[10px] text-amber-500 font-bold">
+                    <span className="text-[10px] text-amber-500 dark:text-amber-400 font-bold">
                       탭해서 전체 보기 →
                     </span>
                   </div>
-
                   <p className="text-base font-black text-amber-800 dark:text-amber-200 mb-1">
                     {dailyCharm.name}
                   </p>
@@ -841,11 +706,11 @@ export default function Cheering() {
                   <div className="w-10 h-1 rounded-full bg-gray-200 dark:bg-gray-700 mx-auto mb-6" />
                   <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-md shadow-amber-200 dark:shadow-amber-900/30 text-xl">
+                      <div className="w-10 h-10 rounded-2xl bg-amber-100 dark:bg-amber-950/50 flex items-center justify-center text-xl">
                         {dailyCharm.emoji || "✨"}
                       </div>
                       <div>
-                        <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest">
+                        <p className="text-[10px] font-black text-amber-500 dark:text-amber-400 uppercase tracking-widest">
                           오늘의 행운
                         </p>
                         <p className="text-base font-black text-gray-900 dark:text-white leading-tight">
@@ -855,15 +720,15 @@ export default function Cheering() {
                     </div>
                     <button
                       onClick={() => setShowCharmDetail(false)}
-                      className="p-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-500"
+                      className="p-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400"
                     >
                       <X className="w-4 h-4" />
                     </button>
                   </div>
 
-                  <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-3xl p-6 border border-amber-100 dark:border-amber-800/40 space-y-4">
+                  <div className="bg-amber-50 dark:bg-amber-950/30 rounded-3xl p-6 border border-amber-100 dark:border-amber-900/40 space-y-4">
                     <div>
-                      <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-1.5">
+                      <p className="text-[10px] font-black text-amber-500 dark:text-amber-400 uppercase tracking-widest mb-1.5">
                         핵심 효과
                       </p>
                       <p className="text-sm font-bold text-amber-800 dark:text-amber-200">
@@ -871,14 +736,14 @@ export default function Cheering() {
                       </p>
                     </div>
                     <div>
-                      <p className="text-[10px] font-black text-orange-500 uppercase tracking-widest mb-1.5">
+                      <p className="text-[10px] font-black text-amber-600 dark:text-amber-500 uppercase tracking-widest mb-1.5">
                         사용법 · 의미
                       </p>
                       <p className="text-sm text-gray-700 dark:text-gray-200 leading-relaxed">
                         {dailyCharm.description}
                       </p>
                     </div>
-                    <p className="text-[10px] text-gray-400 text-center italic pt-1">
+                    <p className="text-[10px] text-gray-400 dark:text-gray-600 text-center italic pt-1">
                       HADA 운명학 분석
                     </p>
                   </div>
@@ -888,26 +753,25 @@ export default function Cheering() {
           </AnimatePresence>
         </section>
 
-        {/* ════ 응원 메시지 섹션 ════ */}
+        {/* 응원 메시지 섹션 */}
         <section>
           <div className="flex items-center gap-2.5 mb-3">
-            <div className="w-2 h-6 bg-purple-500 rounded-full shadow-[0_0_12px_rgba(168,85,247,0.25)]" />
+            <div className="w-2 h-6 bg-fuchsia-300 dark:bg-fuchsia-600 rounded-full" />
             <p className="text-sm font-black text-gray-800 dark:text-gray-100">
               HADA의 응원
             </p>
           </div>
 
-          {/* 응원 요청 카드 */}
-          <div className="bg-white dark:bg-gray-900 rounded-[28px] p-5 border border-purple-50 dark:border-gray-800 shadow-[0_8px_30px_rgba(120,50,255,0.06)]">
+          <div className="bg-white dark:bg-gray-900 rounded-[28px] p-5 border border-fuchsia-50 dark:border-gray-800 shadow-[0_4px_20px_rgba(232,121,249,0.06)]">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center shadow-md shadow-purple-200 dark:shadow-purple-900/30">
-                <Heart className="w-5 h-5 text-white" />
+              <div className="w-10 h-10 rounded-2xl bg-fuchsia-100 dark:bg-fuchsia-950/50 flex items-center justify-center">
+                <Heart className="w-5 h-5 text-fuchsia-500 dark:text-fuchsia-400" />
               </div>
               <div>
                 <p className="text-sm font-black text-gray-900 dark:text-white">
                   지금 어떤 고민이 있나요?
                 </p>
-                <p className="text-xs text-gray-400 mt-0.5">
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
                   목표를 이루는 길, HADA가 함께해요
                 </p>
               </div>
@@ -921,12 +785,11 @@ export default function Cheering() {
             <button
               onClick={() => !loadingLetter && setShowConcernSelector(true)}
               disabled={loadingLetter || goals.length === 0}
-              className="w-full h-14 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-black text-sm flex items-center justify-center gap-2 shadow-lg shadow-purple-200 dark:shadow-purple-900/30 disabled:opacity-40 active:scale-[0.98] transition-transform"
+              className="w-full h-14 rounded-2xl bg-fuchsia-200 hover:bg-fuchsia-300 dark:bg-fuchsia-800/60 dark:hover:bg-fuchsia-700/60 text-fuchsia-900 dark:text-fuchsia-200 font-black text-sm flex items-center justify-center gap-2 shadow-sm disabled:opacity-40 active:scale-[0.98] transition-all"
             >
               {loadingLetter ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" /> 응원 편지 작성
-                  중...
+                  <Loader2 className="w-4 h-4 animate-spin" /> 응원 편지 작성 중...
                 </>
               ) : (
                 <>
@@ -936,18 +799,16 @@ export default function Cheering() {
             </button>
 
             {goals.length === 0 && (
-              <p className="text-xs text-gray-400 text-center mt-2">
+              <p className="text-xs text-gray-400 dark:text-gray-500 text-center mt-2">
                 목표 화면에서 목표를 먼저 추가해주세요
               </p>
             )}
 
-            {/* 안내 */}
-            <p className="text-[10px] text-gray-400 text-center mt-3">
+            <p className="text-[10px] text-gray-400 dark:text-gray-600 text-center mt-3">
               새로 받으면 이전 메시지가 사라져요 · 자정에 초기화
             </p>
           </div>
 
-          {/* 오늘 받은 응원 편지 미리보기 */}
           <AnimatePresence>
             {savedLetter && savedLetterMeta && (
               <motion.div
@@ -961,28 +822,25 @@ export default function Cheering() {
                   onClick={() =>
                     setLetterResult({ letter: savedLetter, ...savedLetterMeta })
                   }
-                  className="w-full bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 rounded-[24px] p-5 border border-purple-100 dark:border-purple-800/40 text-left active:scale-[0.98] transition-transform"
+                  className="w-full bg-fuchsia-50 dark:bg-fuchsia-950/30 rounded-[24px] p-5 border border-fuchsia-100 dark:border-fuchsia-900/40 text-left active:scale-[0.98] transition-transform"
                 >
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 text-purple-500" />
-                      <p className="text-[10px] font-black text-purple-500 uppercase tracking-widest">
+                      <Sparkles className="w-4 h-4 text-fuchsia-500 dark:text-fuchsia-400" />
+                      <p className="text-[10px] font-black text-fuchsia-500 dark:text-fuchsia-400 uppercase tracking-widest">
                         오늘의 응원
                       </p>
                     </div>
-                    <span className="text-[10px] text-purple-400 font-bold">
+                    <span className="text-[10px] text-fuchsia-400 dark:text-fuchsia-500 font-bold">
                       탭해서 전체 보기 →
                     </span>
                   </div>
-
-                  <p className="text-xs font-bold text-purple-700 dark:text-purple-300 mb-1">
+                  <p className="text-xs font-bold text-fuchsia-700 dark:text-fuchsia-300 mb-1">
                     {savedLetterMeta.goalTitle}
                   </p>
                   <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-3">
                     {savedLetterMeta.concern} · {savedLetterMeta.subConcern}
                   </p>
-
-                  {/* 핵심 메시지 미리보기 */}
                   <p className="text-sm font-bold text-gray-800 dark:text-gray-200 leading-relaxed line-clamp-2">
                     {savedLetter.core_message}
                   </p>
@@ -993,7 +851,6 @@ export default function Cheering() {
         </section>
       </div>
 
-      {/* ── 고민 선택 팝업 ──────────────────────────────────── */}
       <AnimatePresence>
         {showConcernSelector && (
           <ConcernSelectorModal
@@ -1004,7 +861,6 @@ export default function Cheering() {
         )}
       </AnimatePresence>
 
-      {/* ── 응원 편지 팝업 ──────────────────────────────────── */}
       <AnimatePresence>
         {letterResult && (
           <CheeringLetterModal

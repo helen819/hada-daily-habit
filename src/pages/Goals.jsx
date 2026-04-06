@@ -40,7 +40,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 
-// ─── dnd-kit imports ─────────────────────────────────────────────
 import {
   DndContext,
   closestCenter,
@@ -58,16 +57,15 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 
 const GOAL_THEMES = [
-  { dot: "bg-indigo-400" },
+  { dot: "bg-violet-400" },
   { dot: "bg-rose-400" },
   { dot: "bg-amber-400" },
   { dot: "bg-emerald-400" },
   { dot: "bg-sky-400" },
-  { dot: "bg-violet-400" },
+  { dot: "bg-fuchsia-400" },
   { dot: "bg-pink-400" },
 ];
 
-// ─── 기간 유형 정의 ────────────────────────────────────────────────
 const DURATION_TYPES = [
   { value: "no_limit", label: "꾸준히" },
   { value: "this_month", label: "이번 달" },
@@ -76,7 +74,6 @@ const DURATION_TYPES = [
   { value: "custom", label: "날짜 입력" },
 ];
 
-// ─── deadline 계산 유틸 ────────────────────────────────────────────
 function calcDeadline(durationType, durationMonths, customDate) {
   const now = new Date();
   switch (durationType) {
@@ -98,7 +95,6 @@ function calcDeadline(durationType, durationMonths, customDate) {
   }
 }
 
-// ─── 기간 선택 컴포넌트 ────────────────────────────────────────────
 function DurationSelector({ value, durationMonths, customDate, onChange }) {
   const [customCalOpen, setCustomCalOpen] = useState(false);
   const [customMonth, setCustomMonth] = useState(new Date());
@@ -106,12 +102,11 @@ function DurationSelector({ value, durationMonths, customDate, onChange }) {
   return (
     <div className="space-y-1.5">
       <div className="flex gap-2">
-        {/* 유형 드롭다운 */}
         <div className="relative flex-1">
           <select
             value={value}
             onChange={(e) => onChange("durationType", e.target.value)}
-            className="w-full h-11 pl-3 pr-7 rounded-2xl bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 border-2 text-sm font-semibold text-gray-700 dark:text-gray-200 appearance-none focus:outline-none focus:ring-2 focus:ring-purple-200 cursor-pointer"
+            className="w-full h-11 pl-3 pr-7 rounded-2xl bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 text-sm font-semibold text-gray-700 dark:text-gray-200 appearance-none focus:outline-none focus:ring-2 focus:ring-violet-200 dark:focus:ring-violet-800 cursor-pointer"
           >
             {DURATION_TYPES.map((t) => (
               <option key={t.value} value={t.value}>
@@ -119,10 +114,9 @@ function DurationSelector({ value, durationMonths, customDate, onChange }) {
               </option>
             ))}
           </select>
-          <ChevronRight className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-purple-400 rotate-90 pointer-events-none" />
+          <ChevronRight className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-violet-400 rotate-90 pointer-events-none" />
         </div>
 
-        {/* monthly: 개월 수 */}
         {value === "monthly" && (
           <motion.div
             initial={{ opacity: 0, x: -6 }}
@@ -132,7 +126,7 @@ function DurationSelector({ value, durationMonths, customDate, onChange }) {
             <select
               value={durationMonths}
               onChange={(e) => onChange("durationMonths", e.target.value)}
-              className="w-full h-11 pl-3 pr-7 rounded-2xl bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 text-sm font-semibold text-gray-700 dark:text-gray-200 appearance-none focus:outline-none focus:ring-2 focus:ring-purple-200 cursor-pointer"
+              className="w-full h-11 pl-3 pr-7 rounded-2xl bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 text-sm font-semibold text-gray-700 dark:text-gray-200 appearance-none focus:outline-none focus:ring-2 focus:ring-violet-200 cursor-pointer"
             >
               {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
                 <option key={m} value={String(m)}>
@@ -144,7 +138,6 @@ function DurationSelector({ value, durationMonths, customDate, onChange }) {
           </motion.div>
         )}
 
-        {/* custom: 날짜 피커 */}
         {value === "custom" && (
           <motion.div
             initial={{ opacity: 0, x: -6 }}
@@ -157,7 +150,7 @@ function DurationSelector({ value, durationMonths, customDate, onChange }) {
                   variant="outline"
                   className="w-full h-11 justify-start text-left font-semibold rounded-2xl border-2 border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-sm px-3 gap-1.5"
                 >
-                  <CalendarIcon className="h-3.5 w-3.5 text-purple-400 flex-shrink-0" />
+                  <CalendarIcon className="h-3.5 w-3.5 text-violet-400 flex-shrink-0" />
                   <span
                     className={
                       customDate
@@ -182,7 +175,7 @@ function DurationSelector({ value, durationMonths, customDate, onChange }) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-purple-500"
+                      className="h-8 w-8 text-violet-500"
                       onClick={() => setCustomMonth(subMonths(customMonth, 1))}
                     >
                       <ChevronLeft size={20} />
@@ -195,7 +188,7 @@ function DurationSelector({ value, durationMonths, customDate, onChange }) {
                             setYear(customMonth, parseInt(e.target.value)),
                           )
                         }
-                        className="bg-purple-50 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 font-bold text-sm rounded-lg px-2 py-1 border-none focus:ring-0 appearance-none cursor-pointer"
+                        className="bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 font-bold text-sm rounded-lg px-2 py-1 border-none focus:ring-0 appearance-none cursor-pointer"
                       >
                         {Array.from(
                           { length: 10 },
@@ -213,7 +206,7 @@ function DurationSelector({ value, durationMonths, customDate, onChange }) {
                             setDateMonth(customMonth, parseInt(e.target.value)),
                           )
                         }
-                        className="bg-purple-50 text-purple-700 font-bold text-sm rounded-lg px-2 py-1 border-none focus:ring-0 appearance-none cursor-pointer"
+                        className="bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 font-bold text-sm rounded-lg px-2 py-1 border-none focus:ring-0 appearance-none cursor-pointer"
                       >
                         {Array.from({ length: 12 }, (_, i) => i).map((m) => (
                           <option key={m} value={m}>
@@ -225,7 +218,7 @@ function DurationSelector({ value, durationMonths, customDate, onChange }) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-purple-500"
+                      className="h-8 w-8 text-violet-500"
                       onClick={() => setCustomMonth(addMonths(customMonth, 1))}
                     >
                       <ChevronRight size={20} />
@@ -239,7 +232,7 @@ function DurationSelector({ value, durationMonths, customDate, onChange }) {
                     .rdp-table { width: 100% !important; max-width: none !important; }
                     .rdp-cell { text-align: center !important; padding: 0 !important; }
                     .rdp-day { width: 40px !important; height: 40px !important; margin: auto !important; display: flex !important; align-items: center !important; justify-content: center !important; }
-                    .rdp-day_selected { background-color: #a855f7 !important; color: white !important; border-radius: 12px !important; }
+                    .rdp-day_selected { background-color: #8b5cf6 !important; color: white !important; border-radius: 12px !important; }
                     .dark .rdp-day { color: #e5e7eb; }
                     .dark .rdp-head_cell { color: #9ca3af; }
                   `}</style>
@@ -262,7 +255,7 @@ function DurationSelector({ value, durationMonths, customDate, onChange }) {
                   />
                   <Button
                     onClick={() => setCustomCalOpen(false)}
-                    className="w-full h-12 mt-4 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-2xl shadow-lg"
+                    className="w-full h-12 mt-4 bg-violet-200 hover:bg-violet-300 dark:bg-violet-800/60 dark:hover:bg-violet-700/60 text-violet-900 dark:text-violet-200 font-bold rounded-2xl shadow-sm border-0"
                   >
                     선택 완료
                   </Button>
@@ -273,7 +266,6 @@ function DurationSelector({ value, durationMonths, customDate, onChange }) {
         )}
       </div>
 
-      {/* 마감일 요약 */}
       {value !== "no_limit" && (
         <p className="text-[11px] text-gray-400 dark:text-gray-500 ml-1">
           {value === "this_month" &&
@@ -296,7 +288,6 @@ function DurationSelector({ value, durationMonths, customDate, onChange }) {
   );
 }
 
-// ─── 공통 확인 팝업 ──────────────────────────────────────────────
 function ConfirmModal({
   icon,
   iconBg,
@@ -342,7 +333,7 @@ function ConfirmModal({
           </button>
           <button
             onClick={onConfirm}
-            className={`flex-1 h-12 rounded-2xl font-black text-sm text-white ${confirmStyle}`}
+            className={`flex-1 h-12 rounded-2xl font-black text-sm ${confirmStyle}`}
           >
             {confirmLabel}
           </button>
@@ -352,7 +343,6 @@ function ConfirmModal({
   );
 }
 
-// ─── 목표 추가/수정 팝업 ──────────────────────────────────────────
 function GoalFormModal({ mode = "add", initial = {}, onConfirm, onClose }) {
   const [title, setTitle] = useState(initial.title || "");
   const [description, setDescription] = useState(initial.description || "");
@@ -418,16 +408,15 @@ function GoalFormModal({ mode = "add", initial = {}, onConfirm, onClose }) {
           </h2>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-500"
+            className="p-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         <div className="space-y-5">
-          {/* 제목 */}
           <div>
-            <label className="text-[11px] font-bold text-purple-500 uppercase tracking-widest mb-2 block">
+            <label className="text-[11px] font-bold text-violet-500 dark:text-violet-400 uppercase tracking-widest mb-2 block">
               목표 제목
             </label>
             <div className="relative">
@@ -440,7 +429,7 @@ function GoalFormModal({ mode = "add", initial = {}, onConfirm, onClose }) {
                   ${
                     isTitleOver
                       ? "border-red-300 focus:border-red-400"
-                      : "border-gray-100 dark:border-gray-700 focus:border-purple-300 dark:focus:border-purple-600"
+                      : "border-gray-100 dark:border-gray-700 focus:border-violet-300 dark:focus:border-violet-600"
                   }`}
               />
               <span
@@ -460,9 +449,8 @@ function GoalFormModal({ mode = "add", initial = {}, onConfirm, onClose }) {
             )}
           </div>
 
-          {/* 설명 */}
           <div>
-            <label className="text-[11px] font-bold text-purple-500 uppercase tracking-widest mb-2 block">
+            <label className="text-[11px] font-bold text-violet-500 dark:text-violet-400 uppercase tracking-widest mb-2 block">
               목표 설명
             </label>
             <textarea
@@ -470,13 +458,12 @@ function GoalFormModal({ mode = "add", initial = {}, onConfirm, onClose }) {
               onChange={(e) => setDescription(e.target.value)}
               rows={4}
               placeholder="왜 이루고 싶은지, 어떻게 실천할지 자유롭게 써주세요..."
-              className="w-full rounded-2xl bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 focus:border-purple-300 dark:focus:border-purple-600 px-4 py-3.5 text-sm resize-none outline-none transition-colors dark:text-white dark:placeholder:text-gray-600"
+              className="w-full rounded-2xl bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 focus:border-violet-300 dark:focus:border-violet-600 px-4 py-3.5 text-sm resize-none outline-none transition-colors dark:text-white dark:placeholder:text-gray-600"
             />
           </div>
 
-          {/* 기간 */}
           <div>
-            <label className="text-[11px] font-bold text-purple-500 uppercase tracking-widest mb-2 block">
+            <label className="text-[11px] font-bold text-violet-500 dark:text-violet-400 uppercase tracking-widest mb-2 block">
               목표 기간
             </label>
             <DurationSelector
@@ -490,7 +477,7 @@ function GoalFormModal({ mode = "add", initial = {}, onConfirm, onClose }) {
           <button
             onClick={handleConfirm}
             disabled={!canSubmit}
-            className="w-full h-14 rounded-2xl bg-purple-600 text-white font-black text-sm disabled:opacity-30 disabled:cursor-not-allowed active:scale-[0.98] transition-transform shadow-lg shadow-purple-200 dark:shadow-purple-900/30"
+            className="w-full h-14 rounded-2xl bg-violet-200 hover:bg-violet-300 dark:bg-violet-800/60 dark:hover:bg-violet-700/60 text-violet-900 dark:text-violet-200 font-black text-sm disabled:opacity-30 disabled:cursor-not-allowed active:scale-[0.98] transition-all shadow-sm"
           >
             {mode === "add" ? "목표 추가하기" : "수정 완료"}
           </button>
@@ -500,7 +487,6 @@ function GoalFormModal({ mode = "add", initial = {}, onConfirm, onClose }) {
   );
 }
 
-// ─── AI 분석 팝업 ─────────────────────────────────────────────────
 function AnalysisModal({ goal, allTodos, onClose }) {
   const [analysis, setAnalysis] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -555,14 +541,8 @@ function AnalysisModal({ goal, allTodos, onClose }) {
                     - summary: 전체적인 실천 현황과 노력에 대한 따뜻한 종합 평가. 100자 이내.
                     - strengths: 잘 하고 있는 점 2가지. 각 30자 이내.
                     - suggestions: 앞으로 더 발전할 수 있는 구체적 제안 2가지. 각 40자 이내.
-                    - encouragement: 응원 메시지. 남은 기간(마감일 기준)을 고려하여 지금 페이스가 적절한지 언급할 것. 100자 이내.
-                      사주 4주 8자 / 명리학 오행 / 자미두수 / 동양 점성술 / 서양 점성술 / 성명학 분석에서 도출한 자연어로 녹여 제시. 
-                      예시: "금의 기운을 타고난 당신은~", "화성의 에너지가 강한 지금~","이름에 담긴 수리가 변화를 암시하므로~".
-                      절대 금지: "명리학", "오행", "자미두수", "점성술", "성명학", "사주" 단어를 그대로 출력하지 말 것.
-                      분석 카테고리명이 아니라 그 카테고리에서 나온 결과값(기운·색·방향·수·행성 등)만 문장에 담을 것.
-                    - score: 실천 달성도 0~100 정수 (완료 비율 + 노력도 종합).
-
-                    부드러운 존댓말, 긍정 위주로 작성하라.`,
+                    - encouragement: 응원 메시지. 100자 이내.
+                    - score: 실천 달성도 0~100 정수.`,
           response_json_schema: {
             type: "object",
             properties: {
@@ -616,11 +596,11 @@ function AnalysisModal({ goal, allTodos, onClose }) {
         <div className="w-10 h-1 rounded-full bg-gray-200 dark:bg-gray-700 mx-auto mb-6" />
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-purple-100 dark:bg-purple-900/40 flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+            <div className="w-8 h-8 rounded-xl bg-violet-100 dark:bg-violet-900/40 flex items-center justify-center">
+              <Sparkles className="w-4 h-4 text-violet-500 dark:text-violet-400" />
             </div>
             <div>
-              <p className="text-[10px] font-bold text-purple-500 uppercase tracking-widest">
+              <p className="text-[10px] font-bold text-violet-500 dark:text-violet-400 uppercase tracking-widest">
                 HADA 분석
               </p>
               <p className="text-sm font-black text-gray-900 dark:text-white leading-tight">
@@ -630,7 +610,7 @@ function AnalysisModal({ goal, allTodos, onClose }) {
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-500"
+            className="p-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400"
           >
             <X className="w-4 h-4" />
           </button>
@@ -638,8 +618,8 @@ function AnalysisModal({ goal, allTodos, onClose }) {
 
         {loading ? (
           <div className="flex flex-col items-center gap-3 py-16">
-            <Loader2 className="w-8 h-8 animate-spin text-purple-400" />
-            <p className="text-sm text-gray-400">
+            <Loader2 className="w-8 h-8 animate-spin text-violet-400" />
+            <p className="text-sm text-gray-400 dark:text-gray-500">
               실천 내역을 분석하고 있어요...
             </p>
           </div>
@@ -679,7 +659,7 @@ function AnalysisModal({ goal, allTodos, onClose }) {
                   />
                   <defs>
                     <linearGradient id="scoreGrad" x1="0" y1="0" x2="1" y2="0">
-                      <stop offset="0%" stopColor="#a855f7" />
+                      <stop offset="0%" stopColor="#a78bfa" />
                       <stop offset="100%" stopColor="#818cf8" />
                     </linearGradient>
                   </defs>
@@ -691,7 +671,7 @@ function AnalysisModal({ goal, allTodos, onClose }) {
                 </span>
               </div>
               <div>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
+                <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">
                   달성도
                 </p>
                 <p className="text-sm font-semibold text-gray-700 dark:text-gray-200 leading-relaxed">
@@ -709,7 +689,7 @@ function AnalysisModal({ goal, allTodos, onClose }) {
                   {analysis.strengths.map((s, i) => (
                     <div
                       key={i}
-                      className="flex items-start gap-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl px-4 py-3"
+                      className="flex items-start gap-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-2xl px-4 py-3"
                     >
                       <CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
                       <p className="text-sm text-emerald-800 dark:text-emerald-300 font-medium">
@@ -730,7 +710,7 @@ function AnalysisModal({ goal, allTodos, onClose }) {
                   {analysis.suggestions.map((s, i) => (
                     <div
                       key={i}
-                      className="flex items-start gap-3 bg-amber-50 dark:bg-amber-900/20 rounded-2xl px-4 py-3"
+                      className="flex items-start gap-3 bg-amber-50 dark:bg-amber-950/40 rounded-2xl px-4 py-3"
                     >
                       <span className="text-amber-500 font-black text-xs mt-0.5 flex-shrink-0">
                         {i + 1}
@@ -745,8 +725,8 @@ function AnalysisModal({ goal, allTodos, onClose }) {
             )}
 
             {analysis?.encouragement && (
-              <div className="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 rounded-3xl px-5 py-4 text-center">
-                <p className="text-sm font-black text-purple-700 dark:text-purple-300">
+              <div className="bg-violet-50 dark:bg-violet-950/40 rounded-3xl px-5 py-4 text-center border border-violet-100 dark:border-violet-900/50">
+                <p className="text-sm font-black text-violet-700 dark:text-violet-300">
                   ✨ {analysis.encouragement}
                 </p>
               </div>
@@ -758,7 +738,6 @@ function AnalysisModal({ goal, allTodos, onClose }) {
   );
 }
 
-// ─── 목표 상세 패널 ───────────────────────────────────────────────
 function GoalDetail({ goal, allTodos, onEdit }) {
   const [showAnalysis, setShowAnalysis] = useState(false);
 
@@ -771,7 +750,6 @@ function GoalDetail({ goal, allTodos, onEdit }) {
   const progressPct =
     totalCount === 0 ? 0 : Math.round((doneCount / totalCount) * 100);
 
-  // D-day 표시 (deadline 있을 때만)
   const ddayText = useMemo(() => {
     if (!goal.deadline) return null;
     const diff = differenceInCalendarDays(parseISO(goal.deadline), new Date());
@@ -787,17 +765,16 @@ function GoalDetail({ goal, allTodos, onEdit }) {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -6 }}
         transition={{ duration: 0.22 }}
-        className="mt-2 bg-gray-50 dark:bg-gray-800/60 rounded-[24px] p-5 border border-gray-100 dark:border-gray-800"
+        className="mt-2 bg-gray-50 dark:bg-gray-800/40 rounded-[24px] p-5 border border-gray-100 dark:border-gray-800"
       >
-        {/* 진행도 */}
         <div className="mb-5">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+            <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">
               실천 현황
             </p>
-            <p className="text-xs font-black text-purple-600 dark:text-purple-400">
+            <p className="text-xs font-black text-violet-500 dark:text-violet-400">
               {doneCount} / {totalCount}
-              <span className="text-gray-400 font-semibold ml-1">완료</span>
+              <span className="text-gray-400 dark:text-gray-500 font-semibold ml-1">완료</span>
             </p>
           </div>
           <div className="h-2 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
@@ -805,25 +782,24 @@ function GoalDetail({ goal, allTodos, onEdit }) {
               initial={{ width: 0 }}
               animate={{ width: `${progressPct}%` }}
               transition={{ duration: 0.7, ease: "easeOut" }}
-              className="h-full rounded-full bg-gradient-to-r from-purple-400 to-indigo-400"
+              className="h-full rounded-full bg-gradient-to-r from-violet-300 to-indigo-300 dark:from-violet-500 dark:to-indigo-500"
             />
           </div>
           {totalCount > 0 && (
-            <p className="text-[10px] text-gray-400 mt-1.5 text-right">
+            <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1.5 text-right">
               {progressPct}% 달성
             </p>
           )}
         </div>
 
-        {/* 목표 설명 */}
         <div className="mb-4">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+            <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">
               목표 설명
             </p>
             <button
               onClick={() => onEdit(goal)}
-              className="flex items-center gap-1 text-[11px] font-bold text-purple-500 dark:text-purple-400 px-2.5 py-1 rounded-lg bg-purple-50 dark:bg-purple-900/30 active:scale-95 transition-transform"
+              className="flex items-center gap-1 text-[11px] font-bold text-violet-500 dark:text-violet-400 px-2.5 py-1 rounded-lg bg-violet-50 dark:bg-violet-900/30 active:scale-95 transition-transform"
             >
               <Pencil className="w-3 h-3" />
               수정
@@ -838,9 +814,8 @@ function GoalDetail({ goal, allTodos, onEdit }) {
           </p>
         </div>
 
-        {/* 기간 정보 — 설명 바로 아래, 항상 표시 */}
         <div className="mb-5 flex items-center gap-1.5">
-          <CalendarIcon className="w-3.5 h-3.5 text-purple-400 flex-shrink-0" />
+          <CalendarIcon className="w-3.5 h-3.5 text-violet-400 flex-shrink-0" />
           <span className="text-xs font-bold text-gray-500 dark:text-gray-400">
             {goal.duration_type === "no_limit" || !goal.duration_type
               ? "꾸준히 (기한 없음)"
@@ -848,10 +823,9 @@ function GoalDetail({ goal, allTodos, onEdit }) {
           </span>
         </div>
 
-        {/* HADA 분석 버튼 */}
         <button
           onClick={() => setShowAnalysis(true)}
-          className="w-full h-16 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-black text-base flex items-center justify-center gap-2.5 shadow-xl shadow-purple-200 dark:shadow-purple-900/40 active:scale-[0.98] transition-transform"
+          className="w-full h-16 rounded-2xl bg-indigo-100 hover:bg-indigo-200 dark:bg-indigo-900/40 dark:hover:bg-indigo-900/60 text-indigo-800 dark:text-indigo-200 font-black text-base flex items-center justify-center gap-2.5 shadow-sm active:scale-[0.98] transition-all border border-indigo-200 dark:border-indigo-800/50"
         >
           <Sparkles className="w-5 h-5" />
           HADA 분석 받기
@@ -871,7 +845,6 @@ function GoalDetail({ goal, allTodos, onEdit }) {
   );
 }
 
-// ─── 드래그 가능한 목표 행 ────────────────────────────────────────
 function SortableGoalRow({
   goal,
   index,
@@ -908,9 +881,9 @@ function SortableGoalRow({
       <div
         className={`rounded-2xl border-2 transition-all duration-200 ${
           isDragging
-            ? "bg-white dark:bg-gray-800 border-purple-300 dark:border-purple-600 shadow-2xl opacity-95 scale-[1.02]"
+            ? "bg-white dark:bg-gray-800 border-violet-300 dark:border-violet-600 shadow-2xl opacity-95 scale-[1.02]"
             : isSelected
-            ? "bg-white dark:bg-gray-800 border-purple-300 dark:border-purple-600 shadow-md"
+            ? "bg-white dark:bg-gray-800 border-violet-200 dark:border-violet-700/50 shadow-md"
             : isCompleted
             ? "bg-gray-50 dark:bg-gray-900 border-gray-100 dark:border-gray-800 opacity-60"
             : "bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800"
@@ -941,14 +914,14 @@ function SortableGoalRow({
             <span
               className={`text-sm font-bold block truncate ${
                 isCompleted
-                  ? "text-gray-400"
+                  ? "text-gray-400 dark:text-gray-600"
                   : "text-gray-800 dark:text-gray-100"
               }`}
             >
               {goal.title}
             </span>
             {isCompleted && (
-              <span className="text-[9px] font-bold text-gray-400">완료됨</span>
+              <span className="text-[9px] font-bold text-gray-400 dark:text-gray-600">완료됨</span>
             )}
           </div>
 
@@ -960,8 +933,8 @@ function SortableGoalRow({
               }}
               className={`w-8 h-8 rounded-xl flex items-center justify-center transition-colors ${
                 isCompleted
-                  ? "bg-gray-100 dark:bg-gray-800 text-gray-400 hover:bg-gray-200"
-                  : "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-500 hover:bg-emerald-100"
+                  ? "bg-gray-100 dark:bg-gray-800 text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+                  : "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-500 hover:bg-emerald-100 dark:hover:bg-emerald-900/50"
               }`}
             >
               {isCompleted ? (
@@ -975,7 +948,7 @@ function SortableGoalRow({
                 e.stopPropagation();
                 onDelete(goal.id);
               }}
-              className="w-8 h-8 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-400 hover:bg-red-100 flex items-center justify-center transition-colors"
+              className="w-8 h-8 rounded-xl bg-red-50 dark:bg-red-950/40 text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 flex items-center justify-center transition-colors"
             >
               <Trash2 className="w-3.5 h-3.5" />
             </button>
@@ -984,7 +957,7 @@ function SortableGoalRow({
                 <ChevronDown
                   className={`w-4 h-4 transition-transform duration-200 ${
                     isSelected
-                      ? "rotate-180 text-purple-400"
+                      ? "rotate-180 text-violet-400"
                       : "text-gray-300 dark:text-gray-600"
                   }`}
                 />
@@ -997,9 +970,6 @@ function SortableGoalRow({
   );
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// Goals 메인
-// ═══════════════════════════════════════════════════════════════════
 export default function Goals() {
   const queryClient = useQueryClient();
   const [selectedGoalId, setSelectedGoalId] = useState(null);
@@ -1083,7 +1053,6 @@ export default function Goals() {
     await queryClient.invalidateQueries({ queryKey: ["goals", profile.id] });
   };
 
-  // ─── 추가 (기간 필드 포함) ──────────────────────────────────
   const handleAdd = async ({
     title,
     description,
@@ -1108,7 +1077,6 @@ export default function Goals() {
     setShowAddModal(false);
   };
 
-  // ─── 수정 (기간 필드 포함) ──────────────────────────────────
   const handleEdit = async ({
     title,
     description,
@@ -1180,13 +1148,12 @@ export default function Goals() {
 
   return (
     <div className="min-h-screen bg-[#FDFCFE] dark:bg-gray-950 pb-32 transition-colors duration-300">
-      {/* 헤더 */}
       <div className="px-6 pt-12 pb-6">
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <p className="text-[10px] font-black text-purple-500 uppercase tracking-[0.3em] mb-2">
+          <p className="text-[10px] font-black text-violet-500 dark:text-violet-400 uppercase tracking-[0.3em] mb-2">
             HADA
           </p>
           <div className="flex items-end justify-between">
@@ -1201,7 +1168,7 @@ export default function Goals() {
             <motion.button
               whileTap={{ scale: 0.92 }}
               onClick={() => setShowAddModal(true)}
-              className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-sm font-black bg-purple-600 text-white shadow-md shadow-purple-200 dark:shadow-purple-900/30"
+              className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-sm font-black bg-violet-200 hover:bg-violet-300 dark:bg-violet-800/50 dark:hover:bg-violet-700/50 text-violet-900 dark:text-violet-200 shadow-sm transition-colors"
             >
               <Plus className="w-4 h-4" />
               추가
@@ -1211,10 +1178,9 @@ export default function Goals() {
       </div>
 
       <div className="px-5 space-y-3">
-        {/* 진행 중 */}
-        <div className="bg-white dark:bg-gray-900 rounded-[32px] p-5 shadow-[0_8px_40px_rgba(120,50,255,0.06)] border border-purple-50 dark:border-gray-800">
+        <div className="bg-white dark:bg-gray-900 rounded-[32px] p-5 shadow-[0_8px_40px_rgba(124,58,237,0.05)] border border-violet-50 dark:border-gray-800">
           <div className="flex items-center gap-2.5 mb-4">
-            <div className="w-2 h-6 bg-purple-500 rounded-full shadow-[0_0_12px_rgba(168,85,247,0.25)]" />
+            <div className="w-2 h-6 bg-violet-400 rounded-full shadow-[0_0_12px_rgba(167,139,250,0.3)]" />
             <p className="text-sm font-black text-gray-800 dark:text-gray-100">
               진행 중
             </p>
@@ -1225,12 +1191,12 @@ export default function Goals() {
 
           {goalsLoading ? (
             <div className="flex justify-center py-10">
-              <Loader2 className="w-6 h-6 animate-spin text-purple-400" />
+              <Loader2 className="w-6 h-6 animate-spin text-violet-400" />
             </div>
           ) : activeGoals.length === 0 ? (
             <div className="py-10 text-center">
               <p className="text-2xl mb-2">🎯</p>
-              <p className="text-sm font-bold text-gray-400">
+              <p className="text-sm font-bold text-gray-400 dark:text-gray-500">
                 아직 목표가 없어요
               </p>
               <p className="text-xs text-gray-300 dark:text-gray-600 mt-1">
@@ -1287,12 +1253,11 @@ export default function Goals() {
           )}
         </div>
 
-        {/* 달성한 목표 */}
         {completedGoals.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white dark:bg-gray-900 rounded-[32px] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.04)] border border-gray-50 dark:border-gray-800"
+            className="bg-white dark:bg-gray-900 rounded-[32px] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-50 dark:border-gray-800"
           >
             <div className="flex items-center gap-2.5 mb-4">
               <div className="w-2 h-6 bg-emerald-400 rounded-full" />
@@ -1323,17 +1288,16 @@ export default function Goals() {
         )}
       </div>
 
-      {/* 모달들 */}
       <AnimatePresence>
         {showCannotDelete && (
           <ConfirmModal
             key="cannot-delete-alert"
             icon={<AlertTriangle className="w-6 h-6 text-amber-500" />}
-            iconBg="bg-amber-50 dark:bg-amber-900/30"
+            iconBg="bg-amber-50 dark:bg-amber-950/40"
             title="최소 1개의 진행 중인 목표가 필요해요"
             description={`HADA의 분석과 할일 목록 이용하기 위해\n최소 1개의 진행 중인 목표가 유지되어야 합니다.\n\n새로운 목표를 추가한 뒤에\n기존 목표를 삭제하거나 달성 완료해 주세요.`}
             confirmLabel="확인"
-            confirmStyle="bg-gray-900 dark:bg-gray-700"
+            confirmStyle="bg-gray-800 dark:bg-gray-700 text-white"
             onConfirm={() => setShowCannotDelete(false)}
             onClose={() => setShowCannotDelete(false)}
           />
@@ -1357,11 +1321,11 @@ export default function Goals() {
           <ConfirmModal
             key="complete-confirm"
             icon={<Trophy className="w-6 h-6 text-emerald-500" />}
-            iconBg="bg-emerald-50 dark:bg-emerald-900/30"
+            iconBg="bg-emerald-50 dark:bg-emerald-950/40"
             title="목표를 달성했나요? 🎉"
             description={`달성 완료 처리를 하면 홈 화면에서 사라집니다.\n달성한 목표 목록에서 언제든 다시 복구할 수 있어요.`}
             confirmLabel="달성 완료"
-            confirmStyle="bg-emerald-500 hover:bg-emerald-600"
+            confirmStyle="bg-emerald-500 hover:bg-emerald-600 text-white"
             onConfirm={() => {
               doComplete(completeConfirm);
               setCompleteConfirm(null);
@@ -1372,12 +1336,12 @@ export default function Goals() {
         {deleteConfirm && (
           <ConfirmModal
             key="delete-confirm"
-            icon={<AlertTriangle className="w-6 h-6 text-red-500" />}
-            iconBg="bg-red-50 dark:bg-red-900/30"
+            icon={<AlertTriangle className="w-6 h-6 text-red-400" />}
+            iconBg="bg-red-50 dark:bg-red-950/40"
             title="정말 삭제하시겠어요?"
             description={`목표와 관련된 모든 할일 기록도\n함께 삭제됩니다. 이 작업은 되돌릴 수 없어요.`}
             confirmLabel="삭제하기"
-            confirmStyle="bg-red-500 hover:bg-red-600"
+            confirmStyle="bg-red-400 hover:bg-red-500 text-white"
             onConfirm={handleDeleteConfirmed}
             onClose={() => setDeleteConfirm(null)}
           />

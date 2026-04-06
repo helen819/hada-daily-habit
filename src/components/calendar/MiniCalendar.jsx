@@ -35,30 +35,27 @@ export default function MiniCalendar({
     year === today.getFullYear();
 
   const dateKey = (d) =>
-    `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(
-      2,
-      "0",
-    )}`;
+    `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
   const isSelected = (d) => dateKey(d) === selectedDate;
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-[#424B63] p-4 shadow-md dark:shadow-[0_2px_12px_rgba(0,0,0,0.4)]">
+    <div className="bg-white dark:bg-gray-900 rounded-3xl p-4">
       {/* 헤더 */}
       <div className="flex items-center justify-between mb-3">
         <button
           onClick={() => onMonthChange(-1)}
-          className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-[#363D54] transition-colors"
+          className="p-1.5 rounded-lg hover:bg-violet-50 dark:hover:bg-gray-800 transition-colors"
         >
-          <ChevronLeft className="w-4 h-4 text-gray-500 dark:text-slate-300" />
+          <ChevronLeft className="w-4 h-4 text-gray-400 dark:text-gray-500" />
         </button>
-        <p className="text-sm font-bold text-gray-800 dark:text-white">
+        <p className="text-sm font-bold text-gray-800 dark:text-gray-100">
           {year}년 {month + 1}월
         </p>
         <button
           onClick={() => onMonthChange(1)}
-          className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-[#363D54] transition-colors"
+          className="p-1.5 rounded-lg hover:bg-violet-50 dark:hover:bg-gray-800 transition-colors"
         >
-          <ChevronRight className="w-4 h-4 text-gray-500 dark:text-slate-300" />
+          <ChevronRight className="w-4 h-4 text-gray-400 dark:text-gray-500" />
         </button>
       </div>
 
@@ -67,7 +64,7 @@ export default function MiniCalendar({
         {DAYS.map((d) => (
           <div
             key={d}
-            className="text-center text-[10px] font-semibold text-gray-400 dark:text-slate-400 py-1"
+            className="text-center text-[10px] font-semibold text-gray-400 dark:text-gray-600 py-1"
           >
             {d}
           </div>
@@ -87,10 +84,10 @@ export default function MiniCalendar({
               className={`flex flex-col items-center justify-center aspect-square rounded-xl transition-all text-xs font-semibold
                 ${
                   isSelected(d)
-                    ? "bg-purple-500 text-white"
+                    ? "bg-violet-200 dark:bg-violet-700/60 text-violet-900 dark:text-violet-100"
                     : isToday(d)
-                    ? "bg-blue-100 dark:bg-blue-700/50 text-blue-600 dark:text-blue-200"
-                    : "text-gray-700 dark:text-slate-200 hover:bg-gray-100 dark:hover:bg-[#363D54]"
+                    ? "bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300"
+                    : "text-gray-700 dark:text-gray-300 hover:bg-violet-50 dark:hover:bg-gray-800"
                 }`}
             >
               {d}
@@ -106,8 +103,8 @@ export default function MiniCalendar({
                 <div
                   className={`w-1 h-1 rounded-full mt-0.5 ${
                     isSelected(d)
-                      ? "bg-white/70"
-                      : "bg-blue-400 dark:bg-blue-400"
+                      ? "bg-violet-500 dark:bg-violet-300"
+                      : "bg-violet-300 dark:bg-violet-500"
                   }`}
                 />
               ) : null}
