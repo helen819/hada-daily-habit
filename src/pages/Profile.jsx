@@ -16,6 +16,7 @@ import {
   ChevronRight,
   X,
   Sparkles,
+  Lock,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import StatsRadar from "@/components/home/StatsRadar";
@@ -24,6 +25,15 @@ import FortuneResultModal from "@/components/shop/FortuneResultModal";
 import { useNavigate } from "react-router-dom";
 import { getFullDestinyData } from "@/components/services/calculator/destinyCalculator";
 import { getKSTDateString } from "@/utils/date";
+
+import {
+  canViewFortune,
+  canResetData,
+  getNextUnlockMessage,
+  LUCKY_LEVEL_THRESHOLD,
+} from "@/config/unlockConfig";
+
+import DevUnlockPanel from "@/components/dev/DevUnlockPanel";
 
 function getToday() {
   return getKSTDateString();
@@ -89,6 +99,15 @@ const FORTUNE_DETAILED = [
   },
 ];
 
+// 운세별 해금 레벨 (안내용)
+const FORTUNE_UNLOCK_LEVELS = {
+  summary: 91,
+  love: 63,
+  wealth: 25,
+  career: 73,
+  health: 34,
+};
+
 const fortuneMemCache = new Map();
 
 function buildCacheKey(profile, categoryId) {
@@ -149,7 +168,6 @@ async function generateFortune(profile, category) {
                 [전체 공통 규칙]
                 - summary: 전체 아우르는 한 줄 요약. 30자 이내.
                 - detailed: 전체 종합 설명. 80자 이내. 줄바꿈 금지.
-                - fortuneSource: "HADA 운명학 분석" 고정.
                 [기간별 규칙]
                 - *.summary: 각 기간 핵심 한 줄. 30자 이내.
                 - *.actionTips: 정확히 2개. 각 항목 20자 이내. 구체 행동만.`,
@@ -250,7 +268,9 @@ async function generateFortune(profile, category) {
               - energyLevel: 0~100 사이 정수만.
               - detailed: 100자 이내. 줄바꿈 금지.
               - actionTips: 정확히 3개. 각 항목 20자 이내. 구체적인 행동만.
-              ${category.id === "daily" ? "- luckyColor: #RRGGBB 형식만." : ""}`,
+              ${
+                category.id === "daily" ? "- luckyColor: #RRGGBB 형식만." : ""
+              }`,
       response_json_schema: {
         type: "object",
         properties: {
@@ -360,7 +380,6 @@ function TraitsModal({ traits, onClose }) {
               </div>
             </div>
           )}
-
           {traits.potentials?.length > 0 && (
             <div>
               <p className="text-[11px] font-black text-violet-500 dark:text-violet-400 uppercase tracking-widest mb-3 px-1">
@@ -378,7 +397,6 @@ function TraitsModal({ traits, onClose }) {
               </div>
             </div>
           )}
-
           {traits.weaknesses?.length > 0 && (
             <div>
               <p className="text-[11px] font-black text-orange-500 dark:text-orange-400 uppercase tracking-widest mb-3 px-1">
@@ -457,36 +475,75 @@ function ResetConfirmModal({ onConfirm, onCancel }) {
   );
 }
 
-function FortuneListItem({ category, onClick, isLoading }) {
+function FortuneListItem({
+  category,
+  onClick,
+  isLoading,
+  isLocked,
+  unlockLevel,
+}) {
   const Icon = category.icon;
   return (
     <motion.button
-      whileTap={{ scale: 0.98 }}
-      onClick={() => onClick(category)}
-      disabled={isLoading}
-      className="w-full flex items-center gap-4 bg-white dark:bg-gray-800/60 rounded-2xl px-4 py-3.5 border border-gray-100 dark:border-gray-700/50 hover:shadow-sm transition-all relative overflow-hidden shadow-sm"
+      whileTap={!isLocked ? { scale: 0.98 } : {}}
+      onClick={() => !isLocked && onClick(category)}
+      disabled={isLoading || isLocked}
+      className={`w-full flex items-center gap-4 rounded-2xl px-4 py-3.5 border transition-all relative overflow-hidden shadow-sm ${
+        isLocked
+          ? "bg-gray-50 dark:bg-gray-800/30 border-gray-100 dark:border-gray-700/30 cursor-not-allowed opacity-70"
+          : "bg-white dark:bg-gray-800/60 border-gray-100 dark:border-gray-700/50 hover:shadow-sm"
+      }`}
     >
       <div
-        className={`relative z-10 w-10 h-10 rounded-xl bg-gradient-to-br ${category.gradient} flex items-center justify-center flex-shrink-0`}
+        className={`relative z-10 w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+          isLocked
+            ? "bg-gray-200 dark:bg-gray-700"
+            : `bg-gradient-to-br ${category.gradient}`
+        }`}
       >
         {isLoading ? (
-          <Loader2 className="w-5 h-5 text-white animate-spin" strokeWidth={1.5} />
+          <Loader2
+            className="w-5 h-5 text-white animate-spin"
+            strokeWidth={1.5}
+          />
+        ) : isLocked ? (
+          <Lock className="w-5 h-5 text-gray-400" />
         ) : (
           <Icon className="w-5 h-5 text-white" strokeWidth={1.5} />
         )}
       </div>
       <div className="relative z-10 flex-1 text-left">
-        <p className="text-sm font-bold text-gray-800 dark:text-gray-100">
+        <p
+          className={`text-sm font-bold ${
+            isLocked
+              ? "text-gray-400 dark:text-gray-600"
+              : "text-gray-800 dark:text-gray-100"
+          }`}
+        >
           {category.title}
         </p>
-        <p className="text-xs text-gray-400 dark:text-gray-500">
-          {isLoading ? "분석 중..." : category.subtitle}
+        <p
+          className={`text-xs ${
+            isLocked
+              ? "text-gray-400 dark:text-gray-600"
+              : "text-gray-400 dark:text-gray-500"
+          }`}
+        >
+          {isLoading
+            ? "분석 중..."
+            : isLocked
+            ? `레벨 ${unlockLevel} 이용 가능`
+            : category.subtitle}
         </p>
       </div>
       {isLoading ? (
         <Loader2 className="relative z-10 w-4 h-4 text-gray-300 dark:text-gray-600 animate-spin" />
+      ) : isLocked ? (
+        <Lock className="relative z-10 w-4 h-4 text-gray-300 dark:text-gray-600" />
       ) : (
-        <span className="relative z-10 text-gray-300 dark:text-gray-600 text-lg">›</span>
+        <span className="relative z-10 text-gray-300 dark:text-gray-600 text-lg">
+          ›
+        </span>
       )}
     </motion.button>
   );
@@ -517,6 +574,11 @@ export default function Profile() {
     queryFn: () => base44.entities.UserProfile.list(),
   });
   const profile = profiles?.[0];
+  const level = profile?.level || 1;
+
+  const isLuckyMode = level >= LUCKY_LEVEL_THRESHOLD;
+  const nextUnlockMessage = getNextUnlockMessage(level);
+  const resetAllowed = canResetData(level);
 
   useEffect(() => {
     if (!profile) return;
@@ -594,13 +656,12 @@ export default function Profile() {
     }
   };
 
-  if (isLoading) {
+  if (isLoading)
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="w-6 h-6 animate-spin text-violet-400" />
       </div>
     );
-  }
   if (!profile) return null;
 
   const xpProgress = (profile.xp || 0) % 100;
@@ -608,330 +669,407 @@ export default function Profile() {
   const nextLevel = currentLevel + 1;
 
   const TABS = [
-    { key: "level", label: "레벨", icon: Star },
+    { key: "level", label: isLuckyMode ? "행운 레벨" : "레벨", icon: Star },
     { key: "fortune", label: "운세", icon: Sparkles },
   ];
 
   return (
-    <div className="min-h-screen bg-[#FDFCFE] dark:bg-gray-950 pb-32 transition-colors duration-300">
-      <AdModal visible={showAdForBoost} onClose={handleBoostAdClose} />
-      <AdModal visible={showAdForFortune} onClose={handleFortuneAdClose} />
+    <>
+      <div className="min-h-screen bg-[#FDFCFE] dark:bg-gray-950 pb-32 transition-colors duration-300">
+        <AdModal visible={showAdForBoost} onClose={handleBoostAdClose} />
+        <AdModal visible={showAdForFortune} onClose={handleFortuneAdClose} />
 
-      <FortuneResultModal
-        result={fortuneResult}
-        category={selectedCategory}
-        onClose={() => {
-          setFortuneResult(null);
-          setSelectedCategory(null);
-        }}
-      />
+        <FortuneResultModal
+          result={fortuneResult}
+          category={selectedCategory}
+          onClose={() => {
+            setFortuneResult(null);
+            setSelectedCategory(null);
+          }}
+        />
 
-      <AnimatePresence>
-        {showResetModal && (
-          <ResetConfirmModal
-            onConfirm={handleReset}
-            onCancel={() => setShowResetModal(false)}
-          />
-        )}
-        {showTraitsModal && profile.traits && (
-          <TraitsModal
-            traits={profile.traits}
-            onClose={() => setShowTraitsModal(false)}
-          />
-        )}
-      </AnimatePresence>
-
-      {/* 헤더 */}
-      <div className="px-6 pt-12 pb-6">
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <p className="text-[10px] font-black text-violet-500 dark:text-violet-400 uppercase tracking-[0.3em] mb-2">
-            HADA
-          </p>
-          <button
-            onClick={() => setShowTraitsModal(true)}
-            className="group flex items-center gap-2 text-left active:opacity-60 transition-opacity"
-          >
-            <h1 className="text-2xl font-black text-gray-900 dark:text-white leading-tight">
-              프로필
-            </h1>
-            <div className="flex items-center justify-center w-5 h-5 rounded-full bg-violet-100 dark:bg-violet-900/40 mt-1">
-              <ChevronRight className="w-3 h-3 text-violet-500 dark:text-violet-400" />
-            </div>
-          </button>
-          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 font-semibold">
-            6대 운명학 기반 알고리즘 계산
-          </p>
-        </motion.div>
-      </div>
-
-      {/* 탭 토글 */}
-      <div className="px-5 mb-5">
-        <motion.div
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.05 }}
-          className="flex bg-gray-100 dark:bg-gray-800/60 rounded-2xl p-1 gap-1"
-        >
-          {TABS.map(({ key, label, icon: Icon }) => (
-            <button
-              key={key}
-              onClick={() => setActiveTab(key)}
-              className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-black transition-all duration-200 ${
-                activeTab === key
-                  ? "bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-sm"
-                  : "text-gray-400 dark:text-gray-500"
-              }`}
-            >
-              <Icon
-                className={`w-4 h-4 ${
-                  activeTab === key
-                    ? key === "fortune"
-                      ? "text-amber-400"
-                      : "text-violet-500 dark:text-violet-400"
-                    : ""
-                }`}
-              />
-              {label}
-            </button>
-          ))}
-        </motion.div>
-      </div>
-
-      <div className="px-5 space-y-5">
-        <AnimatePresence mode="wait">
-          {activeTab === "level" && (
-            <motion.div
-              key="level"
-              initial={{ opacity: 0, x: -16 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -16 }}
-              transition={{ duration: 0.2 }}
-              className="space-y-5"
-            >
-              {/* ── 레벨 카드 — 배경 없이 깔끔하게 ── */}
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-white dark:bg-gray-900 rounded-3xl p-6 border border-violet-100 dark:border-gray-800 shadow-[0_4px_24px_rgba(196,181,253,0.15)]"
-              >
-                {/* 레벨 + XP */}
-                <div className="flex items-center justify-between mb-5">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-violet-50 dark:bg-violet-900/30 flex items-center justify-center">
-                      <Star
-                        className="w-6 h-6 text-violet-400 dark:text-violet-300"
-                        strokeWidth={2}
-                      />
-                    </div>
-                    <div>
-                      <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide">
-                        레벨
-                      </p>
-                      <motion.span
-                        key={currentLevel}
-                        initial={{ scale: 0.7, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        className="text-4xl font-black text-gray-900 dark:text-white"
-                      >
-                        {currentLevel}
-                      </motion.span>
-                    </div>
-                  </div>
-                  <span className="text-sm font-bold text-violet-400 dark:text-violet-400">
-                    {profile.xp || 0} XP
-                  </span>
-                </div>
-
-                {/* XP 바 */}
-                <div className="h-3 bg-violet-50 dark:bg-gray-800 rounded-full overflow-hidden mb-3">
-                  <motion.div
-                    className="h-full rounded-full bg-violet-200 dark:bg-violet-500"
-                    animate={{
-                      width:
-                        xpBarPhase === "filling" ? "100%" : `${xpProgress}%`,
-                    }}
-                    transition={{ width: { duration: 0.8, ease: "easeInOut" } }}
-                  />
-                </div>
-                <p className="text-xs font-medium text-violet-300 dark:text-violet-600 mb-5">
-                  {xpBarPhase === "filling"
-                    ? "레벨업 중! ✨"
-                    : `다음 레벨까지 ${100 - xpProgress} XP`}
-                </p>
-
-                {/* 레벨업 부스트 버튼 */}
-                <motion.button
-                  whileTap={{ scale: 0.96 }}
-                  onClick={handleBoostClick}
-                  disabled={xpBarPhase === "filling"}
-                  className="w-full h-14 rounded-2xl bg-violet-200 hover:bg-violet-300 dark:bg-violet-800/60 dark:hover:bg-violet-700/60 text-violet-900 dark:text-violet-200 font-black text-sm flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.98] transition-all shadow-sm"
-                >
-                  <Zap
-                    className={`w-4 h-4 ${
-                      xpBarPhase === "filling" ? "animate-bounce" : ""
-                    }`}
-                  />
-                  {xpBarPhase === "filling"
-                    ? "부스트 적용 중..."
-                    : "레벨업 부스트"}
-                </motion.button>
-
-                <p className="text-[11px] text-violet-300 dark:text-violet-700 text-center mt-2.5 font-semibold">
-                  레벨 {nextLevel}이 되면 추가 기능이 해제됩니다 ✨
-                </p>
-              </motion.div>
-
-              {/* 오늘의 에너지 */}
-              <motion.div
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.08 }}
-                className="bg-white dark:bg-gray-900 rounded-[32px] border border-gray-100 dark:border-gray-800 p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)]"
-              >
-                <div className="flex items-center gap-2.5 mb-4">
-                  <div className="w-2 h-6 bg-violet-300 dark:bg-violet-600 rounded-full" />
-                  <h3 className="text-sm font-black text-gray-800 dark:text-gray-100">
-                    오늘의 에너지
-                  </h3>
-                </div>
-                <StatsRadar stats={profile.base_stats} />
-              </motion.div>
-
-              {/* 초기화 버튼 */}
-              <div className="pt-2 pb-4">
-                <button
-                  onClick={() => setShowResetModal(true)}
-                  disabled={resetting}
-                  className="w-full py-3.5 rounded-2xl border border-red-100 dark:border-red-900/40 text-red-400 dark:text-red-400 text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50 transition-colors hover:bg-red-50 dark:hover:bg-red-950/30"
-                >
-                  {resetting ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Trash2 className="w-4 h-4" />
-                  )}
-                  {resetting ? "초기화 중..." : "데이터 초기화"}
-                </button>
-                <p className="text-center text-[10px] text-gray-300 dark:text-gray-700 mt-2">
-                  모든 데이터가 삭제되고 처음부터 시작됩니다
-                </p>
-              </div>
-            </motion.div>
+        <AnimatePresence>
+          {showResetModal && (
+            <ResetConfirmModal
+              onConfirm={handleReset}
+              onCancel={() => setShowResetModal(false)}
+            />
           )}
-
-          {activeTab === "fortune" && (
-            <motion.div
-              key="fortune"
-              initial={{ opacity: 0, x: 16 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 16 }}
-              transition={{ duration: 0.2 }}
-              className="space-y-5"
-            >
-              {/* 오늘의 운세 배너 */}
-              <motion.div
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.16 }}
-                className="bg-white dark:bg-gray-900 rounded-[32px] border border-gray-100 dark:border-gray-800 p-5 shadow-[0_4px_20px_rgba(0,0,0,0.03)] space-y-4"
-              >
-                <div>
-                  <div className="flex items-center gap-2.5 mb-3">
-                    <div className="w-2 h-6 bg-amber-300 dark:bg-amber-500 rounded-full" />
-                    <h3 className="text-sm font-black text-gray-800 dark:text-gray-100">
-                      오늘의 운세
-                    </h3>
-                  </div>
-
-                  <div className="rounded-2xl overflow-hidden border border-amber-100 dark:border-amber-900/40 bg-amber-50 dark:bg-amber-950/30">
-                    <div className="px-5 py-4 flex items-center gap-3">
-                      <Sun className="w-7 h-7 text-amber-500 dark:text-amber-400" strokeWidth={1.5} />
-                      <div className="flex-1">
-                        <p className="text-sm font-bold text-amber-800 dark:text-amber-200">
-                          오늘의 운세
-                        </p>
-                        <p className="text-xs text-amber-600/70 dark:text-amber-400/60">
-                          오늘 전체 흐름
-                        </p>
-                      </div>
-                    </div>
-                    <div className="bg-white dark:bg-gray-900 border-t border-amber-100 dark:border-amber-900/30 px-5 py-4 space-y-3">
-                      {loadingDailyPreview ? (
-                        <div className="flex items-center gap-2">
-                          <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-400" />
-                          <p className="text-xs text-gray-400 dark:text-gray-500">
-                            운세 요약 중...
-                          </p>
-                        </div>
-                      ) : dailyPreview ? (
-                        <div className="space-y-1">
-                          <p className="text-sm text-gray-700 dark:text-gray-200 leading-relaxed">
-                            ☀️ {dailyPreview.line1}
-                          </p>
-                          <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-                            ✨ {dailyPreview.line2}
-                          </p>
-                        </div>
-                      ) : (
-                        <p className="text-xs text-gray-400 dark:text-gray-500">
-                          오늘의 운세를 불러오는 중이에요...
-                        </p>
-                      )}
-                      <motion.button
-                        whileTap={{ scale: 0.97 }}
-                        onClick={() => handleCategoryClick(FORTUNE_DAILY)}
-                        disabled={loadingFortune && selectedCategory?.id === "daily"}
-                        className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-amber-100 hover:bg-amber-200 dark:bg-amber-900/40 dark:hover:bg-amber-900/60 text-amber-800 dark:text-amber-200 text-sm font-black transition-all border border-amber-200 dark:border-amber-800/50"
-                      >
-                        {loadingFortune && selectedCategory?.id === "daily" ? (
-                          <>
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            <span>분석 중...</span>
-                          </>
-                        ) : (
-                          <>
-                            <span>자세히 보기</span>
-                            <ChevronRight className="w-4 h-4" strokeWidth={2} />
-                          </>
-                        )}
-                      </motion.button>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-
-              {/* 상세 운세 */}
-              <motion.div
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.16 }}
-                className="bg-white dark:bg-gray-900 rounded-[32px] border border-gray-100 dark:border-gray-800 p-5 shadow-[0_4px_20px_rgba(0,0,0,0.03)] space-y-4"
-              >
-                <div>
-                  <div className="flex items-center gap-2.5 mb-3">
-                    <div className="w-2 h-6 bg-violet-300 dark:bg-violet-600 rounded-full" />
-                    <h3 className="text-sm font-black text-gray-800 dark:text-gray-100">
-                      상세 운세
-                    </h3>
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    {FORTUNE_DETAILED.map((cat) => (
-                      <FortuneListItem
-                        key={cat.id}
-                        category={cat}
-                        onClick={handleCategoryClick}
-                        isLoading={loadingFortune && selectedCategory?.id === cat.id}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </motion.div>
-            </motion.div>
+          {showTraitsModal && profile.traits && (
+            <TraitsModal
+              traits={profile.traits}
+              onClose={() => setShowTraitsModal(false)}
+            />
           )}
         </AnimatePresence>
+
+        {/* 헤더 */}
+        <div className="px-6 pt-12 pb-6">
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <p className="text-[10px] font-black text-violet-500 dark:text-violet-400 uppercase tracking-[0.3em] mb-2">
+              HADA
+            </p>
+            <button
+              onClick={() => setShowTraitsModal(true)}
+              className="group flex items-center gap-2 text-left active:opacity-60 transition-opacity"
+            >
+              <h1 className="text-2xl font-black text-gray-900 dark:text-white leading-tight">
+                프로필
+              </h1>
+              <div className="flex items-center justify-center w-5 h-5 rounded-full bg-violet-100 dark:bg-violet-900/40 mt-1">
+                <ChevronRight className="w-3 h-3 text-violet-500 dark:text-violet-400" />
+              </div>
+            </button>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 font-semibold">
+              6대 운명학 기반 알고리즘 계산
+            </p>
+          </motion.div>
+        </div>
+
+        {/* 탭 토글 */}
+        <div className="px-5 mb-5">
+          <motion.div
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
+            className="flex bg-gray-100 dark:bg-gray-800/60 rounded-2xl p-1 gap-1"
+          >
+            {TABS.map(({ key, label, icon: Icon }) => (
+              <button
+                key={key}
+                onClick={() => setActiveTab(key)}
+                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-black transition-all duration-200 ${
+                  activeTab === key
+                    ? "bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-sm"
+                    : "text-gray-400 dark:text-gray-500"
+                }`}
+              >
+                <Icon
+                  className={`w-4 h-4 ${
+                    activeTab === key
+                      ? key === "fortune"
+                        ? "text-amber-400"
+                        : "text-violet-500 dark:text-violet-400"
+                      : ""
+                  }`}
+                />
+                {label}
+              </button>
+            ))}
+          </motion.div>
+        </div>
+
+        <div className="px-5 space-y-5">
+          <AnimatePresence mode="wait">
+            {activeTab === "level" && (
+              <motion.div
+                key="level"
+                initial={{ opacity: 0, x: -16 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -16 }}
+                transition={{ duration: 0.2 }}
+                className="space-y-5"
+              >
+                {/* 레벨 카드 */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`rounded-3xl p-6 border shadow-[0_4px_24px_rgba(196,181,253,0.15)] ${
+                    isLuckyMode
+                      ? "bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-950/30 dark:to-yellow-950/30 border-amber-200 dark:border-amber-800/50"
+                      : "bg-white dark:bg-gray-900 border-violet-100 dark:border-gray-800"
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-5">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                          isLuckyMode
+                            ? "bg-amber-100 dark:bg-amber-900/40"
+                            : "bg-violet-50 dark:bg-violet-900/30"
+                        }`}
+                      >
+                        <Star
+                          className={`w-6 h-6 ${
+                            isLuckyMode
+                              ? "text-amber-500"
+                              : "text-violet-400 dark:text-violet-300"
+                          }`}
+                          strokeWidth={2}
+                        />
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide">
+                          {isLuckyMode ? "행운 레벨" : "레벨"}
+                        </p>
+                        <motion.span
+                          key={currentLevel}
+                          initial={{ scale: 0.7, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          className={`text-4xl font-black ${
+                            isLuckyMode
+                              ? "text-amber-500"
+                              : "text-gray-900 dark:text-white"
+                          }`}
+                        >
+                          {currentLevel}
+                        </motion.span>
+                      </div>
+                    </div>
+                    <span
+                      className={`text-sm font-bold ${
+                        isLuckyMode
+                          ? "text-amber-500"
+                          : "text-violet-400 dark:text-violet-400"
+                      }`}
+                    >
+                      {profile.xp || 0} XP
+                    </span>
+                  </div>
+
+                  {/* XP 바 */}
+                  <div
+                    className={`h-3 rounded-full overflow-hidden mb-3 ${
+                      isLuckyMode
+                        ? "bg-amber-100 dark:bg-amber-900/30"
+                        : "bg-violet-50 dark:bg-gray-800"
+                    }`}
+                  >
+                    <motion.div
+                      className={`h-full rounded-full ${
+                        isLuckyMode
+                          ? "bg-amber-400"
+                          : "bg-violet-200 dark:bg-violet-500"
+                      }`}
+                      animate={{
+                        width:
+                          xpBarPhase === "filling" ? "100%" : `${xpProgress}%`,
+                      }}
+                      transition={{
+                        width: { duration: 0.8, ease: "easeInOut" },
+                      }}
+                    />
+                  </div>
+
+                  {/* 레벨업 부스트 버튼 */}
+                  <motion.button
+                    whileTap={{ scale: 0.96 }}
+                    onClick={handleBoostClick}
+                    disabled={xpBarPhase === "filling"}
+                    className={`w-full h-14 rounded-2xl font-black text-sm flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.98] transition-all shadow-sm ${
+                      isLuckyMode
+                        ? "bg-amber-200 hover:bg-amber-300 dark:bg-amber-800/60 dark:hover:bg-amber-700/60 text-amber-900 dark:text-amber-200"
+                        : "bg-violet-200 hover:bg-violet-300 dark:bg-violet-800/60 dark:hover:bg-violet-700/60 text-violet-900 dark:text-violet-200"
+                    }`}
+                  >
+                    <Zap
+                      className={`w-4 h-4 ${
+                        xpBarPhase === "filling" ? "animate-bounce" : ""
+                      }`}
+                    />
+                    {xpBarPhase === "filling"
+                      ? "부스트 적용 중..."
+                      : isLuckyMode
+                      ? "행운 레벨 올리기"
+                      : "레벨업 부스트"}
+                  </motion.button>
+
+                  {/* 다음 해금 안내 */}
+                  <p
+                    className={`text-xs text-center mt-2.5 font-semibold ${
+                      isLuckyMode
+                        ? "text-amber-500/70 dark:text-amber-600"
+                        : "text-violet-300 dark:text-violet-600"
+                    }`}
+                  >
+                    {xpBarPhase === "filling"
+                      ? "레벨업 중! ✨"
+                      : nextUnlockMessage}
+                  </p>
+                </motion.div>
+
+                {/* 오늘의 에너지 */}
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.08 }}
+                  className="bg-white dark:bg-gray-900 rounded-[32px] border border-gray-100 dark:border-gray-800 p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)]"
+                >
+                  <div className="flex items-center gap-2.5 mb-4">
+                    <div className="w-2 h-6 bg-violet-300 dark:bg-violet-600 rounded-full" />
+                    <h3 className="text-sm font-black text-gray-800 dark:text-gray-100">
+                      오늘의 에너지
+                    </h3>
+                  </div>
+                  <StatsRadar stats={profile.base_stats} />
+                </motion.div>
+
+                {/* 초기화 버튼 */}
+                <div className="pt-2 pb-4">
+                  <button
+                    onClick={() => resetAllowed && setShowResetModal(true)}
+                    disabled={resetting || !resetAllowed}
+                    className={`w-full py-3.5 rounded-2xl border text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50 transition-colors ${
+                      resetAllowed
+                        ? "border-red-100 dark:border-red-900/40 text-red-400 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30"
+                        : "border-gray-100 dark:border-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed"
+                    }`}
+                  >
+                    {resetting ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : resetAllowed ? (
+                      <Trash2 className="w-4 h-4" />
+                    ) : (
+                      <Lock className="w-4 h-4" />
+                    )}
+                    {resetting
+                      ? "초기화 중..."
+                      : resetAllowed
+                      ? "데이터 초기화"
+                      : `데이터 초기화`}
+                  </button>
+                  <p className="text-center text-[10px] text-gray-300 dark:text-gray-700 mt-2">
+                    {resetAllowed
+                      ? "모든 데이터가 삭제되고 처음부터 시작됩니다"
+                      : "레벨 89에 도달하면 초기화 기능이 활성화됩니다"}
+                  </p>
+                </div>
+              </motion.div>
+            )}
+
+            {activeTab === "fortune" && (
+              <motion.div
+                key="fortune"
+                initial={{ opacity: 0, x: 16 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 16 }}
+                transition={{ duration: 0.2 }}
+                className="space-y-5"
+              >
+                {/* 오늘의 운세 배너 (항상 가능) */}
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.16 }}
+                  className="bg-white dark:bg-gray-900 rounded-[32px] border border-gray-100 dark:border-gray-800 p-5 shadow-[0_4px_20px_rgba(0,0,0,0.03)] space-y-4"
+                >
+                  <div>
+                    <div className="flex items-center gap-2.5 mb-3">
+                      <div className="w-2 h-6 bg-amber-300 dark:bg-amber-500 rounded-full" />
+                      <h3 className="text-sm font-black text-gray-800 dark:text-gray-100">
+                        오늘의 운세
+                      </h3>
+                    </div>
+
+                    <div className="rounded-2xl overflow-hidden border border-amber-100 dark:border-amber-900/40 bg-amber-50 dark:bg-amber-950/30">
+                      <div className="px-5 py-4 flex items-center gap-3">
+                        <Sun
+                          className="w-7 h-7 text-amber-500 dark:text-amber-400"
+                          strokeWidth={1.5}
+                        />
+                        <div className="flex-1">
+                          <p className="text-sm font-bold text-amber-800 dark:text-amber-200">
+                            오늘의 운세
+                          </p>
+                          <p className="text-xs text-amber-600/70 dark:text-amber-400/60">
+                            오늘 전체 흐름
+                          </p>
+                        </div>
+                      </div>
+                      <div className="bg-white dark:bg-gray-900 border-t border-amber-100 dark:border-amber-900/30 px-5 py-4 space-y-3">
+                        {loadingDailyPreview ? (
+                          <div className="flex items-center gap-2">
+                            <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-400" />
+                            <p className="text-xs text-gray-400 dark:text-gray-500">
+                              운세 요약 중...
+                            </p>
+                          </div>
+                        ) : dailyPreview ? (
+                          <div className="space-y-1">
+                            <p className="text-sm text-gray-700 dark:text-gray-200 leading-relaxed">
+                              ☀️ {dailyPreview.line1}
+                            </p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+                              ✨ {dailyPreview.line2}
+                            </p>
+                          </div>
+                        ) : (
+                          <p className="text-xs text-gray-400 dark:text-gray-500">
+                            오늘의 운세를 불러오는 중이에요...
+                          </p>
+                        )}
+                        <motion.button
+                          whileTap={{ scale: 0.97 }}
+                          onClick={() => handleCategoryClick(FORTUNE_DAILY)}
+                          disabled={
+                            loadingFortune && selectedCategory?.id === "daily"
+                          }
+                          className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-amber-100 hover:bg-amber-200 dark:bg-amber-900/40 dark:hover:bg-amber-900/60 text-amber-800 dark:text-amber-200 text-sm font-black transition-all border border-amber-200 dark:border-amber-800/50"
+                        >
+                          {loadingFortune &&
+                          selectedCategory?.id === "daily" ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                              <span>분석 중...</span>
+                            </>
+                          ) : (
+                            <>
+                              <span>자세히 보기</span>
+                              <ChevronRight
+                                className="w-4 h-4"
+                                strokeWidth={2}
+                              />
+                            </>
+                          )}
+                        </motion.button>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+
+                {/* 상세 운세 */}
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.16 }}
+                  className="bg-white dark:bg-gray-900 rounded-[32px] border border-gray-100 dark:border-gray-800 p-5 shadow-[0_4px_20px_rgba(0,0,0,0.03)] space-y-4"
+                >
+                  <div>
+                    <div className="flex items-center gap-2.5 mb-3">
+                      <div className="w-2 h-6 bg-violet-300 dark:bg-violet-600 rounded-full" />
+                      <h3 className="text-sm font-black text-gray-800 dark:text-gray-100">
+                        상세 운세
+                      </h3>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      {FORTUNE_DETAILED.map((cat) => {
+                        const isLocked = !canViewFortune(level, cat.id);
+                        const unlockLevel = FORTUNE_UNLOCK_LEVELS[cat.id];
+                        return (
+                          <FortuneListItem
+                            key={cat.id}
+                            category={cat}
+                            onClick={handleCategoryClick}
+                            isLoading={
+                              loadingFortune && selectedCategory?.id === cat.id
+                            }
+                            isLocked={isLocked}
+                            unlockLevel={unlockLevel}
+                          />
+                        );
+                      })}
+                    </div>
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
-    </div>
+      <DevUnlockPanel />
+    </>
   );
 }

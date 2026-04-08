@@ -18,6 +18,7 @@ import {
   AlertTriangle,
   GripVertical,
   Calendar as CalendarIcon,
+  Lock,
 } from "lucide-react";
 import {
   format,
@@ -55,6 +56,13 @@ import {
   arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+
+import {
+  getMaxGoalSlots,
+  getMaxGoalAnalysis,
+  getWeekKeyBySunday,
+  LUCKY_LEVEL_THRESHOLD,
+} from "@/config/unlockConfig";
 
 const GOAL_THEMES = [
   { dot: "bg-violet-400" },
@@ -487,89 +495,8 @@ function GoalFormModal({ mode = "add", initial = {}, onConfirm, onClose }) {
   );
 }
 
-function AnalysisModal({ goal, allTodos, onClose }) {
-  const [analysis, setAnalysis] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  React.useEffect(() => {
-    const run = async () => {
-      const doneTodos = allTodos.filter((t) => t.completed).map((t) => t.title);
-      const pendingTodos = allTodos
-        .filter((t) => !t.completed)
-        .map((t) => t.title);
-      try {
-        const res = await base44.integrations.Core.InvokeLLM({
-          prompt: `너는 HADA 앱의 목표 분석 엔진이다.
-
-                    아래 사용자의 목표와 실천 현황을 분석해 종합 평가를 작성하라.
-
-                    [목표]
-                    제목: ${goal.title}
-                    설명: ${goal.description || "없음"}
-                    기간 유형: ${
-                      goal.duration_type === "no_limit" || !goal.duration_type
-                        ? "꾸준히 (기한 없음)"
-                        : goal.duration_type === "this_month"
-                        ? "이번 달"
-                        : goal.duration_type === "this_year"
-                        ? "올해"
-                        : goal.duration_type === "monthly"
-                        ? `${goal.duration_months}개월`
-                        : "날짜 지정"
-                    }
-                    마감일: ${
-                      goal.deadline ? goal.deadline.replace(/-/g, ".") : "없음"
-                    }
-
-                    [완료한 실천 항목 (${doneTodos.length}개)]
-                    ${
-                      doneTodos.length
-                        ? doneTodos.map((t, i) => `${i + 1}. ${t}`).join("\n")
-                        : "없음"
-                    }
-
-                    [진행 중/미완료 항목 (${pendingTodos.length}개)]
-                    ${
-                      pendingTodos.length
-                        ? pendingTodos
-                            .map((t, i) => `${i + 1}. ${t}`)
-                            .join("\n")
-                        : "없음"
-                    }
-
-                    [작성 규칙]
-                    - summary: 전체적인 실천 현황과 노력에 대한 따뜻한 종합 평가. 100자 이내.
-                    - strengths: 잘 하고 있는 점 2가지. 각 30자 이내.
-                    - suggestions: 앞으로 더 발전할 수 있는 구체적 제안 2가지. 각 40자 이내.
-                    - encouragement: 응원 메시지. 100자 이내.
-                    - score: 실천 달성도 0~100 정수.`,
-          response_json_schema: {
-            type: "object",
-            properties: {
-              summary: { type: "string" },
-              strengths: { type: "array", items: { type: "string" } },
-              suggestions: { type: "array", items: { type: "string" } },
-              encouragement: { type: "string" },
-              score: { type: "number" },
-            },
-          },
-        });
-        setAnalysis(res);
-      } catch {
-        setAnalysis({
-          summary: "분석을 불러오는 데 실패했어요.",
-          strengths: [],
-          suggestions: [],
-          encouragement: "오늘도 수고하셨어요 ✨",
-          score: 0,
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-    run();
-  }, []);
-
+// ─── HADA 분석 모달 (해금 포함) ───────────────────────────────────
+function AnalysisModal({ goal, analysis, weeklyUsed, maxWeekly, onClose }) {
   const scoreColor = !analysis
     ? "text-gray-400"
     : analysis.score >= 70
@@ -616,130 +543,133 @@ function AnalysisModal({ goal, allTodos, onClose }) {
           </button>
         </div>
 
-        {loading ? (
-          <div className="flex flex-col items-center gap-3 py-16">
-            <Loader2 className="w-8 h-8 animate-spin text-violet-400" />
-            <p className="text-sm text-gray-400 dark:text-gray-500">
-              실천 내역을 분석하고 있어요...
-            </p>
+        {/* 잠금 상태 */}
+
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="space-y-5"
+        >
+          <div className="bg-gray-50 dark:bg-gray-800 rounded-3xl p-5 flex items-center gap-5">
+            <div className="relative w-20 h-20 flex-shrink-0">
+              <svg className="w-20 h-20 -rotate-90" viewBox="0 0 80 80">
+                <circle
+                  cx="40"
+                  cy="40"
+                  r="34"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="8"
+                  className="text-gray-200 dark:text-gray-700"
+                />
+                <motion.circle
+                  cx="40"
+                  cy="40"
+                  r="34"
+                  fill="none"
+                  strokeWidth="8"
+                  strokeLinecap="round"
+                  stroke="url(#scoreGrad)"
+                  strokeDasharray={`${2 * Math.PI * 34}`}
+                  initial={{ strokeDashoffset: 2 * Math.PI * 34 }}
+                  animate={{
+                    strokeDashoffset:
+                      2 * Math.PI * 34 * (1 - (analysis?.score ?? 0) / 100),
+                  }}
+                  transition={{ duration: 1.2, ease: "easeOut" }}
+                />
+                <defs>
+                  <linearGradient id="scoreGrad" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="#a78bfa" />
+                    <stop offset="100%" stopColor="#818cf8" />
+                  </linearGradient>
+                </defs>
+              </svg>
+              <span
+                className={`absolute inset-0 flex items-center justify-center text-xl font-black ${scoreColor}`}
+              >
+                {analysis?.score ?? 0}
+              </span>
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">
+                달성도
+              </p>
+              <p className="text-sm font-semibold text-gray-700 dark:text-gray-200 leading-relaxed">
+                {analysis?.summary}
+              </p>
+            </div>
           </div>
-        ) : (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-5"
-          >
-            <div className="bg-gray-50 dark:bg-gray-800 rounded-3xl p-5 flex items-center gap-5">
-              <div className="relative w-20 h-20 flex-shrink-0">
-                <svg className="w-20 h-20 -rotate-90" viewBox="0 0 80 80">
-                  <circle
-                    cx="40"
-                    cy="40"
-                    r="34"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="8"
-                    className="text-gray-200 dark:text-gray-700"
-                  />
-                  <motion.circle
-                    cx="40"
-                    cy="40"
-                    r="34"
-                    fill="none"
-                    strokeWidth="8"
-                    strokeLinecap="round"
-                    stroke="url(#scoreGrad)"
-                    strokeDasharray={`${2 * Math.PI * 34}`}
-                    initial={{ strokeDashoffset: 2 * Math.PI * 34 }}
-                    animate={{
-                      strokeDashoffset:
-                        2 * Math.PI * 34 * (1 - (analysis?.score ?? 0) / 100),
-                    }}
-                    transition={{ duration: 1.2, ease: "easeOut" }}
-                  />
-                  <defs>
-                    <linearGradient id="scoreGrad" x1="0" y1="0" x2="1" y2="0">
-                      <stop offset="0%" stopColor="#a78bfa" />
-                      <stop offset="100%" stopColor="#818cf8" />
-                    </linearGradient>
-                  </defs>
-                </svg>
-                <span
-                  className={`absolute inset-0 flex items-center justify-center text-xl font-black ${scoreColor}`}
-                >
-                  {analysis?.score ?? 0}
-                </span>
-              </div>
-              <div>
-                <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">
-                  달성도
-                </p>
-                <p className="text-sm font-semibold text-gray-700 dark:text-gray-200 leading-relaxed">
-                  {analysis?.summary}
-                </p>
+
+          {analysis?.strengths?.length > 0 && (
+            <div>
+              <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-2.5">
+                ✅ 잘하고 있어요
+              </p>
+              <div className="space-y-2">
+                {analysis.strengths.map((s, i) => (
+                  <div
+                    key={i}
+                    className="flex items-start gap-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-2xl px-4 py-3"
+                  >
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
+                    <p className="text-sm text-emerald-800 dark:text-emerald-300 font-medium">
+                      {s}
+                    </p>
+                  </div>
+                ))}
               </div>
             </div>
+          )}
 
-            {analysis?.strengths?.length > 0 && (
-              <div>
-                <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-2.5">
-                  ✅ 잘하고 있어요
-                </p>
-                <div className="space-y-2">
-                  {analysis.strengths.map((s, i) => (
-                    <div
-                      key={i}
-                      className="flex items-start gap-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-2xl px-4 py-3"
-                    >
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
-                      <p className="text-sm text-emerald-800 dark:text-emerald-300 font-medium">
-                        {s}
-                      </p>
-                    </div>
-                  ))}
-                </div>
+          {analysis?.suggestions?.length > 0 && (
+            <div>
+              <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-2.5">
+                💡 이렇게 해보세요
+              </p>
+              <div className="space-y-2">
+                {analysis.suggestions.map((s, i) => (
+                  <div
+                    key={i}
+                    className="flex items-start gap-3 bg-amber-50 dark:bg-amber-950/40 rounded-2xl px-4 py-3"
+                  >
+                    <span className="text-amber-500 font-black text-xs mt-0.5 flex-shrink-0">
+                      {i + 1}
+                    </span>
+                    <p className="text-sm text-amber-800 dark:text-amber-300 font-medium">
+                      {s}
+                    </p>
+                  </div>
+                ))}
               </div>
-            )}
+            </div>
+          )}
 
-            {analysis?.suggestions?.length > 0 && (
-              <div>
-                <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-2.5">
-                  💡 이렇게 해보세요
-                </p>
-                <div className="space-y-2">
-                  {analysis.suggestions.map((s, i) => (
-                    <div
-                      key={i}
-                      className="flex items-start gap-3 bg-amber-50 dark:bg-amber-950/40 rounded-2xl px-4 py-3"
-                    >
-                      <span className="text-amber-500 font-black text-xs mt-0.5 flex-shrink-0">
-                        {i + 1}
-                      </span>
-                      <p className="text-sm text-amber-800 dark:text-amber-300 font-medium">
-                        {s}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {analysis?.encouragement && (
-              <div className="bg-violet-50 dark:bg-violet-950/40 rounded-3xl px-5 py-4 text-center border border-violet-100 dark:border-violet-900/50">
-                <p className="text-sm font-black text-violet-700 dark:text-violet-300">
-                  ✨ {analysis.encouragement}
-                </p>
-              </div>
-            )}
-          </motion.div>
-        )}
+          {analysis?.encouragement && (
+            <div className="bg-violet-50 dark:bg-violet-950/40 rounded-3xl px-5 py-4 text-center border border-violet-100 dark:border-violet-900/50">
+              <p className="text-sm font-black text-violet-700 dark:text-violet-300">
+                ✨ {analysis.encouragement}
+              </p>
+            </div>
+          )}
+        </motion.div>
       </motion.div>
     </motion.div>
   );
 }
 
-function GoalDetail({ goal, allTodos, onEdit }) {
+function GoalDetail({
+  goal,
+  allTodos,
+  onEdit,
+  level,
+  weeklyAnalysisUsed,
+  maxWeeklyAnalysis,
+  onAnalysisUsed,
+}) {
   const [showAnalysis, setShowAnalysis] = useState(false);
+  const [analysisResult, setAnalysisResult] = useState(null);
+  const [analysisLoading, setAnalysisLoading] = useState(false);
 
   const todos = useMemo(
     () => (allTodos || []).filter((t) => t.goal_id === goal.id),
@@ -758,6 +688,84 @@ function GoalDetail({ goal, allTodos, onEdit }) {
     return `마감까지 ${diff}일`;
   }, [goal.deadline]);
 
+  const isAnalysisUnlocked = maxWeeklyAnalysis > 0;
+  const isAnalysisLimitReached = weeklyAnalysisUsed >= maxWeeklyAnalysis;
+
+  const handleAnalysisOpen = async () => {
+    if (!isAnalysisUnlocked || isAnalysisLimitReached) return;
+
+    setAnalysisLoading(true);
+
+    const doneTodos = todos.filter((t) => t.completed).map((t) => t.title);
+    const pendingTodos = todos.filter((t) => !t.completed).map((t) => t.title);
+
+    try {
+      const res = await base44.integrations.Core.InvokeLLM({
+        prompt: `너는 HADA 앱의 목표 분석 엔진이다.
+
+                아래 사용자의 목표와 실천 현황을 분석해 종합 평가를 작성하라.
+
+                [목표]
+                제목: ${goal.title}
+                설명: ${goal.description || "없음"}
+                기간 유형: ${
+                  goal.duration_type === "no_limit" || !goal.duration_type
+                    ? "꾸준히 (기한 없음)"
+                    : goal.duration_type === "this_month"
+                    ? "이번 달"
+                    : goal.duration_type === "this_year"
+                    ? "올해"
+                    : goal.duration_type === "monthly"
+                    ? `${goal.duration_months}개월`
+                    : "날짜 지정"
+                }
+                마감일: ${
+                  goal.deadline ? goal.deadline.replace(/-/g, ".") : "없음"
+                }
+
+                [완료한 실천 항목 (${doneTodos.length}개)]
+                ${
+                  doneTodos.length
+                    ? doneTodos.map((t, i) => `${i + 1}. ${t}`).join("\n")
+                    : "없음"
+                }
+
+                [진행 중/미완료 항목 (${pendingTodos.length}개)]
+                ${
+                  pendingTodos.length
+                    ? pendingTodos.map((t, i) => `${i + 1}. ${t}`).join("\n")
+                    : "없음"
+                }
+
+                [작성 규칙]
+                - summary: 전체적인 실천 현황과 노력에 대한 따뜻한 종합 평가. 100자 이내.
+                - strengths: 잘 하고 있는 점 2가지. 각 30자 이내.
+                - suggestions: 앞으로 더 발전할 수 있는 구체적 제안 2가지. 각 40자 이내.
+                - encouragement: 응원 메시지. 100자 이내.
+                - score: 실천 달성도 0~100 정수.`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            summary: { type: "string" },
+            strengths: { type: "array", items: { type: "string" } },
+            suggestions: { type: "array", items: { type: "string" } },
+            encouragement: { type: "string" },
+            score: { type: "number" },
+          },
+        },
+      });
+
+      setAnalysisResult(res);
+      setShowAnalysis(true);
+      onAnalysisUsed?.(); // ✅ 성공했을 때만 차감 + 모달 열기
+    } catch {
+      // 실패 시 차감 없음, 모달도 안 열림
+      alert("분석 요청에 실패했어요. 잠시 후 다시 시도해주세요.");
+    } finally {
+      setAnalysisLoading(false);
+    }
+  };
+
   return (
     <>
       <motion.div
@@ -774,7 +782,9 @@ function GoalDetail({ goal, allTodos, onEdit }) {
             </p>
             <p className="text-xs font-black text-violet-500 dark:text-violet-400">
               {doneCount} / {totalCount}
-              <span className="text-gray-400 dark:text-gray-500 font-semibold ml-1">완료</span>
+              <span className="text-gray-400 dark:text-gray-500 font-semibold ml-1">
+                완료
+              </span>
             </p>
           </div>
           <div className="h-2 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
@@ -823,21 +833,62 @@ function GoalDetail({ goal, allTodos, onEdit }) {
           </span>
         </div>
 
+        {/* HADA 분석 버튼 */}
         <button
-          onClick={() => setShowAnalysis(true)}
-          className="w-full h-16 rounded-2xl bg-indigo-100 hover:bg-indigo-200 dark:bg-indigo-900/40 dark:hover:bg-indigo-900/60 text-indigo-800 dark:text-indigo-200 font-black text-base flex items-center justify-center gap-2.5 shadow-sm active:scale-[0.98] transition-all border border-indigo-200 dark:border-indigo-800/50"
+          onClick={handleAnalysisOpen}
+          disabled={
+            !isAnalysisUnlocked || isAnalysisLimitReached || analysisLoading
+          }
+          className={`w-full h-16 rounded-2xl font-black text-base flex items-center justify-center gap-2.5 shadow-sm active:scale-[0.98] transition-all border ${
+            !isAnalysisUnlocked
+              ? "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 border-gray-200 dark:border-gray-700 cursor-not-allowed"
+              : isAnalysisLimitReached
+              ? "bg-amber-50 dark:bg-amber-950/30 text-amber-400 dark:text-amber-500 border-amber-100 dark:border-amber-900/40 cursor-not-allowed"
+              : analysisLoading
+              ? "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-400 dark:text-indigo-500 border-indigo-100 dark:border-indigo-800/30 cursor-not-allowed"
+              : "bg-indigo-100 hover:bg-indigo-200 dark:bg-indigo-900/40 dark:hover:bg-indigo-900/60 text-indigo-800 dark:text-indigo-200 border-indigo-200 dark:border-indigo-800/50"
+          }`}
         >
-          <Sparkles className="w-5 h-5" />
-          HADA 분석 받기
+          {!isAnalysisUnlocked ? (
+            <>
+              <Lock className="w-5 h-5" />
+              HADA 분석 (레벨 5 이용 가능)
+            </>
+          ) : isAnalysisLimitReached ? (
+            <>
+              <Sparkles className="w-5 h-5" />
+              이번 주 횟수 소진 ({weeklyAnalysisUsed}/{maxWeeklyAnalysis}회)
+            </>
+          ) : analysisLoading ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" />
+              분석 중...
+            </>
+          ) : (
+            <>
+              <Sparkles className="w-5 h-5" />
+              HADA 분석 받기
+              <span className="text-xs font-bold opacity-70 ml-1">
+                {maxWeeklyAnalysis === 999
+                  ? "무제한"
+                  : `${weeklyAnalysisUsed}/${maxWeeklyAnalysis}회`}
+              </span>
+            </>
+          )}
         </button>
       </motion.div>
 
       <AnimatePresence>
-        {showAnalysis && (
+        {showAnalysis && analysisResult && (
           <AnalysisModal
             goal={goal}
-            allTodos={todos}
-            onClose={() => setShowAnalysis(false)}
+            analysis={analysisResult}
+            weeklyUsed={weeklyAnalysisUsed}
+            maxWeekly={maxWeeklyAnalysis}
+            onClose={() => {
+              setShowAnalysis(false);
+              setAnalysisResult(null);
+            }}
           />
         )}
       </AnimatePresence>
@@ -861,7 +912,10 @@ function SortableGoalRow({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: goal.id, disabled: isDragDisabled });
+  } = useSortable({
+    id: goal.id,
+    disabled: isDragDisabled,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -871,7 +925,9 @@ function SortableGoalRow({
   };
 
   const idHash = goal.id
-    ? goal.id.split("").reduce((acc, ch) => acc + ch.charCodeAt(0), 0)
+    ? goal.id
+        .split("")
+        .reduce((acc, ch, i) => acc + ch.charCodeAt(0) * (i + 1), 0)
     : 0;
   const theme = GOAL_THEMES[idHash % GOAL_THEMES.length];
   const isCompleted = goal.is_completed;
@@ -921,7 +977,9 @@ function SortableGoalRow({
               {goal.title}
             </span>
             {isCompleted && (
-              <span className="text-[9px] font-bold text-gray-400 dark:text-gray-600">완료됨</span>
+              <span className="text-[9px] font-bold text-gray-400 dark:text-gray-600">
+                완료됨
+              </span>
             )}
           </div>
 
@@ -977,7 +1035,12 @@ export default function Goals() {
   const [editingGoal, setEditingGoal] = useState(null);
   const [completeConfirm, setCompleteConfirm] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [showCannotAdd, setShowCannotAdd] = useState(false);
   const [showCannotDelete, setShowCannotDelete] = useState(false);
+
+  // 주간 분석 사용 횟수 관리
+  const [weeklyAnalysisUsed, setWeeklyAnalysisUsed] = useState(0);
+  const weekKey = getWeekKeyBySunday();
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -991,13 +1054,34 @@ export default function Goals() {
     queryFn: () => base44.entities.UserProfile.list(),
   });
   const profile = profiles[0];
+  const level = profile?.level || 1;
+  const maxGoalSlots = getMaxGoalSlots(level);
+  const maxWeeklyAnalysis = getMaxGoalAnalysis(level);
+
+  // 주간 분석 사용 횟수 로드
+  React.useEffect(() => {
+    if (!profile) return;
+    const load = async () => {
+      const key = `analysis_used_${profile.id}_${weekKey}`;
+      const stored = await base44.storage.get(key);
+      setWeeklyAnalysisUsed(Number(stored) || 0);
+    };
+    load();
+  }, [profile?.id, weekKey]);
+
+  const handleAnalysisUsed = async () => {
+    if (!profile) return;
+    const newCount = weeklyAnalysisUsed + 1;
+    setWeeklyAnalysisUsed(newCount);
+    const key = `analysis_used_${profile.id}_${weekKey}`;
+    await base44.storage.set(key, newCount);
+  };
 
   const { data: goals = [], isLoading: goalsLoading } = useQuery({
     queryKey: ["goals", profile?.id],
     queryFn: async () => {
       const all = await base44.entities.Goal.list();
       const mine = all.filter((g) => g.user_profile_id === profile.id);
-
       const needsMigration = mine.some((g) => g.order == null);
       if (needsMigration) {
         const sorted = [...mine].sort(
@@ -1029,28 +1113,32 @@ export default function Goals() {
   const handleDragEnd = async (event) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
-
     const oldIndex = activeGoals.findIndex((g) => g.id === active.id);
     const newIndex = activeGoals.findIndex((g) => g.id === over.id);
     if (oldIndex === -1 || newIndex === -1) return;
-
     const reordered = arrayMove(activeGoals, oldIndex, newIndex);
     const reorderedWithOrder = reordered.map((goal, idx) => ({
       ...goal,
       order: idx,
     }));
-
     queryClient.setQueryData(
       ["goals", profile.id],
       [...reorderedWithOrder, ...completedGoals],
     );
-
     for (let idx = 0; idx < reorderedWithOrder.length; idx++) {
       await base44.entities.Goal.update(reorderedWithOrder[idx].id, {
         order: idx,
       });
     }
     await queryClient.invalidateQueries({ queryKey: ["goals", profile.id] });
+  };
+
+  const handleAddClick = () => {
+    if (activeGoals.length >= maxGoalSlots) {
+      setShowCannotAdd(true);
+      return;
+    }
+    setShowAddModal(true);
   };
 
   const handleAdd = async ({
@@ -1146,6 +1234,9 @@ export default function Goals() {
     });
   };
 
+  // 목표 슬롯 잠금 안내 레벨
+  const nextSlotLevel = [13, 67].find((l) => l > level) || null;
+
   return (
     <div className="min-h-screen bg-[#FDFCFE] dark:bg-gray-950 pb-32 transition-colors duration-300">
       <div className="px-6 pt-12 pb-6">
@@ -1167,11 +1258,16 @@ export default function Goals() {
             </div>
             <motion.button
               whileTap={{ scale: 0.92 }}
-              onClick={() => setShowAddModal(true)}
+              onClick={handleAddClick}
               className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-sm font-black bg-violet-200 hover:bg-violet-300 dark:bg-violet-800/50 dark:hover:bg-violet-700/50 text-violet-900 dark:text-violet-200 shadow-sm transition-colors"
             >
               <Plus className="w-4 h-4" />
               추가
+              <span className="text-[10px] opacity-60">
+                {maxGoalSlots === 999
+                  ? ""
+                  : `(${activeGoals.length}/${maxGoalSlots})`}
+              </span>
             </motion.button>
           </div>
         </motion.div>
@@ -1241,6 +1337,10 @@ export default function Goals() {
                               goal={goal}
                               allTodos={allTodos}
                               onEdit={(g) => setEditingGoal(g)}
+                              level={level}
+                              weeklyAnalysisUsed={weeklyAnalysisUsed}
+                              maxWeeklyAnalysis={maxWeeklyAnalysis}
+                              onAnalysisUsed={handleAnalysisUsed}
                             />
                           </motion.div>
                         )}
@@ -1289,6 +1389,25 @@ export default function Goals() {
       </div>
 
       <AnimatePresence>
+        {showCannotAdd && (
+          <ConfirmModal
+            key="cannot-add-alert"
+            icon={<Lock className="w-6 h-6 text-violet-400" />}
+            iconBg="bg-violet-50 dark:bg-violet-950/40"
+            title={`목표 슬롯이 꽉 찼어요 (${
+              maxGoalSlots === 999 ? "" : activeGoals.length / maxGoalSlots
+            })`}
+            description={
+              nextSlotLevel
+                ? `레벨 ${nextSlotLevel}에 도달하면 목표 슬롯이 추가됩니다.\n현재 레벨: ${level}`
+                : "현재 사용 가능한 최대 슬롯을 모두 사용하고 있어요."
+            }
+            confirmLabel="확인"
+            confirmStyle="bg-violet-500 text-white"
+            onConfirm={() => setShowCannotAdd(false)}
+            onClose={() => setShowCannotAdd(false)}
+          />
+        )}
         {showCannotDelete && (
           <ConfirmModal
             key="cannot-delete-alert"

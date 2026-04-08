@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { showInterstitial, preloadInterstitial } from "@/plugins/admob";
 import { AdMob } from "@capacitor-community/admob";
@@ -9,10 +9,18 @@ export default function AdModal({
   closeLabel = "닫고 행운 받기 ✨",
 }) {
   const [countdown, setCountdown] = useState(5);
+  const hasClosedRef = useRef(false); // ← 추가
+
+  const safeClose = () => {
+    if (hasClosedRef.current) return; // 이미 닫혔으면 무시
+    hasClosedRef.current = true;
+    onClose();
+  };
 
   useEffect(() => {
     if (!visible) return;
     setCountdown(5);
+    hasClosedRef.current = false; // visible 바뀔 때마다 리셋
 
     const tryInterstitial = async () => {
       try {
@@ -20,7 +28,7 @@ export default function AdModal({
         const dismissListener = await AdMob.addListener(
           "onInterstitialDismissed",
           () => {
-            onClose(); // 광고 닫히면 onClose 호출
+            safeClose();
             dismissListener.remove();
           },
         );
@@ -92,7 +100,7 @@ export default function AdModal({
               </>
             ) : (
               <button
-                onClick={onClose}
+                onClick={safeClose}
                 className="w-full py-3 rounded-xl bg-purple-500 dark:bg-purple-600 text-white font-semibold text-sm hover:bg-purple-600 dark:hover:bg-purple-500 transition-colors"
               >
                 {closeLabel}

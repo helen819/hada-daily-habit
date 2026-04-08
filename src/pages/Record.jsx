@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
@@ -10,6 +10,7 @@ import {
   Circle,
   Heart,
   CalendarDays,
+  Lock,
 } from "lucide-react";
 
 import MiniCalendar from "@/components/calendar/MiniCalendar";
@@ -20,22 +21,17 @@ import FireworksEffect from "@/components/happiness/FireworksEffect";
 import AdModal from "@/components/shop/AdModal";
 import { getKSTDateString } from "@/utils/date";
 
-// ═══════════════════════════════════════════════════════════════════
-// Record 메인
-// ═══════════════════════════════════════════════════════════════════
+import { canViewHappinessVault } from "@/config/unlockConfig";
+
 export default function Record() {
   const queryClient = useQueryClient();
   const today = getKSTDateString();
 
-  // ─── 탭 상태 ────────────────────────────────────────────────
-  const [activeTab, setActiveTab] = useState("calendar"); // "calendar" | "happiness"
-
-  // ─── 캘린더 상태 ────────────────────────────────────────────
+  const [activeTab, setActiveTab] = useState("calendar");
   const [year, setYear] = useState(new Date().getFullYear());
   const [month, setMonth] = useState(new Date().getMonth());
   const [selectedDate, setSelectedDate] = useState(null);
 
-  // ─── 행복 기록 상태 ─────────────────────────────────────────
   const [summary, setSummary] = useState(null);
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [summaryLoaded, setSummaryLoaded] = useState(false);
@@ -45,12 +41,13 @@ export default function Record() {
   const [fullRecords, setFullRecords] = useState([]);
   const [isFetchingFull, setIsFetchingFull] = useState(false);
 
-  // ─── 데이터 쿼리 ────────────────────────────────────────────
   const { data: profiles = [] } = useQuery({
     queryKey: ["userProfile"],
     queryFn: () => base44.entities.UserProfile.list(),
   });
   const profile = profiles[0];
+  const level = profile?.level || 1;
+  const vaultUnlocked = canViewHappinessVault(level);
 
   const { data: happinessRecords = [], isLoading: hapLoading } = useQuery({
     queryKey: ["happinessRecords"],
@@ -75,7 +72,6 @@ export default function Record() {
     enabled: !!profile?.id,
   });
 
-  // ─── 캘린더 배지 계산 ────────────────────────────────────────
   const dateBadges = useMemo(() => {
     const map = {};
     happinessRecords.forEach((r) => {
@@ -105,15 +101,20 @@ export default function Record() {
   }, [happinessRecords, allGoalTodos]);
 
   const handleDateSelect = (date) => {
-    // 같은 날짜 재클릭 시 닫기, 아니면 열기
     setSelectedDate((prev) => (prev === date ? null : date));
   };
 
   const handleMonthChange = (delta) => {
     let m = month + delta;
     let y = year;
-    if (m < 0) { m = 11; y -= 1; }
-    if (m > 11) { m = 0; y += 1; }
+    if (m < 0) {
+      m = 11;
+      y -= 1;
+    }
+    if (m > 11) {
+      m = 0;
+      y += 1;
+    }
     setMonth(m);
     setYear(y);
   };
@@ -123,7 +124,6 @@ export default function Record() {
     [allGoalTodos, selectedDate],
   );
 
-  // ─── 행복 기록 ───────────────────────────────────────────────
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.HappinessRecord.create(data),
     onSuccess: () => {
@@ -134,6 +134,7 @@ export default function Record() {
   });
 
   const handleOpenStorage = async () => {
+    if (!vaultUnlocked) return;
     setShowAd(true);
     setIsFetchingFull(true);
     try {
@@ -148,12 +149,14 @@ export default function Record() {
 
   const SUMMARY_CACHE_KEY = "happiness_summary_cache";
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (summaryLoaded) return;
     const load = async () => {
       const cached = await base44.storage.get(SUMMARY_CACHE_KEY);
       if (cached) {
-        try { setSummary(JSON.parse(cached)); } catch {}
+        try {
+          setSummary(JSON.parse(cached));
+        } catch {}
       }
       setSummaryLoaded(true);
     };
@@ -161,7 +164,7 @@ export default function Record() {
   }, []);
 
   const prevCountRef = React.useRef(null);
-  React.useEffect(() => {
+  useEffect(() => {
     if (!summaryLoaded) return;
     if (happinessRecords.length < 3) return;
     const currentCount = happinessRecords.length;
@@ -220,7 +223,6 @@ export default function Record() {
 
   const markedDates = useMemo(() => Object.keys(dateBadges), [dateBadges]);
 
-  // ─── 탭 설정 ─────────────────────────────────────────────────
   const TABS = [
     { key: "calendar", label: "캘린더", icon: CalendarDays },
     { key: "happiness", label: "행복", icon: Heart },
@@ -247,9 +249,11 @@ export default function Record() {
         }}
       />
 
-      {/* ── 헤더 ─────────────────────────────────────────────── */}
       <div className="px-6 pt-12 pb-4">
-        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
           <p className="text-[10px] font-black text-purple-500 uppercase tracking-[0.3em] mb-2">
             HADA
           </p>
@@ -259,7 +263,6 @@ export default function Record() {
         </motion.div>
       </div>
 
-      {/* ── 탭 토글 ──────────────────────────────────────────── */}
       <div className="px-5 mb-5">
         <motion.div
           initial={{ opacity: 0, y: 6 }}
@@ -292,11 +295,9 @@ export default function Record() {
         </motion.div>
       </div>
 
-      {/* ── 탭 콘텐츠 ────────────────────────────────────────── */}
       <div className="px-5">
         <AnimatePresence mode="wait">
-
-          {/* ── 캘린더 탭 ──────────────────────────────────────── */}
+          {/* ── 캘린더 탭 ── */}
           {activeTab === "calendar" && (
             <motion.div
               key="calendar"
@@ -306,7 +307,6 @@ export default function Record() {
               transition={{ duration: 0.2 }}
               className="space-y-3"
             >
-              {/* 달력 */}
               <div className="bg-white dark:bg-gray-900 rounded-[32px] shadow-[0_8px_40px_rgba(120,50,255,0.06)] border border-purple-50 dark:border-gray-800 overflow-hidden">
                 <MiniCalendar
                   year={year}
@@ -321,7 +321,6 @@ export default function Record() {
                 />
               </div>
 
-              {/* 날짜 상세 — 선택 시 달력 바로 아래 인라인으로 펼침 */}
               <AnimatePresence>
                 {selectedDate && (
                   <motion.div
@@ -333,7 +332,6 @@ export default function Record() {
                     className="overflow-hidden"
                   >
                     <div className="bg-white dark:bg-gray-900 rounded-[28px] border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden">
-                      {/* 날짜 헤더 */}
                       <div className="flex items-center justify-between px-5 py-4 border-b border-gray-50 dark:border-gray-800">
                         <div>
                           <p className="text-[10px] font-black text-purple-500 uppercase tracking-widest mb-0.5">
@@ -341,7 +339,9 @@ export default function Record() {
                           </p>
                           <p className="text-base font-black text-gray-900 dark:text-white">
                             {selectedDate
-                              ? `${parseInt(selectedDate.slice(5, 7))}월 ${parseInt(selectedDate.slice(8, 10))}일`
+                              ? `${parseInt(
+                                  selectedDate.slice(5, 7),
+                                )}월 ${parseInt(selectedDate.slice(8, 10))}일`
                               : ""}
                           </p>
                         </div>
@@ -353,13 +353,15 @@ export default function Record() {
                         </button>
                       </div>
 
-                      {/* 배지 */}
                       {(dateBadges[selectedDate]?.length ?? 0) > 0 && (
                         <div className="flex flex-wrap gap-2 px-5 pt-4">
                           {dateBadges[selectedDate].map((badge) => {
                             const BADGE_LABELS = {
                               heart: { emoji: "💕", label: "행복 기록 있음" },
-                              fire: { emoji: "🔥", label: "할일 70% 이상 완료" },
+                              fire: {
+                                emoji: "🔥",
+                                label: "할일 70% 이상 완료",
+                              },
                               rest: { emoji: "😴", label: "할일 거의 미완료" },
                               star: { emoji: "⭐", label: "일정 3개 이상" },
                             };
@@ -380,7 +382,6 @@ export default function Record() {
                         </div>
                       )}
 
-                      {/* 할일 기록 */}
                       <div className="px-5 py-4">
                         {selectedDayTodos.length > 0 ? (
                           <div className="space-y-3">
@@ -393,7 +394,7 @@ export default function Record() {
                                 if (!map[gid]) map[gid] = [];
                                 map[gid].push(t);
                                 return map;
-                              }, {})
+                              }, {}),
                             ).map(([gid, todos]) => {
                               const goal = goals.find((g) => g.id === gid);
                               const done = todos.filter((t) => t.completed);
@@ -412,17 +413,31 @@ export default function Record() {
                                   )}
                                   <div className="px-4 py-1 divide-y divide-gray-50 dark:divide-gray-800">
                                     {done.map((t) => (
-                                      <div key={t.id} className="flex items-center gap-3 py-2.5">
+                                      <div
+                                        key={t.id}
+                                        className="flex items-center gap-3 py-2.5"
+                                      >
                                         <CheckCircle2 className="w-4 h-4 text-purple-400 flex-shrink-0" />
-                                        <span className="text-sm text-gray-400 flex-1">{t.title}</span>
-                                        <span className="text-[10px] font-bold text-purple-400">완료</span>
+                                        <span className="text-sm text-gray-400 flex-1">
+                                          {t.title}
+                                        </span>
+                                        <span className="text-[10px] font-bold text-purple-400">
+                                          완료
+                                        </span>
                                       </div>
                                     ))}
                                     {pending.map((t) => (
-                                      <div key={t.id} className="flex items-center gap-3 py-2.5">
+                                      <div
+                                        key={t.id}
+                                        className="flex items-center gap-3 py-2.5"
+                                      >
                                         <Circle className="w-4 h-4 text-gray-300 dark:text-gray-600 flex-shrink-0" />
-                                        <span className="text-sm text-gray-600 dark:text-gray-300 flex-1">{t.title}</span>
-                                        <span className="text-[10px] font-bold text-gray-300 dark:text-gray-600">미완료</span>
+                                        <span className="text-sm text-gray-600 dark:text-gray-300 flex-1">
+                                          {t.title}
+                                        </span>
+                                        <span className="text-[10px] font-bold text-gray-300 dark:text-gray-600">
+                                          미완료
+                                        </span>
                                       </div>
                                     ))}
                                   </div>
@@ -452,7 +467,7 @@ export default function Record() {
             </motion.div>
           )}
 
-          {/* ── 행복 탭 ────────────────────────────────────────── */}
+          {/* ── 행복 탭 ── */}
           {activeTab === "happiness" && (
             <motion.div
               key="happiness"
@@ -462,7 +477,6 @@ export default function Record() {
               transition={{ duration: 0.2 }}
               className="space-y-5"
             >
-              {/* 오늘의 행복 기록 입력 */}
               <div>
                 <div className="flex items-center gap-2.5 mb-3 px-1">
                   <div className="w-2 h-6 bg-pink-400 rounded-full" />
@@ -476,7 +490,6 @@ export default function Record() {
                 />
               </div>
 
-              {/* AI 요약 */}
               <AnimatePresence>
                 {summaryLoading && (
                   <motion.div
@@ -516,7 +529,6 @@ export default function Record() {
                 )}
               </AnimatePresence>
 
-              {/* 최근 기록 3개 */}
               {latestRecords.length > 0 && (
                 <div>
                   <div className="flex items-center gap-2.5 mb-3 px-1">
@@ -527,7 +539,11 @@ export default function Record() {
                   </div>
                   <div className="space-y-3">
                     {latestRecords.map((record, i) => (
-                      <HappinessCard key={record.id} record={record} index={i} />
+                      <HappinessCard
+                        key={record.id}
+                        record={record}
+                        index={i}
+                      />
                     ))}
                   </div>
                 </div>
@@ -540,24 +556,42 @@ export default function Record() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
                   onClick={handleOpenStorage}
-                  className="w-full bg-gradient-to-r from-pink-50 to-rose-50 dark:from-pink-950/40 dark:to-rose-950/40 border border-pink-100 dark:border-pink-900/50 rounded-[28px] px-6 py-5 flex flex-col items-center gap-3 active:scale-[0.98] transition-transform shadow-sm"
+                  disabled={!vaultUnlocked}
+                  className={`w-full rounded-[28px] px-6 py-5 flex flex-col items-center gap-3 active:scale-[0.98] transition-transform shadow-sm ${
+                    vaultUnlocked
+                      ? "bg-gradient-to-r from-pink-50 to-rose-50 dark:from-pink-950/40 dark:to-rose-950/40 border border-pink-100 dark:border-pink-900/50"
+                      : "bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 cursor-not-allowed opacity-70"
+                  }`}
                 >
-                  <div className="text-4xl">✨</div>
+                  <div className="text-4xl">{vaultUnlocked ? "✨" : "🔒"}</div>
                   <div>
-                    <p className="text-sm font-black text-pink-700 dark:text-pink-400 text-center">
+                    <p
+                      className={`text-sm font-black text-center ${
+                        vaultUnlocked
+                          ? "text-pink-700 dark:text-pink-400"
+                          : "text-gray-500 dark:text-gray-400"
+                      }`}
+                    >
                       행복 보관함
                     </p>
-                    <p className="text-xs text-pink-500 dark:text-pink-500 text-center mt-0.5">
-                      모든 행복 기록 모아보기
+                    <p
+                      className={`text-xs text-center mt-0.5 ${
+                        vaultUnlocked
+                          ? "text-pink-500 dark:text-pink-500"
+                          : "text-gray-400 dark:text-gray-500"
+                      }`}
+                    >
+                      {vaultUnlocked
+                        ? "모든 행복 기록 모아보기"
+                        : "레벨 15에서 이용 가능합니다"}
                     </p>
                   </div>
                 </motion.button>
               )}
             </motion.div>
           )}
-
         </AnimatePresence>
       </div>
-</div>
+    </div>
   );
 }
