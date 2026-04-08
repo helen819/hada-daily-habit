@@ -27,7 +27,7 @@ function getTodayKey() {
   return getKSTDateString();
 }
 
-async function generateAICharm(profile) {
+async function generateAICharm(profile, previousCharm = null) {
   const now = new Date();
   const dateStr = now.toLocaleDateString("ko-KR", {
     year: "numeric",
@@ -87,7 +87,14 @@ async function generateAICharm(profile) {
             - name: 10자 이내. 일상에서 당장 구할 수 있는 일반적인 물건.
             - emoji: 위 물건과 가장 잘 어울리는 이모지 기호 딱 1개. (예: 🔑, ☕) 다른 텍스트 포함 금지.
             - effect: 30자 이내. "어떤 목표"와 연관된 효과인지 명시하여 작성.
-            - description: 100자 이내. 사용법·의미. 줄바꿈 금지.`,
+            - description: 100자 이내. 사용법·의미. 줄바꿈 금지.
+            ${
+              previousCharm
+                ? `\n[제외 항목 - 반드시 다른 물건을 추천할 것]
+              이전에 추천한 "${previousCharm.name}"과 동일하거나 유사한 물건은 절대 추천하지 마라. 
+              완전히 다른 종류의 물건을 추천해야 한다.`
+                : ""
+            }`,
     response_json_schema: {
       type: "object",
       properties: {
