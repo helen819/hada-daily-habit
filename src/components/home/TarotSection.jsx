@@ -8,6 +8,7 @@ import {
   Plus,
   Maximize2,
   X,
+  Clock,
 } from "lucide-react";
 import {
   Sparkles,
@@ -65,7 +66,6 @@ const borderColors = {
   fortune: "border-amber-300",
 };
 
-// 파스텔 버튼 색상 — 연한 배경 + 어두운 텍스트
 const buttonColors = {
   work_efficiency:
     "bg-violet-200 hover:bg-violet-300 dark:bg-violet-800/60 dark:hover:bg-violet-700/60 text-violet-900 dark:text-violet-200",
@@ -86,8 +86,7 @@ const buttonAddedColors = {
     "bg-fuchsia-100 dark:bg-fuchsia-900/40 text-fuchsia-500 dark:text-fuchsia-400",
   communication:
     "bg-pink-100 dark:bg-pink-900/40 text-pink-500 dark:text-pink-400",
-  focus:
-    "bg-sky-100 dark:bg-sky-900/40 text-sky-500 dark:text-sky-400",
+  focus: "bg-sky-100 dark:bg-sky-900/40 text-sky-500 dark:text-sky-400",
   fortune:
     "bg-amber-100 dark:bg-amber-900/40 text-amber-500 dark:text-amber-400",
 };
@@ -105,6 +104,27 @@ const buttonBgColors = {
     "bg-amber-100 dark:bg-amber-900/40 text-amber-500 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-800/60",
 };
 
+// ─── HH 숫자 → 표시용 시간대 라벨 변환 ─────────────────────────
+// AI / DB / 알람은 모두 HH("09","14","21") 기준으로 저장
+// 화면에서만 오전/오후/저녁/밤으로 변환하여 표시
+function hhToTimeSlotLabel(raw) {
+  if (!raw) return null;
+  const h = parseInt(raw, 10);
+  if (isNaN(h)) return null;
+  if (h >= 6 && h < 12) return "오전";
+  if (h >= 12 && h < 18) return "오후";
+  if (h >= 18 && h < 22) return "저녁";
+  return "밤";
+}
+
+// ─── 시간대 라벨별 뱃지 색상 ──────────────────────────────────
+const timeSlotBadgeColors = {
+  오전: "bg-sky-100 text-sky-600 dark:bg-sky-900/40 dark:text-sky-400",
+  오후: "bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-400",
+  저녁: "bg-orange-100 text-orange-600 dark:bg-orange-900/40 dark:text-orange-400",
+  밤: "bg-indigo-100 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400",
+};
+
 function TarotDetailModal({ action, onClose, onAdd, added }) {
   const Icon = statIcons[action.stat_focus] || Sparkles;
   const backGradient =
@@ -116,6 +136,9 @@ function TarotDetailModal({ action, onClose, onAdd, added }) {
   const buttonAddedColor =
     buttonAddedColors[action.stat_focus] ||
     "bg-violet-100 dark:bg-violet-900/40 text-violet-500 dark:text-violet-400";
+
+  const timeSlot = hhToTimeSlotLabel(action.recommended_time);
+  const timeBadgeStyle = timeSlot ? timeSlotBadgeColors[timeSlot] : null;
 
   useEffect(() => {
     document.body.classList.add("modal-open");
@@ -147,9 +170,18 @@ function TarotDetailModal({ action, onClose, onAdd, added }) {
             <div className="w-9 h-9 rounded-xl bg-white/30 flex items-center justify-center">
               <Icon className="w-5 h-5 text-white" strokeWidth={1.5} />
             </div>
-            <p className="text-white/90 text-xs font-semibold uppercase tracking-widest">
-              {action.keyword}
-            </p>
+            <div>
+              <p className="text-white/90 text-xs font-semibold uppercase tracking-widest">
+                {action.keyword}
+              </p>
+              {/* 권장 시간대 뱃지 (헤더 내) */}
+              {timeSlot && (
+                <span className="inline-flex items-center gap-0.5 mt-1 text-[10px] font-bold text-white/70">
+                  <Clock className="w-2.5 h-2.5" strokeWidth={2} />
+                  {timeSlot} 추천
+                </span>
+              )}
+            </div>
           </div>
           <button
             onClick={onClose}
@@ -212,9 +244,6 @@ function MiniTarotCard({
   const buttonBg =
     buttonBgColors[action.stat_focus] ||
     "bg-violet-100 dark:bg-violet-900/40 text-violet-500";
-  const buttonAdded =
-    buttonAddedColors[action.stat_focus] ||
-    "bg-violet-100 dark:bg-violet-900/40 text-violet-500";
 
   const Icon = statIcons[action.stat_focus] || Sparkles;
   const backGradient =
@@ -223,6 +252,10 @@ function MiniTarotCard({
     cardFrontColors[action.stat_focus] ||
     "from-gray-50 to-gray-50 border-gray-200";
   const iconColor = iconColors[action.stat_focus] || "text-gray-500";
+
+  // 권장 시간대 정규화
+  const timeSlot = hhToTimeSlotLabel(action.recommended_time);
+  const timeBadgeStyle = timeSlot ? timeSlotBadgeColors[timeSlot] : null;
 
   const isAlreadyAdded = useMemo(() => {
     return todos?.some((todo) => todo.title === action.micro_action);
@@ -239,7 +272,6 @@ function MiniTarotCard({
   const handleFlip = async () => {
     if (!canFlip || flipped) return;
     setFlipped(true);
-
     if (!action.viewed) {
       await base44.entities.GoalAction.update(action.id, { viewed: true });
       onViewed?.();
@@ -323,13 +355,25 @@ function MiniTarotCard({
               height: "100%",
             }}
           >
+            {/* 권장 시간대 뱃지 — 카드 상단 우측 */}
+            {timeSlot && timeBadgeStyle && (
+              <div className="flex justify-end mb-1 flex-shrink-0">
+                <span
+                  className={`inline-flex items-center gap-0.5 text-[9px] font-black px-1.5 py-0.5 rounded-md leading-none ${timeBadgeStyle}`}
+                >
+                  <Clock className="w-2 h-2" strokeWidth={2.5} />
+                  {timeSlot}
+                </span>
+              </div>
+            )}
+
             <div className="flex items-start gap-1.5 flex-1 min-h-0 overflow-hidden">
               <div
                 className={`w-5 h-5 rounded-md bg-white/70 dark:bg-white/10 flex items-center justify-center flex-shrink-0 mt-0.5 ${iconColor}`}
               >
                 <Icon className="w-3 h-3" strokeWidth={1.5} />
               </div>
-              <p className="text-[11px] font-black text-gray-800 dark:text-gray-100 leading-snug flex-1 line-clamp-4 overflow-hidden break-keep">
+              <p className="text-[11px] font-black text-gray-800 dark:text-gray-100 leading-snug flex-1 line-clamp-3 overflow-hidden break-keep">
                 {action.micro_action}
               </p>
             </div>
@@ -393,11 +437,7 @@ function InfiniteCardCarousel({
     loadSwipeCount();
   }, [storageKey]);
 
-  const items = actions.map((action) => ({
-    type: "card",
-    action,
-  }));
-
+  const items = actions.map((action) => ({ type: "card", action }));
   const total = items.length;
   const containerRef = useRef(null);
   const touchStartX = useRef(null);

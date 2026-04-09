@@ -27,6 +27,7 @@ class DailyAlarmPlugin : Plugin() {
         }
         call.resolve(JSObject().apply { put("granted", true) })
     }
+
     @PluginMethod
     fun scheduleAlarm(call: PluginCall) {
         val context = context
@@ -42,17 +43,15 @@ class DailyAlarmPlugin : Plugin() {
             .apply()
 
         // ── 중복 방지 가드 ──────────────────────────────────────
-        // 오늘 날짜 기준으로 이미 7일치 예약했는지 확인
         val today = getKSTDateString()
         val lastScheduledDate = prefs.getString("alarm_last_scheduled_date", null)
 
         if (lastScheduledDate == today) {
-            // 오늘 이미 예약했으면 스킵
             call.resolve(JSObject().apply { put("skipped", true) })
             return
         }
 
-        // 7일치 예약 실행
+        // 30일치 예약 실행
         scheduleWeeklyAlarms(context)
 
         // 예약한 날짜 기록
@@ -64,60 +63,69 @@ class DailyAlarmPlugin : Plugin() {
     }
 
     companion object {
-        // AlarmManager request code 기준: 1001 ~ 1030 (30일치)
-        private const val BASE_REQUEST_CODE = 1001
+        // ── Request code 설계 ───────────────────────────────────
+        // 오전  8시 알람: 1001 ~ 1030  (일일 리딩 — 기존 유지)
+        // 오전 11시 알람: 2001 ~ 2030  (오전 할일 리마인더)
+        // 오후  3시 알람: 3001 ~ 3030  (오후 할일 리마인더)
+        // 오후  7시 알람: 4001 ~ 4030  (저녁 할일 리마인더)
+        private const val BASE_RC_08 = 1001
+        private const val BASE_RC_11 = 2001
+        private const val BASE_RC_15 = 3001
+        private const val BASE_RC_19 = 4001
         private const val ALARM_DAYS = 30
+
+        // 알람 타입 상수 — AlarmReceiver에서 Intent extra로 전달
+        const val ALARM_TYPE_MORNING_READING = "morning_reading"  // 08시: Gemini 일일 리딩
+        const val ALARM_TYPE_MORNING_TODO = "morning_todo"        // 11시: 오전 할일 리마인더
+        const val ALARM_TYPE_AFTERNOON_TODO = "afternoon_todo"    // 15시: 오후 할일 리마인더
+        const val ALARM_TYPE_EVENING_TODO = "evening_todo"        // 19시: 저녁 할일 리마인더
 
         fun scheduleWeeklyAlarms(context: Context) {
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
             for (dayOffset in 1..ALARM_DAYS) {
-                val calendar = Calendar.getInstance(TimeZone.getTimeZone("Asia/Seoul")).apply {
-                    add(Calendar.DAY_OF_YEAR, dayOffset)
-                    set(Calendar.HOUR_OF_DAY, 8)
-                    set(Calendar.MINUTE, 0)
-                    set(Calendar.SECOND, 0)
-                    set(Calendar.MILLISECOND, 0)
-                }
-
-                val intent = Intent(context, AlarmReceiver::class.java).apply {
-                    // 각 날짜 식별용 extra (AlarmReceiver에서 로깅 등에 활용 가능)
-                    putExtra("day_offset", dayOffset)
-                }
-
-                // dayOffset마다 다른 requestCode → PendingIntent가 겹치지 않음
-                val requestCode = BASE_REQUEST_CODE + dayOffset - 1
-                val pendingIntent = PendingIntent.getBroadcast(
-                    context,
-                    requestCode,
-                    intent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                // 08시 — 일일 리딩 알림 (기존과 동일)
+                scheduleOneAlarm(
+                    context, alarmManager,
+                    dayOffset, hour = 8,
+                    requestCode = BASE_RC_08 + dayOffset - 1,
+                    alarmType = ALARM_TYPE_MORNING_READING
                 )
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    alarmManager.setExactAndAllowWhileIdle(
-                        AlarmManager.RTC_WAKEUP,
-                        calendar.timeInMillis,
-                        pendingIntent
-                    )
-                } else {
-                    alarmManager.setExact(
-                        AlarmManager.RTC_WAKEUP,
-                        calendar.timeInMillis,
-                        pendingIntent
-                    )
-                }
+                // 11시 — 오전 행운카드 할일 리마인더
+                scheduleOneAlarm(
+                    context, alarmManager,
+                    dayOffset, hour = 11,
+                    requestCode = BASE_RC_11 + dayOffset - 1,
+                    alarmType = ALARM_TYPE_MORNING_TODO
+                )
+                // 15시 — 오후 행운카드 할일 리마인더
+                scheduleOneAlarm(
+                    context, alarmManager,
+                    dayOffset, hour = 15,
+                    requestCode = BASE_RC_15 + dayOffset - 1,
+                    alarmType = ALARM_TYPE_AFTERNOON_TODO
+                )
+                // 19시 — 저녁 행운카드 할일 리마인더
+                scheduleOneAlarm(
+                    context, alarmManager,
+                    dayOffset, hour = 19,
+                    requestCode = BASE_RC_19 + dayOffset - 1,
+                    alarmType = ALARM_TYPE_EVENING_TODO
+                )
             }
         }
 
-        // AlarmReceiver에서 실행 후 다음 주 같은 요일 재예약할 때 사용
-        fun rescheduleOneDayAfterWeek(context: Context, dayOffset: Int) {
-            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-
-            // 30일 뒤 같은 시간으로 밀어서 재예약
+        private fun scheduleOneAlarm(
+            context: Context,
+            alarmManager: AlarmManager,
+            dayOffset: Int,
+            hour: Int,
+            requestCode: Int,
+            alarmType: String
+        ) {
             val calendar = Calendar.getInstance(TimeZone.getTimeZone("Asia/Seoul")).apply {
-                add(Calendar.DAY_OF_YEAR, 30)
-                set(Calendar.HOUR_OF_DAY, 8)
+                add(Calendar.DAY_OF_YEAR, dayOffset)
+                set(Calendar.HOUR_OF_DAY, hour)
                 set(Calendar.MINUTE, 0)
                 set(Calendar.SECOND, 0)
                 set(Calendar.MILLISECOND, 0)
@@ -125,9 +133,57 @@ class DailyAlarmPlugin : Plugin() {
 
             val intent = Intent(context, AlarmReceiver::class.java).apply {
                 putExtra("day_offset", dayOffset)
+                putExtra("alarm_type", alarmType)
+                putExtra("request_code", requestCode)
             }
 
-            val requestCode = BASE_REQUEST_CODE + dayOffset - 1
+            val pendingIntent = PendingIntent.getBroadcast(
+                context,
+                requestCode,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                alarmManager.setExactAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    calendar.timeInMillis,
+                    pendingIntent
+                )
+            } else {
+                alarmManager.setExact(
+                    AlarmManager.RTC_WAKEUP,
+                    calendar.timeInMillis,
+                    pendingIntent
+                )
+            }
+        }
+
+        // AlarmReceiver에서 발화 후 30일 뒤 같은 슬롯으로 재예약
+        fun rescheduleOneAlarm(context: Context, requestCode: Int, alarmType: String) {
+            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+
+            // requestCode에서 hour 역산
+            val hour = when {
+                requestCode >= BASE_RC_19 -> 19
+                requestCode >= BASE_RC_15 -> 15
+                requestCode >= BASE_RC_11 -> 11
+                else -> 8  // BASE_RC_08
+            }
+
+            val calendar = Calendar.getInstance(TimeZone.getTimeZone("Asia/Seoul")).apply {
+                add(Calendar.DAY_OF_YEAR, 30)
+                set(Calendar.HOUR_OF_DAY, hour)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }
+
+            val intent = Intent(context, AlarmReceiver::class.java).apply {
+                putExtra("alarm_type", alarmType)
+                putExtra("request_code", requestCode)
+            }
+
             val pendingIntent = PendingIntent.getBroadcast(
                 context,
                 requestCode,
