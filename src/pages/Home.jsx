@@ -14,6 +14,7 @@ import {
   MessageCircle,
   Clover,
   Check,
+  Clock,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -372,9 +373,25 @@ function GoalTodoPanel({ goalId, today, profile, todos = [], queryClient }) {
                           strokeWidth={1.5}
                         />
                       </div>
-                      <p className="text-white/80 text-xs font-semibold uppercase tracking-widest">
-                        {selectedCard.card_keyword}
-                      </p>
+                      <div>
+                        <p className="text-white/80 text-xs font-semibold uppercase tracking-widest">
+                          {selectedCard.card_keyword}
+                        </p>
+                        {(() => {
+                          const ts = hhToTimeSlotLabel(
+                            selectedCard.recommended_time,
+                          );
+                          const bs = ts ? timeSlotBadgeColors[ts] : null;
+                          return ts && bs ? (
+                            <span
+                              className={`inline-flex items-center gap-0.5 mt-1 text-[10px] font-bold px-1.5 py-0.5 rounded-md leading-none ${bs}`}
+                            >
+                              <Clock className="w-2.5 h-2.5" strokeWidth={2} />
+                              {ts} 추천
+                            </span>
+                          ) : null;
+                        })()}
+                      </div>
                     </div>
                     <button
                       onClick={() => setSelectedCard(null)}
@@ -425,6 +442,13 @@ export function hhToTimeSlotLabel(hh) {
   if (h >= 18 && h < 22) return "저녁";
   return "밤";
 }
+
+const timeSlotBadgeColors = {
+  오전: "bg-sky-100 text-sky-600 dark:bg-sky-900/40 dark:text-sky-400",
+  오후: "bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-400",
+  저녁: "bg-orange-100 text-orange-600 dark:bg-orange-900/40 dark:text-orange-400",
+  밤: "bg-indigo-100 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400",
+};
 
 // ─── 현재 시각 기준으로 오늘 밤 10시(22)까지 가능한 HH 범위 문자열 목록 ──
 // AI에게는 "09~11", "12~17", "18~20", "21~22" 같은 구체적 시간 범위 문자열이 아닌

@@ -113,8 +113,9 @@ function hhToTimeSlotLabel(raw) {
   if (isNaN(h)) return null;
   if (h >= 6 && h < 12) return "오전";
   if (h >= 12 && h < 18) return "오후";
-  if (h >= 18 && h < 22) return "저녁";
-  return "밤";
+  if (h >= 18 && h < 21) return "저녁";
+  if (h >= 21 && h < 22) return "밤";
+  return null; // 범위 밖이면 뱃지 미표시
 }
 
 // ─── 시간대 라벨별 뱃지 색상 ──────────────────────────────────
@@ -174,9 +175,8 @@ function TarotDetailModal({ action, onClose, onAdd, added }) {
               <p className="text-white/90 text-xs font-semibold uppercase tracking-widest">
                 {action.keyword}
               </p>
-              {/* 권장 시간대 뱃지 (헤더 내) */}
-              {timeSlot && (
-                <span className="inline-flex items-center gap-0.5 mt-1 text-[10px] font-bold text-white/70">
+              {timeSlot && timeBadgeStyle && (
+                <span className={`inline-flex items-center gap-0.5 mt-1 text-[10px] font-bold px-1.5 py-0.5 rounded-md leading-none ${timeBadgeStyle}`}>
                   <Clock className="w-2.5 h-2.5" strokeWidth={2} />
                   {timeSlot} 추천
                 </span>
@@ -216,11 +216,7 @@ function TarotDetailModal({ action, onClose, onAdd, added }) {
               added ? buttonAddedColor : buttonColor
             }`}
           >
-            {added ? (
-              <Check className="w-4 h-4" />
-            ) : (
-              <Plus className="w-4 h-4" />
-            )}
+            {added ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
             {added ? "할일에 추가됨" : "할일 목록에 추가"}
           </button>
         </div>
@@ -252,10 +248,6 @@ function MiniTarotCard({
     cardFrontColors[action.stat_focus] ||
     "from-gray-50 to-gray-50 border-gray-200";
   const iconColor = iconColors[action.stat_focus] || "text-gray-500";
-
-  // 권장 시간대 정규화
-  const timeSlot = hhToTimeSlotLabel(action.recommended_time);
-  const timeBadgeStyle = timeSlot ? timeSlotBadgeColors[timeSlot] : null;
 
   const isAlreadyAdded = useMemo(() => {
     return todos?.some((todo) => todo.title === action.micro_action);
@@ -294,9 +286,7 @@ function MiniTarotCard({
       </AnimatePresence>
 
       <div
-        className={`relative cursor-pointer transition-opacity ${
-          added ? "opacity-40" : ""
-        }`}
+        className={`relative cursor-pointer transition-opacity ${added ? "opacity-40" : ""}`}
         style={{ perspective: "800px", height: "150px" }}
         onClick={handleFlip}
       >
@@ -323,18 +313,14 @@ function MiniTarotCard({
             >
               {canFlip ? (
                 <>
-                  <div className="text-white/40 text-2xl font-serif select-none">
-                    ✦
-                  </div>
+                  <div className="text-white/40 text-2xl font-serif select-none">✦</div>
                   <p className="text-white/70 text-[10px] font-semibold tracking-widest uppercase">
                     열기
                   </p>
                 </>
               ) : (
                 <>
-                  <div className="text-white/30 text-2xl font-serif select-none">
-                    ✦
-                  </div>
+                  <div className="text-white/30 text-2xl font-serif select-none">✦</div>
                   <p className="text-white/40 text-[10px] font-semibold tracking-widest uppercase">
                     준비중
                   </p>
@@ -355,18 +341,6 @@ function MiniTarotCard({
               height: "100%",
             }}
           >
-            {/* 권장 시간대 뱃지 — 카드 상단 우측 */}
-            {timeSlot && timeBadgeStyle && (
-              <div className="flex justify-end mb-1 flex-shrink-0">
-                <span
-                  className={`inline-flex items-center gap-0.5 text-[9px] font-black px-1.5 py-0.5 rounded-md leading-none ${timeBadgeStyle}`}
-                >
-                  <Clock className="w-2 h-2" strokeWidth={2.5} />
-                  {timeSlot}
-                </span>
-              </div>
-            )}
-
             <div className="flex items-start gap-1.5 flex-1 min-h-0 overflow-hidden">
               <div
                 className={`w-5 h-5 rounded-md bg-white/70 dark:bg-white/10 flex items-center justify-center flex-shrink-0 mt-0.5 ${iconColor}`}
@@ -455,9 +429,7 @@ function InfiniteCardCarousel({
     setDirection(-1);
     setCurrentIndex((prev) => (prev - 1 + total) % total);
     checkAndShowAd();
-    setTimeout(() => {
-      isAnimating.current = false;
-    }, 350);
+    setTimeout(() => { isAnimating.current = false; }, 350);
   };
 
   const goRight = () => {
@@ -466,9 +438,7 @@ function InfiniteCardCarousel({
     setDirection(1);
     setCurrentIndex((prev) => (prev + 1) % total);
     checkAndShowAd();
-    setTimeout(() => {
-      isAnimating.current = false;
-    }, 350);
+    setTimeout(() => { isAnimating.current = false; }, 350);
   };
 
   const handleAreaClick = (e) => {
@@ -613,15 +583,9 @@ export default function TarotSection({
           className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
         >
           {collapsed ? (
-            <ChevronDown
-              className="w-4 h-4 text-gray-400 dark:text-gray-500"
-              strokeWidth={1.5}
-            />
+            <ChevronDown className="w-4 h-4 text-gray-400 dark:text-gray-500" strokeWidth={1.5} />
           ) : (
-            <ChevronUp
-              className="w-4 h-4 text-gray-400 dark:text-gray-500"
-              strokeWidth={1.5}
-            />
+            <ChevronUp className="w-4 h-4 text-gray-400 dark:text-gray-500" strokeWidth={1.5} />
           )}
         </button>
       </div>
