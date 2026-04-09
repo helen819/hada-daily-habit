@@ -744,7 +744,6 @@ export default function Home() {
     const res = await base44.integrations.Core.InvokeLLM({
       prompt: `너는 HADA 앱의 일일 리딩 엔진이다.
 사용자의 목표 리스트를 분석하여 오늘 하루의 방향성을 제시하라.
-
 오늘 날짜: ${today}, 시간대: ${timeSlot}
 
 [사용자의 현재 목표 리스트]
@@ -754,11 +753,23 @@ ${goalsContext}
 1. today_hint: 헤더 인사말. 사용자의 목표들 중 오늘 가장 집중하면 좋을 키워드를 녹여낼 것. 16자 이내. 줄바꿈 금지.
 2. welcome_subtitle: 전체 목표의 맥락과 연결된 동기부여 문구. 20자 이내. 줄바꿈 금지.
 3. base_stats: 위 목표들을 달성하기 위한 오늘 사용자의 기운/능력치 (0~100 정수).
-4. mode_card.suggested_mode: 아래 기준으로 action 또는 restore 중 하나만 선택.
-   - action: 목표가 성과·실행·생산성·공부·업무·재물·자기계발 위주일 때
-   - restore: 목표에 치료·회복·완치·건강·휴식·정신건강·관계 회복 등 몸과 마음을 돌보는 내용이 포함될 때
-   - 둘 다 섞여 있으면 더 비중이 높은 쪽을 선택. restore는 진짜 필요할 때만.
-5. mode_card.card_body: 사용자의 목표 리스트 중 하나를 언급하며 구체적인 조언을 제공할 것 (60자 이내).${traitsPrompt}`,
+4. mode_card.suggested_mode: 아래 판단 기준에 따라 action 또는 restore 중 하나만 선택.
+
+   [1순위 — 오늘의 에너지 (시스템 데이터 기반)]
+   - 일진이 강하거나(일간 왕지·건록), 달이 차오르거나(상현~보름), 화성·목성 기운이 활성화된 날 → action 유리
+   - 일간이 약하거나(병지·절지), 달이 기울거나(하현~그믐), 수성 역행·보이드 오브 코스 구간 → restore 유리
+   - 이름 수리나 오행에서 오늘 소진·내향 에너지가 감지될 때 → restore 유리
+
+   [2순위 — 목표의 성격 (보조 참고)]
+   - 성과·실행·공부·업무 위주 목표만 있으면 action 쪽에 가산
+   - 치료·회복·완치·건강·정신건강 목표가 있으면 restore 쪽에 가산
+
+   [최종 결정]
+   - 1순위 에너지 신호가 명확하면 그것을 따름
+   - 에너지 신호가 중립이면 목표 성격으로 결정
+   - restore는 에너지 소진이나 회복 필요 신호가 있을 때만 선택. 불분명하면 action.
+
+5. mode_card.card_body: 오늘의 에너지 흐름을 언급하며 목표 중 하나와 연결한 구체적 조언 (60자 이내).${traitsPrompt}`,
       response_json_schema: {
         type: "object",
         properties: {
