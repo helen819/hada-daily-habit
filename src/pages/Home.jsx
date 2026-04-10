@@ -474,6 +474,10 @@ function GoalDetailPanel({
   const hasTriggered = useRef(false);
 
   useEffect(() => {
+    hasTriggered.current = false;
+  }, [profile?.current_mode]);
+
+  useEffect(() => {
     if (hasTriggered.current) return;
 
     const recentTodos = [...(todos || [])].sort(
@@ -746,12 +750,26 @@ export default function Home() {
 사용자의 목표 리스트를 분석하여 오늘 하루의 방향성을 제시하라.
 오늘 날짜: ${today}, 시간대: ${timeSlot}
 
+[현재 모드: ${
+        currentMode === "action" ? "활동 모드 (ACTION)" : "회복 모드 (RESTORE)"
+      }]
+모드 설명: ${
+        currentMode === "action"
+          ? "에너지가 충만하여 적극적으로 실행하고 성과를 내는 날. 도전적이고 활기찬 톤으로 작성."
+          : "에너지를 아끼고 회복하며 내면을 돌보는 날. 부드럽고 위로하는 톤으로 작성."
+      }
+
 [사용자의 현재 목표 리스트]
 ${goalsContext}
 
 [작성 규칙 — 글자 수는 방향 지시, 초과 시 코드 truncate]
-1. today_hint: 헤더 인사말. 사용자의 목표들 중 오늘 가장 집중하면 좋을 키워드를 녹여낼 것. 16자 이내. 줄바꿈 금지.
+1. today_hint: 헤더 인사말. 현재 모드(${
+        currentMode === "action" ? "활동" : "회복"
+      })의 톤으로,
+   사용자의 목표들 중 오늘 가장 집중하면 좋을 키워드를 녹여낼 것. 16자 이내. 줄바꿈 금지.
 2. welcome_subtitle: 전체 목표의 맥락과 연결된 동기부여 문구. 20자 이내. 줄바꿈 금지.
+   - action 모드: 성취·실행 강조
+   - restore 모드: 회복·자기돌봄 강조
 3. base_stats: 위 목표들을 달성하기 위한 오늘 사용자의 기운/능력치 (0~100 정수).
 4. mode_card.suggested_mode: 아래 판단 기준에 따라 action 또는 restore 중 하나만 선택.
 
@@ -935,7 +953,10 @@ ${goalsContext}
       hasGeneratedActions.current = false;
       setIsInitializing(true);
       await generateDailyReading(newMode);
+      queryClient.invalidateQueries({ queryKey: ["dailyReading", today] }); // ← 추가
+      queryClient.invalidateQueries({ queryKey: ["allGoalActions"] }); // ← 추가
       queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+      await base44.storage.set("homeInitDate", "");
       isModeChanging.current = false;
       setIsInitializing(false);
     };
@@ -954,8 +975,12 @@ ${goalsContext}
     await base44.entities.UserProfile.update(profile.id, {
       current_mode: mode,
     });
+    window.dispatchEvent(new CustomEvent("modeChanged", { detail: mode }));
     await generateDailyReading(mode);
+    queryClient.invalidateQueries({ queryKey: ["dailyReading", today] });
+    queryClient.invalidateQueries({ queryKey: ["allGoalActions"] });
     queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+    await base44.storage.set("homeInitDate", "");
     isModeChanging.current = false;
     setIsInitializing(false);
   };

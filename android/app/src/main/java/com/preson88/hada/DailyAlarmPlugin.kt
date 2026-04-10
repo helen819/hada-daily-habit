@@ -33,7 +33,6 @@ class DailyAlarmPlugin : Plugin() {
         val context = context
         val prefs = context.getSharedPreferences("CAPPrefs", Context.MODE_PRIVATE)
 
-        // API 키 저장
         val apiKey = call.getString("apiKey") ?: run {
             call.reject("apiKey 없음")
             return
@@ -42,7 +41,6 @@ class DailyAlarmPlugin : Plugin() {
             .putString("CAP_local-app_setting_gemini_api_key", "\"$apiKey\"")
             .apply()
 
-        // ── 중복 방지 가드 ──────────────────────────────────────
         val today = getKSTDateString()
         val lastScheduledDate = prefs.getString("alarm_last_scheduled_date", null)
 
@@ -51,10 +49,8 @@ class DailyAlarmPlugin : Plugin() {
             return
         }
 
-        // 30일치 예약 실행
         scheduleWeeklyAlarms(context)
 
-        // 예약한 날짜 기록
         prefs.edit()
             .putString("alarm_last_scheduled_date", today)
             .apply()
@@ -63,55 +59,50 @@ class DailyAlarmPlugin : Plugin() {
     }
 
     companion object {
-        // ── Request code 설계 ───────────────────────────────────
-        // 오전  8시 알람: 1001 ~ 1030  (일일 리딩 — 기존 유지)
-        // 오전 11시 알람: 2001 ~ 2030  (오전 할일 리마인더)
-        // 오후  3시 알람: 3001 ~ 3030  (오후 할일 리마인더)
-        // 오후  7시 알람: 4001 ~ 4030  (저녁 할일 리마인더)
-        private const val BASE_RC_08 = 1001
-        private const val BASE_RC_11 = 2001
-        private const val BASE_RC_15 = 3001
-        private const val BASE_RC_19 = 4001
+        // dayOffset 0~30 (31일치) 이므로 base + 30까지 사용
+        // 각 타입 간 간격을 100으로 여유있게 설정
+        private const val BASE_RC_08 = 1000   // 1000~1030
+        private const val BASE_RC_11 = 2000   // 2000~2030
+        private const val BASE_RC_15 = 3000   // 3000~3030
+        private const val BASE_RC_19 = 4000   // 4000~4030
         private const val ALARM_DAYS = 30
 
-        // 알람 타입 상수 — AlarmReceiver에서 Intent extra로 전달
-        const val ALARM_TYPE_MORNING_READING = "morning_reading"  // 08시: Gemini 일일 리딩
-        const val ALARM_TYPE_MORNING_TODO = "morning_todo"        // 11시: 오전 할일 리마인더
-        const val ALARM_TYPE_AFTERNOON_TODO = "afternoon_todo"    // 15시: 오후 할일 리마인더
-        const val ALARM_TYPE_EVENING_TODO = "evening_todo"        // 19시: 저녁 할일 리마인더
+        const val ALARM_TYPE_MORNING_READING = "morning_reading"
+        const val ALARM_TYPE_MORNING_TODO    = "morning_todo"
+        const val ALARM_TYPE_AFTERNOON_TODO  = "afternoon_todo"
+        const val ALARM_TYPE_EVENING_TODO    = "evening_todo"
 
         fun scheduleWeeklyAlarms(context: Context) {
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
-            for (dayOffset in 1..ALARM_DAYS) {
-                // 08시 — 일일 리딩 알림 (기존과 동일)
-                scheduleOneAlarm(
-                    context, alarmManager,
-                    dayOffset, hour = 8,
-                    requestCode = BASE_RC_08 + dayOffset - 1,
-                    alarmType = ALARM_TYPE_MORNING_READING
-                )
-                // 11시 — 오전 행운카드 할일 리마인더
-                scheduleOneAlarm(
-                    context, alarmManager,
-                    dayOffset, hour = 11,
-                    requestCode = BASE_RC_11 + dayOffset - 1,
-                    alarmType = ALARM_TYPE_MORNING_TODO
-                )
-                // 15시 — 오후 행운카드 할일 리마인더
-                scheduleOneAlarm(
-                    context, alarmManager,
-                    dayOffset, hour = 15,
-                    requestCode = BASE_RC_15 + dayOffset - 1,
-                    alarmType = ALARM_TYPE_AFTERNOON_TODO
-                )
-                // 19시 — 저녁 행운카드 할일 리마인더
-                scheduleOneAlarm(
-                    context, alarmManager,
-                    dayOffset, hour = 19,
-                    requestCode = BASE_RC_19 + dayOffset - 1,
-                    alarmType = ALARM_TYPE_EVENING_TODO
-                )
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                if (!alarmManager.canScheduleExactAlarms()) return
+            }
+
+            val nowHour = Calendar.getInstance(TimeZone.getTimeZone("Asia/Seoul"))
+                .get(Calendar.HOUR_OF_DAY)
+
+            val slots = listOf(
+                Triple(8,  BASE_RC_08, ALARM_TYPE_MORNING_READING),
+                Triple(11, BASE_RC_11, ALARM_TYPE_MORNING_TODO),
+                Triple(15, BASE_RC_15, ALARM_TYPE_AFTERNOON_TODO),
+                Triple(19, BASE_RC_19, ALARM_TYPE_EVENING_TODO),
+            )
+
+            for (dayOffset in 0..ALARM_DAYS) {
+                for ((hour, baseRc, alarmType) in slots) {
+                    // 오늘(dayOffset == 0)이고 이미 지난 시간이면 스킵
+                    if (dayOffset == 0 && nowHour >= hour) continue
+
+                    scheduleOneAlarm(
+                        context      = context,
+                        alarmManager = alarmManager,
+                        dayOffset    = dayOffset,
+                        hour         = hour,
+                        requestCode  = baseRc + dayOffset,
+                        alarmType    = alarmType
+                    )
+                }
             }
         }
 
@@ -159,16 +150,14 @@ class DailyAlarmPlugin : Plugin() {
             }
         }
 
-        // AlarmReceiver에서 발화 후 30일 뒤 같은 슬롯으로 재예약
         fun rescheduleOneAlarm(context: Context, requestCode: Int, alarmType: String) {
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
-            // requestCode에서 hour 역산
             val hour = when {
                 requestCode >= BASE_RC_19 -> 19
                 requestCode >= BASE_RC_15 -> 15
                 requestCode >= BASE_RC_11 -> 11
-                else -> 8  // BASE_RC_08
+                else -> 8
             }
 
             val calendar = Calendar.getInstance(TimeZone.getTimeZone("Asia/Seoul")).apply {
