@@ -513,7 +513,7 @@ function AnalysisModal({ goal, analysis, weeklyUsed, maxWeekly, onClose }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex flex-col justify-end bg-black/50 backdrop-blur-sm"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <motion.div
@@ -521,141 +521,146 @@ function AnalysisModal({ goal, analysis, weeklyUsed, maxWeekly, onClose }) {
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 100, opacity: 0 }}
         transition={{ type: "spring", damping: 28, stiffness: 300 }}
-        className="w-full max-w-lg bg-white dark:bg-[#1A1830] rounded-t-[32px] px-6 pt-5 pb-12 shadow-2xl max-h-[85vh] overflow-y-auto"
+        className="w-full bg-white dark:bg-[#1A1830] rounded-t-[32px] shadow-2xl flex flex-col"
+        style={{ maxHeight: "85vh" }}
       >
-        <div className="w-10 h-1 rounded-full bg-gray-200 dark:bg-gray-700 mx-auto mb-6" />
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-violet-100 dark:bg-violet-900/40 flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-violet-500 dark:text-violet-400" />
+        {/* 고정 헤더 */}
+        <div className="flex-shrink-0 px-6 pt-5 pb-2">
+          <div className="w-10 h-1 rounded-full bg-gray-200 dark:bg-gray-700 mx-auto mb-6" />
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-violet-100 dark:bg-violet-900/40 flex items-center justify-center">
+                <Sparkles className="w-4 h-4 text-violet-500 dark:text-violet-400" />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold text-violet-500 dark:text-violet-400 uppercase tracking-widest">
+                  HADA 분석
+                </p>
+                <p className="text-sm font-black text-gray-900 dark:text-white leading-tight break-keep">
+                  {goal.title}
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="text-[10px] font-bold text-violet-500 dark:text-violet-400 uppercase tracking-widest">
-                HADA 분석
-              </p>
-              <p className="text-sm font-black text-gray-900 dark:text-white leading-tight break-keep">
-                {goal.title}
-              </p>
-            </div>
+            <button
+              onClick={onClose}
+              className="p-2 rounded-xl bg-gray-100 dark:bg-[#2A2845] text-gray-500 dark:text-violet-200"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-xl bg-gray-100 dark:bg-[#2A2845] text-gray-500 dark:text-violet-200"
-          >
-            <X className="w-4 h-4" />
-          </button>
         </div>
 
-        {/* 잠금 상태 */}
-
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="space-y-5"
-        >
-          <div className="bg-gray-50 dark:bg-[#2A2845] rounded-3xl p-5 flex items-center gap-5">
-            <div className="relative w-20 h-20 flex-shrink-0">
-              <svg className="w-20 h-20 -rotate-90" viewBox="0 0 80 80">
-                <circle
-                  cx="40"
-                  cy="40"
-                  r="34"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="8"
-                  className="text-gray-200 dark:text-gray-700"
-                />
-                <motion.circle
-                  cx="40"
-                  cy="40"
-                  r="34"
-                  fill="none"
-                  strokeWidth="8"
-                  strokeLinecap="round"
-                  stroke="url(#scoreGrad)"
-                  strokeDasharray={`${2 * Math.PI * 34}`}
-                  initial={{ strokeDashoffset: 2 * Math.PI * 34 }}
-                  animate={{
-                    strokeDashoffset:
-                      2 * Math.PI * 34 * (1 - (analysis?.score ?? 0) / 100),
-                  }}
-                  transition={{ duration: 1.2, ease: "easeOut" }}
-                />
-                <defs>
-                  <linearGradient id="scoreGrad" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor="#a78bfa" />
-                    <stop offset="100%" stopColor="#818cf8" />
-                  </linearGradient>
-                </defs>
-              </svg>
-              <span
-                className={`absolute inset-0 flex items-center justify-center text-xl font-black ${scoreColor}`}
-              >
-                {analysis?.score ?? 0}
-              </span>
-            </div>
-            <div>
-              <p className="text-[10px] font-bold text-gray-400 dark:text-violet-300/70 uppercase tracking-widest mb-1">
-                달성도
-              </p>
-              <p className="text-sm font-semibold text-gray-700 dark:text-gray-200 leading-relaxed break-keep">
-                {analysis?.summary}
-              </p>
-            </div>
-          </div>
-
-          {analysis?.strengths?.length > 0 && (
-            <div>
-              <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-2.5 break-keep">
-                ✅ 잘하고 있어요
-              </p>
-              <div className="space-y-2">
-                {analysis.strengths.map((s, i) => (
-                  <div
-                    key={i}
-                    className="flex items-start gap-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-2xl px-4 py-3"
-                  >
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
-                    <p className="text-sm text-emerald-800 dark:text-emerald-300 font-medium break-keep">
-                      {s}
-                    </p>
-                  </div>
-                ))}
+        {/* 스크롤 영역 */}
+        <div className="flex-1 overflow-y-auto px-6 pb-12 overscroll-contain">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-5"
+          >
+            <div className="bg-gray-50 dark:bg-[#2A2845] rounded-3xl p-5 flex items-center gap-5">
+              <div className="relative w-20 h-20 flex-shrink-0">
+                <svg className="w-20 h-20 -rotate-90" viewBox="0 0 80 80">
+                  <circle
+                    cx="40"
+                    cy="40"
+                    r="34"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="8"
+                    className="text-gray-200 dark:text-gray-700"
+                  />
+                  <motion.circle
+                    cx="40"
+                    cy="40"
+                    r="34"
+                    fill="none"
+                    strokeWidth="8"
+                    strokeLinecap="round"
+                    stroke="url(#scoreGrad)"
+                    strokeDasharray={`${2 * Math.PI * 34}`}
+                    initial={{ strokeDashoffset: 2 * Math.PI * 34 }}
+                    animate={{
+                      strokeDashoffset:
+                        2 * Math.PI * 34 * (1 - (analysis?.score ?? 0) / 100),
+                    }}
+                    transition={{ duration: 1.2, ease: "easeOut" }}
+                  />
+                  <defs>
+                    <linearGradient id="scoreGrad" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stopColor="#a78bfa" />
+                      <stop offset="100%" stopColor="#818cf8" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+                <span
+                  className={`absolute inset-0 flex items-center justify-center text-xl font-black ${scoreColor}`}
+                >
+                  {analysis?.score ?? 0}
+                </span>
+              </div>
+              <div>
+                <p className="text-[10px] font-bold text-gray-400 dark:text-violet-300/70 uppercase tracking-widest mb-1">
+                  달성도
+                </p>
+                <p className="text-sm font-semibold text-gray-700 dark:text-gray-200 leading-relaxed break-keep">
+                  {analysis?.summary}
+                </p>
               </div>
             </div>
-          )}
 
-          {analysis?.suggestions?.length > 0 && (
-            <div>
-              <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-2.5 break-keep">
-                💡 이렇게 해보세요
-              </p>
-              <div className="space-y-2">
-                {analysis.suggestions.map((s, i) => (
-                  <div
-                    key={i}
-                    className="flex items-start gap-3 bg-amber-50 dark:bg-amber-950/40 rounded-2xl px-4 py-3"
-                  >
-                    <span className="text-amber-500 font-black text-xs mt-0.5 flex-shrink-0 break-keep">
-                      {i + 1}
-                    </span>
-                    <p className="text-sm text-amber-800 dark:text-amber-300 font-medium break-keep">
-                      {s}
-                    </p>
-                  </div>
-                ))}
+            {analysis?.strengths?.length > 0 && (
+              <div>
+                <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-2.5 break-keep">
+                  ✅ 잘하고 있어요
+                </p>
+                <div className="space-y-2">
+                  {analysis.strengths.map((s, i) => (
+                    <div
+                      key={i}
+                      className="flex items-start gap-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-2xl px-4 py-3"
+                    >
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
+                      <p className="text-sm text-emerald-800 dark:text-emerald-300 font-medium break-keep">
+                        {s}
+                      </p>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {analysis?.encouragement && (
-            <div className="bg-violet-50 dark:bg-violet-950/40 rounded-3xl px-5 py-4 text-center border border-violet-100 dark:border-violet-900/50">
-              <p className="text-sm font-black text-violet-700 dark:text-violet-300 break-keep">
-                ✨ {analysis.encouragement}
-              </p>
-            </div>
-          )}
-        </motion.div>
+            {analysis?.suggestions?.length > 0 && (
+              <div>
+                <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-2.5 break-keep">
+                  💡 이렇게 해보세요
+                </p>
+                <div className="space-y-2">
+                  {analysis.suggestions.map((s, i) => (
+                    <div
+                      key={i}
+                      className="flex items-start gap-3 bg-amber-50 dark:bg-amber-950/40 rounded-2xl px-4 py-3"
+                    >
+                      <span className="text-amber-500 font-black text-xs mt-0.5 flex-shrink-0">
+                        {i + 1}
+                      </span>
+                      <p className="text-sm text-amber-800 dark:text-amber-300 font-medium break-keep">
+                        {s}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {analysis?.encouragement && (
+              <div className="bg-violet-50 dark:bg-violet-950/40 rounded-3xl px-5 py-4 text-center border border-violet-100 dark:border-violet-900/50">
+                <p className="text-sm font-black text-violet-700 dark:text-violet-300 break-keep">
+                  ✨ {analysis.encouragement}
+                </p>
+              </div>
+            )}
+          </motion.div>
+        </div>
       </motion.div>
     </motion.div>
   );
@@ -669,9 +674,10 @@ function GoalDetail({
   weeklyAnalysisUsed,
   maxWeeklyAnalysis,
   onAnalysisUsed,
+  onAnalysisReady, // ← 추가
 }) {
-  const [showAnalysis, setShowAnalysis] = useState(false);
-  const [analysisResult, setAnalysisResult] = useState(null);
+  // const [showAnalysis, setShowAnalysis] = useState(false);
+  // const [analysisResult, setAnalysisResult] = useState(null);
   const [analysisLoading, setAnalysisLoading] = useState(false);
 
   const todos = useMemo(
@@ -758,8 +764,9 @@ function GoalDetail({
         },
       });
 
-      setAnalysisResult(res);
-      setShowAnalysis(true);
+      // setAnalysisResult(res);
+      // setShowAnalysis(true);
+      onAnalysisReady?.({ goal, analysis: res }); // ← 변경
       onAnalysisUsed?.(); // ✅ 성공했을 때만 차감 + 모달 열기
     } catch {
       // 실패 시 차감 없음, 모달도 안 열림
@@ -878,21 +885,6 @@ function GoalDetail({
           )}
         </button>
       </motion.div>
-
-      <AnimatePresence>
-        {showAnalysis && analysisResult && (
-          <AnalysisModal
-            goal={goal}
-            analysis={analysisResult}
-            weeklyUsed={weeklyAnalysisUsed}
-            maxWeekly={maxWeeklyAnalysis}
-            onClose={() => {
-              setShowAnalysis(false);
-              setAnalysisResult(null);
-            }}
-          />
-        )}
-      </AnimatePresence>
     </>
   );
 }
@@ -1073,6 +1065,7 @@ export default function Goals() {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [showCannotAdd, setShowCannotAdd] = useState(false);
   const [showCannotDelete, setShowCannotDelete] = useState(false);
+  const [analysisModal, setAnalysisModal] = useState(null);
 
   // 주간 분석 사용 횟수 관리
   const [weeklyAnalysisUsed, setWeeklyAnalysisUsed] = useState(0);
@@ -1300,9 +1293,7 @@ export default function Goals() {
               <Plus className="w-4 h-4" />
               추가
               <span className="text-[10px] opacity-60">
-                {maxGoalSlots === 999
-                  ? ""
-                  : `(${activeGoals.length}/${maxGoalSlots})`}
+                {activeGoals.length}/{maxGoalSlots}
               </span>
             </motion.button>
           </div>
@@ -1377,6 +1368,7 @@ export default function Goals() {
                               weeklyAnalysisUsed={weeklyAnalysisUsed}
                               maxWeeklyAnalysis={maxWeeklyAnalysis}
                               onAnalysisUsed={handleAnalysisUsed}
+                              onAnalysisReady={(data) => setAnalysisModal(data)}
                             />
                           </motion.div>
                         )}
@@ -1425,14 +1417,24 @@ export default function Goals() {
       </div>
 
       <AnimatePresence>
+        {analysisModal && (
+          <AnalysisModal
+            key="analysis-modal"
+            goal={analysisModal.goal}
+            analysis={analysisModal.analysis}
+            weeklyUsed={weeklyAnalysisUsed}
+            maxWeekly={maxWeeklyAnalysis}
+            onClose={() => setAnalysisModal(null)}
+          />
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
         {showCannotAdd && (
           <ConfirmModal
             key="cannot-add-alert"
             icon={<Lock className="w-6 h-6 text-violet-400" />}
             iconBg="bg-violet-50 dark:bg-violet-950/40"
-            title={`목표 슬롯이 꽉 찼어요 (${
-              maxGoalSlots === 999 ? "" : activeGoals.length / maxGoalSlots
-            })`}
+            title="목표 슬롯이 꽉 찼어요"
             description={
               nextSlotLevel
                 ? `레벨 ${nextSlotLevel}에 도달하면 목표 슬롯이 추가됩니다.\n현재 레벨: ${level}`

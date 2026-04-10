@@ -173,7 +173,7 @@ function CheeringLetterModal({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex flex-col justify-end bg-black/50 backdrop-blur-sm"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <motion.div
@@ -181,77 +181,83 @@ function CheeringLetterModal({
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 80, opacity: 0 }}
         transition={{ type: "spring", damping: 28, stiffness: 300 }}
-        className="w-full max-w-lg bg-white dark:bg-[#1A1830] rounded-t-[32px] px-6 pt-5 pb-12 shadow-2xl max-h-[85vh] overflow-y-auto"
+        className="w-full bg-white dark:bg-[#1A1830] rounded-t-[32px] shadow-2xl flex flex-col"
+        style={{ maxHeight: "85vh" }}
       >
-        <div className="w-10 h-1 rounded-full bg-gray-200 dark:bg-gray-700 mx-auto mb-6" />
-        <div className="flex items-start justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-fuchsia-100 dark:bg-fuchsia-950/50 flex items-center justify-center flex-shrink-0">
-              <Heart className="w-5 h-5 text-fuchsia-500 dark:text-fuchsia-400" />
+        {/* 고정 헤더 */}
+        <div className="flex-shrink-0 px-6 pt-5 pb-2">
+          <div className="w-10 h-1 rounded-full bg-gray-200 dark:bg-gray-700 mx-auto mb-6" />
+          <div className="flex items-start justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-fuchsia-100 dark:bg-fuchsia-950/50 flex items-center justify-center flex-shrink-0">
+                <Heart className="w-5 h-5 text-fuchsia-500 dark:text-fuchsia-400" />
+              </div>
+              <div>
+                <p className="text-[10px] font-black text-fuchsia-500 dark:text-fuchsia-400 uppercase tracking-widest">
+                  HADA 응원
+                </p>
+                <p className="text-sm font-black text-gray-900 dark:text-white leading-tight break-keep">
+                  {goalTitle}
+                </p>
+                <p className="text-[11px] text-gray-400 dark:text-violet-300/70 mt-0.5 break-keep">
+                  {concern} · {subConcern}
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="text-[10px] font-black text-fuchsia-500 dark:text-fuchsia-400 uppercase tracking-widest">
-                HADA 응원
-              </p>
-              <p className="text-sm font-black text-gray-900 dark:text-white leading-tight break-keep">
-                {goalTitle}
-              </p>
-              <p className="text-[11px] text-gray-400 dark:text-violet-300/70 mt-0.5 break-keep">
-                {concern} · {subConcern}
-              </p>
-            </div>
+            <button
+              onClick={onClose}
+              className="p-2 rounded-xl bg-gray-100 dark:bg-[#2A2845] text-gray-500 dark:text-violet-200 flex-shrink-0"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-xl bg-gray-100 dark:bg-[#2A2845] text-gray-500 dark:text-violet-200 flex-shrink-0"
-          >
-            <X className="w-4 h-4" />
-          </button>
         </div>
 
-        <div className="bg-fuchsia-50 dark:bg-fuchsia-950/30 rounded-3xl p-6 border border-fuchsia-100 dark:border-fuchsia-900/40">
-          {letter.greeting && (
-            <p className="text-sm font-black text-fuchsia-700 dark:text-fuchsia-300 mb-4 leading-snug">
-              {letter.greeting}
-            </p>
-          )}
-          {letter.empathy && (
-            <div className="mb-4">
-              <p className="text-[10px] font-black text-fuchsia-400 dark:text-fuchsia-500 uppercase tracking-widest mb-1.5">
-                잘하고 있어요
+        {/* 스크롤 영역 */}
+        <div className="flex-1 overflow-y-auto px-6 pb-12 overscroll-contain">
+          <div className="bg-fuchsia-50 dark:bg-fuchsia-950/30 rounded-3xl p-6 border border-fuchsia-100 dark:border-fuchsia-900/40">
+            {letter.greeting && (
+              <p className="text-sm font-black text-fuchsia-700 dark:text-fuchsia-300 mb-4 leading-snug">
+                {letter.greeting}
               </p>
-              <p className="text-sm text-gray-700 dark:text-gray-200 leading-relaxed break-keep">
-                {letter.empathy}
+            )}
+            {letter.empathy && (
+              <div className="mb-4">
+                <p className="text-[10px] font-black text-fuchsia-400 dark:text-fuchsia-500 uppercase tracking-widest mb-1.5">
+                  잘하고 있어요
+                </p>
+                <p className="text-sm text-gray-700 dark:text-gray-200 leading-relaxed break-keep">
+                  {letter.empathy}
+                </p>
+              </div>
+            )}
+            {letter.core_message && (
+              <div className="mb-4 bg-white/70 dark:bg-white/5 rounded-2xl px-4 py-3 border border-fuchsia-100 dark:border-fuchsia-800/30">
+                <p className="text-sm font-bold text-fuchsia-800 dark:text-fuchsia-200 leading-relaxed break-keep">
+                  {letter.core_message}
+                </p>
+              </div>
+            )}
+            {letter.advice && (
+              <div className="mb-4">
+                <p className="text-[10px] font-black text-violet-400 dark:text-violet-500 uppercase tracking-widest mb-1.5">
+                  이렇게 해보세요
+                </p>
+                <p className="text-sm text-gray-700 dark:text-gray-200 leading-relaxed break-keep">
+                  {letter.advice}
+                </p>
+              </div>
+            )}
+            {letter.closing && (
+              <p className="text-sm font-bold text-fuchsia-600 dark:text-fuchsia-300 text-center pt-2 leading-relaxed break-keep">
+                ✨ {letter.closing}
               </p>
-            </div>
-          )}
-          {letter.core_message && (
-            <div className="mb-4 bg-white/70 dark:bg-white/5 rounded-2xl px-4 py-3 border border-fuchsia-100 dark:border-fuchsia-800/30">
-              <p className="text-sm font-bold text-fuchsia-800 dark:text-fuchsia-200 leading-relaxed break-keep">
-                {letter.core_message}
-              </p>
-            </div>
-          )}
-          {letter.advice && (
-            <div className="mb-4">
-              <p className="text-[10px] font-black text-violet-400 dark:text-violet-500 uppercase tracking-widest mb-1.5">
-                이렇게 해보세요
-              </p>
-              <p className="text-sm text-gray-700 dark:text-gray-200 leading-relaxed break-keep">
-                {letter.advice}
-              </p>
-            </div>
-          )}
-          {letter.closing && (
-            <p className="text-sm font-bold text-fuchsia-600 dark:text-fuchsia-300 text-center pt-2 leading-relaxed break-keep">
-              ✨ {letter.closing}
-            </p>
-          )}
+            )}
+          </div>
+          <p className="text-[10px] text-gray-400 dark:text-gray-600 text-center mt-4">
+            이 응원은 일요일 자정에 초기화됩니다
+          </p>
         </div>
-
-        <p className="text-[10px] text-gray-400 dark:text-gray-600 text-center mt-4">
-          이 응원은 일요일 자정에 초기화됩니다
-        </p>
       </motion.div>
     </motion.div>
   );
