@@ -976,120 +976,101 @@ export default function Profile() {
                 className="space-y-5"
               >
                 {/* 오늘의 운세 배너 (항상 가능) */}
-                <motion.div
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.16 }}
-                  className="bg-white dark:bg-[#1A1830]/90 rounded-[32px] border border-gray-100 dark:border-purple-900/30 backdrop-blur-md p-5 dark:shadow-[0_4px_24px_rgba(139,92,246,0.12)] space-y-4"
-                >
-                  <div>
-                    <div className="flex items-center gap-2.5 mb-3">
-                      <div className="w-2 h-6 bg-amber-300 dark:bg-amber-500 rounded-full" />
-                      <h3 className="text-sm font-black text-gray-800 dark:text-gray-100">
-                        오늘의 운세
-                      </h3>
-                    </div>
+                <div>
+                  <div className="flex items-center gap-2.5 mb-3">
+                    <div className="w-2 h-6 bg-amber-300 dark:bg-amber-500 rounded-full" />
+                    <h3 className="text-sm font-black text-gray-800 dark:text-gray-100">
+                      오늘의 운세
+                    </h3>
+                  </div>
 
-                    <div className="rounded-2xl overflow-hidden border border-amber-100 dark:border-amber-900/40 bg-amber-50 dark:bg-amber-950/30">
-                      <div className="px-5 py-4 flex items-center gap-3">
-                        <Sun
-                          className="w-7 h-7 text-amber-500 dark:text-amber-400"
-                          strokeWidth={1.5}
-                        />
-                        <div className="flex-1">
-                          <p className="text-sm font-bold text-amber-800 dark:text-amber-200">
-                            오늘의 운세
-                          </p>
-                          <p className="text-xs text-amber-600/70 dark:text-amber-400/60">
-                            오늘 전체 흐름
+                  <div className="rounded-2xl overflow-hidden border border-amber-100 dark:border-amber-900/40 bg-amber-50 dark:bg-amber-950/30">
+                    <div className="px-5 py-4 flex items-center gap-3">
+                      <Sun
+                        className="w-7 h-7 text-amber-500 dark:text-amber-400"
+                        strokeWidth={1.5}
+                      />
+                      <div className="flex-1">
+                        <p className="text-sm font-bold text-amber-800 dark:text-amber-200">
+                          오늘의 운세
+                        </p>
+                        <p className="text-xs text-amber-600/70 dark:text-amber-400/60">
+                          오늘 전체 흐름
+                        </p>
+                      </div>
+                    </div>
+                    <div className="bg-white dark:bg-[#1A1830] border-t border-amber-100 dark:border-amber-900/30 px-5 py-4 space-y-3">
+                      {loadingDailyPreview ? (
+                        <div className="flex items-center gap-2">
+                          <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-400" />
+                          <p className="text-xs text-gray-400 dark:text-violet-300/70">
+                            운세 요약 중...
                           </p>
                         </div>
-                      </div>
-                      <div className="bg-white dark:bg-[#1A1830] border-t border-amber-100 dark:border-amber-900/30 px-5 py-4 space-y-3">
-                        {loadingDailyPreview ? (
-                          <div className="flex items-center gap-2">
-                            <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-400" />
-                            <p className="text-xs text-gray-400 dark:text-violet-300/70">
-                              운세 요약 중...
-                            </p>
-                          </div>
-                        ) : dailyPreview ? (
-                          <div className="space-y-1">
-                            <p className="text-sm text-gray-700 dark:text-gray-200 leading-relaxed break-keep">
-                              ☀️ {dailyPreview.line1}
-                            </p>
-                            <p className="text-sm text-gray-500 dark:text-violet-200 leading-relaxed break-keep">
-                              ✨ {dailyPreview.line2}
-                            </p>
-                          </div>
-                        ) : (
-                          <p className="text-xs text-gray-400 dark:text-violet-300/70 break-keep">
-                            오늘의 운세를 불러오는 중이에요...
+                      ) : dailyPreview ? (
+                        <div className="space-y-1">
+                          <p className="text-sm text-gray-700 dark:text-gray-200 leading-relaxed break-keep">
+                            ☀️ {dailyPreview.line1}
                           </p>
+                          <p className="text-sm text-gray-500 dark:text-violet-200 leading-relaxed break-keep">
+                            ✨ {dailyPreview.line2}
+                          </p>
+                        </div>
+                      ) : (
+                        <p className="text-xs text-gray-400 dark:text-violet-300/70 break-keep">
+                          오늘의 운세를 불러오는 중이에요...
+                        </p>
+                      )}
+                      <motion.button
+                        whileTap={{ scale: 0.97 }}
+                        onClick={() => handleCategoryClick(FORTUNE_DAILY)}
+                        disabled={
+                          loadingFortune && selectedCategory?.id === "daily"
+                        }
+                        className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-amber-100 hover:bg-amber-200 dark:bg-amber-900/40 dark:hover:bg-amber-900/60 text-amber-800 dark:text-amber-200 text-sm font-black transition-all border border-amber-200 dark:border-amber-800/50"
+                      >
+                        {loadingFortune && selectedCategory?.id === "daily" ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <span>분석 중...</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>자세히 보기</span>
+                            <ChevronRight className="w-4 h-4" strokeWidth={2} />
+                          </>
                         )}
-                        <motion.button
-                          whileTap={{ scale: 0.97 }}
-                          onClick={() => handleCategoryClick(FORTUNE_DAILY)}
-                          disabled={
-                            loadingFortune && selectedCategory?.id === "daily"
-                          }
-                          className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-amber-100 hover:bg-amber-200 dark:bg-amber-900/40 dark:hover:bg-amber-900/60 text-amber-800 dark:text-amber-200 text-sm font-black transition-all border border-amber-200 dark:border-amber-800/50"
-                        >
-                          {loadingFortune &&
-                          selectedCategory?.id === "daily" ? (
-                            <>
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                              <span>분석 중...</span>
-                            </>
-                          ) : (
-                            <>
-                              <span>자세히 보기</span>
-                              <ChevronRight
-                                className="w-4 h-4"
-                                strokeWidth={2}
-                              />
-                            </>
-                          )}
-                        </motion.button>
-                      </div>
+                      </motion.button>
                     </div>
                   </div>
-                </motion.div>
+                </div>
 
-                {/* 상세 운세 */}
-                <motion.div
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.16 }}
-                  className="bg-white dark:bg-[#1A1830]/90 rounded-[32px] border border-gray-100 dark:border-purple-900/30 backdrop-blur-md p-5 dark:shadow-[0_4px_24px_rgba(139,92,246,0.12)] space-y-4"
-                >
-                  <div>
-                    <div className="flex items-center gap-2.5 mb-3">
-                      <div className="w-2 h-6 bg-violet-300 dark:bg-violet-600 rounded-full" />
-                      <h3 className="text-sm font-black text-gray-800 dark:text-gray-100">
-                        상세 운세
-                      </h3>
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      {FORTUNE_DETAILED.map((cat) => {
-                        const isLocked = !canViewFortune(level, cat.id);
-                        const unlockLevel = FORTUNE_UNLOCK_LEVELS[cat.id];
-                        return (
-                          <FortuneListItem
-                            key={cat.id}
-                            category={cat}
-                            onClick={handleCategoryClick}
-                            isLoading={
-                              loadingFortune && selectedCategory?.id === cat.id
-                            }
-                            isLocked={isLocked}
-                            unlockLevel={unlockLevel}
-                          />
-                        );
-                      })}
-                    </div>
+                <div>
+                  <div className="flex items-center gap-2.5 mb-3">
+                    <div className="w-2 h-6 bg-violet-300 dark:bg-violet-600 rounded-full" />
+                    <h3 className="text-sm font-black text-gray-800 dark:text-gray-100">
+                      상세 운세
+                    </h3>
                   </div>
-                </motion.div>
+                  <div className="flex flex-col gap-2">
+                    {FORTUNE_DETAILED.map((cat) => {
+                      const isLocked = !canViewFortune(level, cat.id);
+                      const unlockLevel = FORTUNE_UNLOCK_LEVELS[cat.id];
+                      return (
+                        <FortuneListItem
+                          key={cat.id}
+                          category={cat}
+                          onClick={handleCategoryClick}
+                          isLoading={
+                            loadingFortune && selectedCategory?.id === cat.id
+                          }
+                          isLocked={isLocked}
+                          unlockLevel={unlockLevel}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
