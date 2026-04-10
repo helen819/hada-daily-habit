@@ -727,8 +727,6 @@ export default function Cheering() {
                       ? `레벨 ${CHARM_FIRST_LEVEL}에 도달하면 사용 가능해요`
                       : loadingCharm
                       ? "운명 계산 중..."
-                      : maxCharmPicks === 999
-                      ? "무제한 이용 가능"
                       : `오늘 ${charmPickCount} / ${maxCharmPicks}회 사용`}
                   </p>
                 </div>
@@ -894,8 +892,6 @@ export default function Cheering() {
                 <p className="text-xs text-gray-400 dark:text-violet-300/70 mt-0.5">
                   {isLetterLocked
                     ? `레벨 ${LETTER_FIRST_LEVEL}에 도달하면 사용 가능해요`
-                    : maxCheeringLetter === 999
-                    ? "무제한 이용 가능"
                     : `이번 주 ${weeklyLetterUsed} / ${maxCheeringLetter}회 사용`}
                 </p>
               </div>

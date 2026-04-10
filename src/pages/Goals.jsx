@@ -872,9 +872,7 @@ function GoalDetail({
               <Sparkles className="w-5 h-5" />
               HADA 분석 받기
               <span className="text-xs font-bold opacity-70 ml-1">
-                {maxWeeklyAnalysis === 999
-                  ? "무제한"
-                  : `${weeklyAnalysisUsed}/${maxWeeklyAnalysis}회`}
+                {weeklyAnalysisUsed}/{maxWeeklyAnalysis}회
               </span>
             </>
           )}
