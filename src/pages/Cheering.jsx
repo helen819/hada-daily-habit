@@ -181,7 +181,7 @@ function CheeringLetterModal({
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 80, opacity: 0 }}
         transition={{ type: "spring", damping: 28, stiffness: 300 }}
-        className="w-full max-w-lg bg-white dark:bg-gray-900 rounded-t-[32px] px-6 pt-5 pb-12 shadow-2xl max-h-[85vh] overflow-y-auto"
+        className="w-full max-w-lg bg-white dark:bg-[#1A1830] rounded-t-[32px] px-6 pt-5 pb-12 shadow-2xl max-h-[85vh] overflow-y-auto"
       >
         <div className="w-10 h-1 rounded-full bg-gray-200 dark:bg-gray-700 mx-auto mb-6" />
         <div className="flex items-start justify-between mb-6">
@@ -196,14 +196,14 @@ function CheeringLetterModal({
               <p className="text-sm font-black text-gray-900 dark:text-white leading-tight">
                 {goalTitle}
               </p>
-              <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5">
+              <p className="text-[11px] text-gray-400 dark:text-violet-300/70 mt-0.5">
                 {concern} · {subConcern}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 flex-shrink-0"
+            className="p-2 rounded-xl bg-gray-100 dark:bg-[#2A2845] text-gray-500 dark:text-violet-200 flex-shrink-0"
           >
             <X className="w-4 h-4" />
           </button>
@@ -279,7 +279,7 @@ function ConcernSelectorModal({ goals, onConfirm, onClose }) {
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 80, opacity: 0 }}
         transition={{ type: "spring", damping: 28, stiffness: 320 }}
-        className="w-full max-w-lg bg-white dark:bg-gray-900 rounded-t-[32px] px-6 pt-5 pb-10 shadow-2xl max-h-[85vh] overflow-y-auto"
+        className="w-full max-w-lg bg-white dark:bg-[#1A1830] rounded-t-[32px] px-6 pt-5 pb-10 shadow-2xl max-h-[85vh] overflow-y-auto"
       >
         <div className="w-10 h-1 rounded-full bg-gray-200 dark:bg-gray-700 mx-auto mb-6" />
         <div className="flex items-center justify-between mb-6">
@@ -288,7 +288,7 @@ function ConcernSelectorModal({ goals, onConfirm, onClose }) {
           </h2>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400"
+            className="p-2 rounded-xl bg-gray-100 dark:bg-[#2A2845] text-gray-500 dark:text-violet-200"
           >
             <X className="w-4 h-4" />
           </button>
@@ -306,7 +306,7 @@ function ConcernSelectorModal({ goals, onConfirm, onClose }) {
                 className={`w-full text-left px-4 py-3 rounded-2xl border-2 text-sm font-bold transition-all ${
                   selectedGoalId === goal.id
                     ? "border-violet-300 dark:border-violet-600 bg-violet-50 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300"
-                    : "border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300"
+                    : "border-gray-100 dark:border-purple-900/30 bg-white dark:bg-[#1A1830] text-gray-700 dark:text-gray-300"
                 }`}
               >
                 {goal.title}
@@ -333,7 +333,7 @@ function ConcernSelectorModal({ goals, onConfirm, onClose }) {
                   className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl border-2 text-sm font-bold transition-all ${
                     selectedCat?.id === cat.id
                       ? "border-violet-300 dark:border-violet-600 bg-violet-50 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300"
-                      : "border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300"
+                      : "border-gray-100 dark:border-purple-900/30 bg-white dark:bg-[#1A1830] text-gray-700 dark:text-gray-300"
                   }`}
                 >
                   <span>{cat.label}</span>
@@ -362,7 +362,7 @@ function ConcernSelectorModal({ goals, onConfirm, onClose }) {
                           className={`w-full text-left px-4 py-2.5 rounded-xl border text-xs font-semibold transition-all ${
                             selectedSub === sub && selectedCat?.id === cat.id
                               ? "border-indigo-200 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300"
-                              : "border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
+                              : "border-gray-100 dark:border-purple-900/30 bg-gray-50 dark:bg-[#2A2845] text-gray-600 dark:text-violet-200"
                           }`}
                         >
                           · {sub}
@@ -634,7 +634,7 @@ export default function Cheering() {
   const LETTER_FIRST_LEVEL = 21;
 
   return (
-    <div className="min-h-screen bg-[#FDFCFE] dark:bg-gray-950 pb-32 transition-colors duration-300">
+    <div className="min-h-screen bg-[#FDFCFE] dark:bg-[#0F0E17] pb-32 transition-colors duration-300">
       <AdModal visible={showAdForCharm} onClose={handleCharmAdClose} />
 
       <div className="px-6 pt-12 pb-6">
@@ -648,7 +648,7 @@ export default function Cheering() {
           <h1 className="text-2xl font-black text-gray-900 dark:text-white leading-tight">
             응원
           </h1>
-          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 font-semibold">
+          <p className="text-xs text-gray-400 dark:text-violet-300/70 mt-1 font-semibold">
             오늘 하루, HADA가 당신 곁에 있어요
           </p>
         </motion.div>
@@ -672,9 +672,9 @@ export default function Cheering() {
             disabled={loadingCharm || isCharmLocked || remainingCharms <= 0}
             className={`relative w-full rounded-3xl p-5 overflow-hidden text-center transition-all ${
               isCharmLocked
-                ? "bg-gray-100 dark:bg-gray-800 cursor-not-allowed"
+                ? "bg-gray-100 dark:bg-[#2A2845] cursor-not-allowed"
                 : remainingCharms <= 0
-                ? "bg-gray-100 dark:bg-gray-800 cursor-not-allowed"
+                ? "bg-gray-100 dark:bg-[#2A2845] cursor-not-allowed"
                 : "bg-amber-100 hover:bg-amber-200 dark:bg-amber-900/40 dark:hover:bg-amber-900/60 active:scale-[0.98]"
             }`}
           >
@@ -699,7 +699,7 @@ export default function Cheering() {
                   <p
                     className={`text-sm font-black ${
                       isCharmLocked || remainingCharms <= 0
-                        ? "text-gray-400 dark:text-gray-500"
+                        ? "text-gray-400 dark:text-violet-300/70"
                         : "text-amber-900 dark:text-amber-200"
                     }`}
                   >
@@ -712,7 +712,7 @@ export default function Cheering() {
                   <p
                     className={`text-[11px] mt-0.5 ${
                       isCharmLocked || remainingCharms <= 0
-                        ? "text-gray-400 dark:text-gray-500"
+                        ? "text-gray-400 dark:text-violet-300/70"
                         : "text-amber-700/70 dark:text-amber-400/60"
                     }`}
                   >
@@ -795,7 +795,7 @@ export default function Cheering() {
                   animate={{ y: 0, opacity: 1 }}
                   exit={{ y: 60, opacity: 0 }}
                   transition={{ type: "spring", damping: 28, stiffness: 320 }}
-                  className="w-full max-w-lg bg-white dark:bg-gray-900 rounded-t-[32px] px-6 pt-5 pb-12 shadow-2xl"
+                  className="w-full max-w-lg bg-white dark:bg-[#1A1830] rounded-t-[32px] px-6 pt-5 pb-12 shadow-2xl"
                 >
                   <div className="w-10 h-1 rounded-full bg-gray-200 dark:bg-gray-700 mx-auto mb-6" />
                   <div className="flex items-center justify-between mb-6">
@@ -814,7 +814,7 @@ export default function Cheering() {
                     </div>
                     <button
                       onClick={() => setShowCharmDetail(false)}
-                      className="p-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400"
+                      className="p-2 rounded-xl bg-gray-100 dark:bg-[#2A2845] text-gray-500 dark:text-violet-200"
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -856,8 +856,8 @@ export default function Cheering() {
           <div
             className={`rounded-[28px] p-5 shadow-[0_4px_20px_rgba(232,121,249,0.06)] ${
               isLetterLocked
-                ? "bg-gray-100 dark:bg-gray-800 border border-gray-100 dark:border-gray-700"
-                : "bg-white dark:bg-gray-900 border border-fuchsia-50 dark:border-gray-800"
+                ? "bg-gray-100 dark:bg-[#2A2845] border border-gray-100 dark:border-gray-700"
+                : "bg-white dark:bg-[#1A1830] border border-fuchsia-50 dark:border-purple-900/30"
             }`}
           >
             <div className="flex items-center gap-3 mb-4">
@@ -878,13 +878,13 @@ export default function Cheering() {
                 <p
                   className={`text-sm font-black ${
                     isLetterLocked
-                      ? "text-gray-400 dark:text-gray-500"
+                      ? "text-gray-400 dark:text-violet-300/70"
                       : "text-gray-900 dark:text-white"
                   }`}
                 >
                   지금 어떤 고민이 있나요?
                 </p>
-                <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                <p className="text-xs text-gray-400 dark:text-violet-300/70 mt-0.5">
                   {isLetterLocked
                     ? `레벨 ${LETTER_FIRST_LEVEL}에 도달하면 사용 가능해요`
                     : maxCheeringLetter === 999
@@ -895,7 +895,7 @@ export default function Cheering() {
             </div>
 
             {!isLetterLocked && (
-              <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed mb-4">
+              <p className="text-xs text-gray-500 dark:text-violet-200 leading-relaxed mb-4">
                 목표를 향해 나아가다 보면 힘든 순간이 찾아오기 마련이에요. 어떤
                 고민인지 선택하면 HADA가 맞춤 응원 편지를 써드려요.
               </p>
@@ -916,7 +916,7 @@ export default function Cheering() {
               }
               className={`w-full h-14 rounded-2xl font-black text-sm flex items-center justify-center gap-2 shadow-sm active:scale-[0.98] transition-all ${
                 isLetterLocked || isLetterLimitReached
-                  ? "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed"
+                  ? "bg-gray-100 dark:bg-[#2A2845] text-gray-400 dark:text-gray-600 cursor-not-allowed"
                   : "bg-fuchsia-200 hover:bg-fuchsia-300 dark:bg-fuchsia-800/60 dark:hover:bg-fuchsia-700/60 text-fuchsia-900 dark:text-fuchsia-200 disabled:opacity-40"
               }`}
             >
@@ -943,7 +943,7 @@ export default function Cheering() {
             </button>
 
             {goals.length === 0 && !isLetterLocked && (
-              <p className="text-xs text-gray-400 dark:text-gray-500 text-center mt-2">
+              <p className="text-xs text-gray-400 dark:text-violet-300/70 text-center mt-2">
                 목표 화면에서 목표를 먼저 추가해주세요
               </p>
             )}
@@ -990,7 +990,7 @@ export default function Cheering() {
                   <p className="text-xs font-bold text-fuchsia-700 dark:text-fuchsia-300 mb-1">
                     {savedLetterMeta.goalTitle}
                   </p>
-                  <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-3">
+                  <p className="text-[11px] text-gray-500 dark:text-violet-200 mb-3">
                     {savedLetterMeta.concern} · {savedLetterMeta.subConcern}
                   </p>
                   <p className="text-sm font-bold text-gray-800 dark:text-gray-200 leading-relaxed line-clamp-2">

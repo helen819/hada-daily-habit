@@ -39,7 +39,7 @@ const ENERGY_LABELS = {
 function SummaryPeriodSection({ title, emoji, data, headerColor }) {
   if (!data) return null;
   return (
-    <div className="bg-white dark:bg-[#1A1F2E] rounded-2xl p-4 border border-gray-100 dark:border-[#424B63] shadow-sm space-y-2">
+    <div className="bg-white dark:bg-[#211F38] rounded-2xl p-4 border border-gray-100 dark:border-[#424B63] shadow-sm space-y-2">
       <p className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
         {emoji} {title}
       </p>
@@ -167,7 +167,7 @@ export default function FortuneResultModal({ result, category, onClose }) {
               <>
                 {/* 에너지 레벨 (summary 제외한 모든 카테고리) */}
                 <div className="px-6 pt-6 mb-6">
-                  <div className="bg-white dark:bg-[#1A1F2E] rounded-2xl p-4 border border-gray-100 dark:border-[#424B63] shadow-md">
+                  <div className="bg-white dark:bg-[#211F38] rounded-2xl p-4 border border-gray-100 dark:border-[#424B63] shadow-md">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-1.5">
                         <Zap className="w-4 h-4 text-amber-400 fill-amber-400" />
@@ -229,7 +229,7 @@ export default function FortuneResultModal({ result, category, onClose }) {
 
                   {/* 행운 색상 (daily 전용) */}
                   {category?.id === "daily" && result.aiLuckyColor && (
-                    <div className="flex items-center gap-3 bg-gray-50 dark:bg-[#1A1F2E] rounded-2xl px-4 py-3 border border-gray-100/50 dark:border-[#424B63]">
+                    <div className="flex items-center gap-3 bg-gray-50 dark:bg-[#211F38] rounded-2xl px-4 py-3 border border-gray-100/50 dark:border-[#424B63]">
                       <div
                         className="w-8 h-8 rounded-xl flex-shrink-0 border-2 border-white dark:border-[#424B63]"
                         style={{ backgroundColor: result.aiLuckyColor }}

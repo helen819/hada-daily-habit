@@ -110,7 +110,7 @@ function getDdayStyle(deadline) {
     return "bg-orange-100 text-orange-500 dark:bg-orange-900/40 dark:text-orange-400";
   if (diff <= 30)
     return "bg-yellow-100 text-yellow-600 dark:bg-yellow-900/40 dark:text-yellow-400";
-  return "bg-gray-100 text-gray-400 dark:bg-gray-700/50 dark:text-gray-500";
+  return "bg-gray-100 text-gray-400 dark:bg-gray-700/50 dark:text-violet-300/70";
 }
 
 function GoalBar({ goal, isSelected, onClick, index }) {
@@ -258,8 +258,8 @@ function GoalTodoPanel({ goalId, today, profile, todos = [], queryClient }) {
   };
 
   return (
-    <div className="mt-4 rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 overflow-hidden shadow-sm">
-      <div className="flex border-b border-gray-100 dark:border-gray-800">
+    <div className="mt-4 rounded-2xl bg-white dark:bg-[#1A1830] border border-gray-100 dark:border-purple-900/30 overflow-hidden shadow-sm">
+      <div className="flex border-b border-gray-100 dark:border-purple-900/30">
         {[
           { key: "ongoing", label: "진행 중", count: ongoing.length },
           { key: "done", label: "완료", count: done.length },
@@ -284,7 +284,7 @@ function GoalTodoPanel({ goalId, today, profile, todos = [], queryClient }) {
         {(tab === "ongoing" ? ongoing : done).map((todo) => (
           <div
             key={todo.id}
-            className="flex items-center gap-3 py-3 border-b border-gray-50 dark:border-gray-800/50 last:border-0"
+            className="flex items-center gap-3 py-3 border-b border-gray-50 dark:border-purple-900/30/50 last:border-0"
           >
             <button onClick={() => toggleTodo(todo)}>
               {todo.completed ? (
@@ -325,7 +325,7 @@ function GoalTodoPanel({ goalId, today, profile, todos = [], queryClient }) {
             onChange={(e) => setNewTodo(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && addTodo()}
             placeholder="할일 추가..."
-            className="flex-1 text-xs rounded-xl bg-gray-50 dark:bg-gray-800 px-4 py-3 outline-none dark:text-white"
+            className="flex-1 text-xs rounded-xl bg-gray-50 dark:bg-[#2A2845] px-4 py-3 outline-none dark:text-white"
           />
           <button
             onClick={addTodo}
@@ -404,7 +404,7 @@ function GoalTodoPanel({ goalId, today, profile, todos = [], queryClient }) {
                     <p className="text-xl font-black text-gray-800 dark:text-white leading-snug break-keep">
                       {selectedCard.title}
                     </p>
-                    <div className="bg-gray-50 dark:bg-[#1A1F2E] rounded-2xl p-4 border border-gray-100 dark:border-[#424B63]">
+                    <div className="bg-gray-50 dark:bg-[#211F38] rounded-2xl p-4 border border-gray-100 dark:border-[#424B63]">
                       <p className="text-sm text-gray-600 dark:text-slate-300 leading-relaxed break-keep">
                         {selectedCard.card_how}
                         {selectedCard.card_fortune && (
@@ -444,10 +444,10 @@ export function hhToTimeSlotLabel(hh) {
 }
 
 const timeSlotBadgeColors = {
-  오전: "bg-sky-100 text-sky-600 dark:bg-sky-900/40 dark:text-sky-400",
-  오후: "bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-400",
-  저녁: "bg-orange-100 text-orange-600 dark:bg-orange-900/40 dark:text-orange-400",
-  밤: "bg-indigo-100 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400",
+  오전: "bg-sky-100 text-sky-600 dark:bg-sky-500/90 dark:text-white",
+  오후: "bg-amber-100 text-amber-600 dark:bg-amber-500/90 dark:text-white",
+  저녁: "bg-orange-100 text-orange-600 dark:bg-orange-500/90 dark:text-white",
+  밤: "bg-indigo-100 text-indigo-600 dark:bg-indigo-500/90 dark:text-white",
 };
 
 // ─── 현재 시각 기준으로 오늘 밤 10시(22)까지 가능한 HH 범위 문자열 목록 ──
@@ -1005,7 +1005,7 @@ ${goalsContext}
 
   if (profileLoading || isInitializing || !isAppReady)
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-white dark:bg-gray-950">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-white dark:bg-[#0F0E17]">
         <Loader2 className="w-10 h-10 animate-spin text-purple-500" />
       </div>
     );
@@ -1020,7 +1020,7 @@ ${goalsContext}
         />
       )}
 
-      <div className="min-h-screen bg-[#FDFCFE] dark:bg-gray-950 pb-32 transition-colors duration-500">
+      <div className="min-h-screen bg-[#FDFCFE] dark:bg-[#0F0E17] pb-32 transition-colors duration-500">
         <div className="px-6 pt-12 pb-8">
           <motion.div
             initial={{ opacity: 0, y: -10 }}
@@ -1034,14 +1034,14 @@ ${goalsContext}
                 ? `${reading.today_hint}`
                 : `안녕하세요, ${profile.full_name}님!`}
             </h1>
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-3 font-semibold">
+            <p className="text-xs text-gray-400 dark:text-violet-300/70 mt-3 font-semibold">
               {reading?.welcome_subtitle || profile.goal}
             </p>
           </motion.div>
         </div>
 
         <div className="px-5 space-y-6">
-          <div className="bg-white dark:bg-gray-900 rounded-[32px] p-6 shadow-[0_8px_30px_rgba(120,50,255,0.04)] border border-purple-50/50 dark:border-gray-800">
+          <div className="bg-white dark:bg-[#1A1830] rounded-[32px] p-6 shadow-[0_8px_30px_rgba(120,50,255,0.04)] border border-purple-50/50 dark:border-purple-900/30">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
                 <div className="w-2.5 h-8 bg-purple-500 rounded-full shadow-[0_0_15px_rgba(168,85,247,0.2)]" />

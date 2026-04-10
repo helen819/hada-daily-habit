@@ -229,7 +229,7 @@ export default function Record() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#FDFCFE] dark:bg-gray-950 pb-32 transition-colors duration-300">
+    <div className="min-h-screen bg-[#FDFCFE] dark:bg-[#0F0E17] pb-32 transition-colors duration-300">
       <FireworksEffect visible={showFireworks} />
 
       <AnimatePresence>
@@ -268,7 +268,7 @@ export default function Record() {
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.05 }}
-          className="flex bg-gray-100 dark:bg-gray-800/60 rounded-2xl p-1 gap-1"
+          className="flex bg-gray-100 dark:bg-[#2A2845]/60 rounded-2xl p-1 gap-1"
         >
           {TABS.map(({ key, label, icon: Icon }) => (
             <button
@@ -276,8 +276,8 @@ export default function Record() {
               onClick={() => setActiveTab(key)}
               className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-black transition-all duration-200 ${
                 activeTab === key
-                  ? "bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-sm"
-                  : "text-gray-400 dark:text-gray-500"
+                  ? "bg-white dark:bg-[#1A1830] text-gray-900 dark:text-white shadow-sm"
+                  : "text-gray-400 dark:text-violet-300/70"
               }`}
             >
               <Icon
@@ -307,7 +307,7 @@ export default function Record() {
               transition={{ duration: 0.2 }}
               className="space-y-3"
             >
-              <div className="bg-white dark:bg-gray-900 rounded-[32px] shadow-[0_8px_40px_rgba(120,50,255,0.06)] border border-purple-50 dark:border-gray-800 overflow-hidden">
+              <div className="bg-white dark:bg-[#1A1830] rounded-[32px] shadow-[0_8px_40px_rgba(120,50,255,0.06)] border border-purple-50 dark:border-purple-900/30 overflow-hidden">
                 <MiniCalendar
                   year={year}
                   month={month}
@@ -331,8 +331,8 @@ export default function Record() {
                     transition={{ duration: 0.25, ease: "easeOut" }}
                     className="overflow-hidden"
                   >
-                    <div className="bg-white dark:bg-gray-900 rounded-[28px] border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden">
-                      <div className="flex items-center justify-between px-5 py-4 border-b border-gray-50 dark:border-gray-800">
+                    <div className="bg-white dark:bg-[#1A1830] rounded-[28px] border border-gray-100 dark:border-purple-900/30 shadow-sm overflow-hidden">
+                      <div className="flex items-center justify-between px-5 py-4 border-b border-gray-50 dark:border-purple-900/30">
                         <div>
                           <p className="text-[10px] font-black text-purple-500 uppercase tracking-widest mb-0.5">
                             HADA
@@ -347,7 +347,7 @@ export default function Record() {
                         </div>
                         <button
                           onClick={() => setSelectedDate(null)}
-                          className="p-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-400"
+                          className="p-2 rounded-xl bg-gray-100 dark:bg-[#2A2845] text-gray-400"
                         >
                           <X className="w-4 h-4" />
                         </button>
@@ -370,7 +370,7 @@ export default function Record() {
                             return (
                               <div
                                 key={badge}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700"
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-50 dark:bg-[#2A2845] border border-gray-100 dark:border-gray-700"
                               >
                                 <span className="text-sm">{b.emoji}</span>
                                 <span className="text-[11px] font-bold text-gray-600 dark:text-gray-300">
@@ -402,10 +402,10 @@ export default function Record() {
                               return (
                                 <div
                                   key={gid}
-                                  className="rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden"
+                                  className="rounded-2xl border border-gray-100 dark:border-purple-900/30 overflow-hidden"
                                 >
                                   {goal && (
-                                    <div className="px-4 py-2.5 bg-purple-50 dark:bg-purple-900/20 border-b border-gray-100 dark:border-gray-800">
+                                    <div className="px-4 py-2.5 bg-purple-50 dark:bg-purple-900/20 border-b border-gray-100 dark:border-purple-900/30">
                                       <p className="text-xs font-black text-purple-600 dark:text-purple-400">
                                         🎯 {goal.title}
                                       </p>
@@ -460,7 +460,7 @@ export default function Record() {
               </AnimatePresence>
 
               {!selectedDate && (
-                <p className="text-xs text-gray-400 dark:text-gray-500 text-center font-semibold">
+                <p className="text-xs text-gray-400 dark:text-violet-300/70 text-center font-semibold">
                   날짜를 눌러 그날의 기록을 확인해요
                 </p>
               )}
@@ -509,7 +509,7 @@ export default function Record() {
                     initial={{ opacity: 0, y: -8 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0 }}
-                    className="bg-white dark:bg-gray-900 rounded-[24px] p-5 border border-pink-50 dark:border-pink-900/30 shadow-[0_4px_20px_rgba(236,72,153,0.07)]"
+                    className="bg-white dark:bg-[#1A1830] rounded-[24px] p-5 border border-pink-50 dark:border-pink-900/30 shadow-[0_4px_20px_rgba(236,72,153,0.07)]"
                   >
                     <div className="flex items-center gap-2 mb-3">
                       <div className="w-8 h-8 rounded-xl bg-pink-100 dark:bg-pink-900/40 flex items-center justify-center">
@@ -522,7 +522,7 @@ export default function Record() {
                     <p className="text-sm font-bold text-gray-800 dark:text-white mb-1.5 leading-snug">
                       {summary.header_text}
                     </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+                    <p className="text-xs text-gray-500 dark:text-violet-200 leading-relaxed">
                       {summary.encouragement}
                     </p>
                   </motion.div>
@@ -560,7 +560,7 @@ export default function Record() {
                   className={`w-full rounded-[28px] px-6 py-5 flex flex-col items-center gap-3 active:scale-[0.98] transition-transform shadow-sm ${
                     vaultUnlocked
                       ? "bg-gradient-to-r from-pink-50 to-rose-50 dark:from-pink-950/40 dark:to-rose-950/40 border border-pink-100 dark:border-pink-900/50"
-                      : "bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 cursor-not-allowed opacity-70"
+                      : "bg-gray-50 dark:bg-[#2A2845]/50 border border-gray-200 dark:border-gray-700 cursor-not-allowed opacity-70"
                   }`}
                 >
                   <div className="text-4xl">{vaultUnlocked ? "✨" : "🔒"}</div>
@@ -569,7 +569,7 @@ export default function Record() {
                       className={`text-sm font-black text-center ${
                         vaultUnlocked
                           ? "text-pink-700 dark:text-pink-400"
-                          : "text-gray-500 dark:text-gray-400"
+                          : "text-gray-500 dark:text-violet-200"
                       }`}
                     >
                       행복 보관함
@@ -578,7 +578,7 @@ export default function Record() {
                       className={`text-xs text-center mt-0.5 ${
                         vaultUnlocked
                           ? "text-pink-500 dark:text-pink-500"
-                          : "text-gray-400 dark:text-gray-500"
+                          : "text-gray-400 dark:text-violet-300/70"
                       }`}
                     >
                       {vaultUnlocked

@@ -63,7 +63,7 @@ export default function HappinessInput({ onSubmit, isSubmitting }) {
   return (
     <div
       ref={listRef}
-      className="rounded-3xl bg-white dark:bg-gray-900 p-5 border border-pink-100 dark:border-gray-800 shadow-sm"
+      className="rounded-3xl bg-white dark:bg-[#1A1830] p-5 border border-pink-100 dark:border-purple-900/30 shadow-sm"
     >
       {/* 헤더 */}
       <div className="flex items-center gap-2 mb-4">
@@ -100,7 +100,7 @@ export default function HappinessInput({ onSubmit, isSubmitting }) {
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder="오늘의 행복 기록하기..."
-          className="bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-600 rounded-2xl mb-2 resize-none text-sm focus:bg-white dark:focus:bg-gray-800 transition-all pr-3"
+          className="bg-gray-50 dark:bg-[#2A2845] border border-gray-100 dark:border-gray-700 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-600 rounded-2xl mb-2 resize-none text-sm focus:bg-white dark:focus:bg-gray-800 transition-all pr-3"
           rows={3}
           onFocus={handleInputFocus}
           onBlur={handleInputBlur}
@@ -130,7 +130,7 @@ export default function HappinessInput({ onSubmit, isSubmitting }) {
         disabled={!text.trim() || isSubmitting || isOverLimit}
         className={`w-full rounded-2xl h-11 transition-all text-sm font-semibold shadow-sm border-0 ${
           isOverLimit
-            ? "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed shadow-none"
+            ? "bg-gray-100 dark:bg-[#2A2845] text-gray-400 dark:text-gray-600 cursor-not-allowed shadow-none"
             : "bg-pink-200 hover:bg-pink-300 dark:bg-pink-900/50 dark:hover:bg-pink-900/70 text-pink-900 dark:text-pink-200"
         }`}
       >

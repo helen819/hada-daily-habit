@@ -46,7 +46,7 @@ export default function ModeCard({ data, onDismiss, onSelect }) {
             {/* 닫기 버튼 */}
             <button
               onClick={handleDismiss}
-              className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full bg-gray-50 dark:bg-[#1A1F2E] text-gray-400 dark:text-slate-400 active:scale-90 transition-transform"
+              className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full bg-gray-50 dark:bg-[#211F38] text-gray-400 dark:text-slate-400 active:scale-90 transition-transform"
             >
               <X className="w-5 h-5" />
             </button>

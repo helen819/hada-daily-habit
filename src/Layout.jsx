@@ -188,7 +188,7 @@ export default function Layout({ children, currentPageName }) {
                       className={`w-5 h-5 ${
                         isActive
                           ? "text-purple-500 dark:text-purple-400"
-                          : "text-gray-400 dark:text-gray-500"
+                          : "text-gray-400 dark:text-violet-300/70"
                       }`}
                       strokeWidth={1.5}
                     />
@@ -196,7 +196,7 @@ export default function Layout({ children, currentPageName }) {
                       className={`text-[9px] font-semibold ${
                         isActive
                           ? "text-purple-600 dark:text-purple-400"
-                          : "text-gray-400 dark:text-gray-500"
+                          : "text-gray-400 dark:text-violet-300/70"
                       }`}
                     >
                       {label}

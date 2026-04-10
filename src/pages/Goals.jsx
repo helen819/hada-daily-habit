@@ -65,13 +65,16 @@ import {
 } from "@/config/unlockConfig";
 
 const GOAL_THEMES = [
-  { dot: "bg-violet-400" },
-  { dot: "bg-rose-400" },
-  { dot: "bg-amber-400" },
-  { dot: "bg-emerald-400" },
-  { dot: "bg-sky-400" },
-  { dot: "bg-fuchsia-400" },
-  { dot: "bg-pink-400" },
+  { dot: "bg-violet-400", neon: "dark:shadow-[0_0_8px_rgba(167,139,250,0.9)]" },
+  { dot: "bg-rose-400", neon: "dark:shadow-[0_0_8px_rgba(251,113,133,0.9)]" },
+  { dot: "bg-amber-400", neon: "dark:shadow-[0_0_8px_rgba(251,191,36,0.9)]" },
+  { dot: "bg-emerald-400", neon: "dark:shadow-[0_0_8px_rgba(52,211,153,0.9)]" },
+  { dot: "bg-sky-400", neon: "dark:shadow-[0_0_8px_rgba(56,189,248,0.9)]" },
+  {
+    dot: "bg-fuchsia-400",
+    neon: "dark:shadow-[0_0_8px_rgba(232,121,249,0.9)]",
+  },
+  { dot: "bg-pink-400", neon: "dark:shadow-[0_0_8px_rgba(244,114,182,0.9)]" },
 ];
 
 const DURATION_TYPES = [
@@ -114,7 +117,7 @@ function DurationSelector({ value, durationMonths, customDate, onChange }) {
           <select
             value={value}
             onChange={(e) => onChange("durationType", e.target.value)}
-            className="w-full h-11 pl-3 pr-7 rounded-2xl bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 text-sm font-semibold text-gray-700 dark:text-gray-200 appearance-none focus:outline-none focus:ring-2 focus:ring-violet-200 dark:focus:ring-violet-800 cursor-pointer"
+            className="w-full h-11 pl-3 pr-7 rounded-2xl bg-gray-50 dark:bg-[#2A2845] border-2 border-gray-100 dark:border-gray-700 text-sm font-semibold text-gray-700 dark:text-gray-200 appearance-none focus:outline-none focus:ring-2 focus:ring-violet-200 dark:focus:ring-violet-800 cursor-pointer"
           >
             {DURATION_TYPES.map((t) => (
               <option key={t.value} value={t.value}>
@@ -134,7 +137,7 @@ function DurationSelector({ value, durationMonths, customDate, onChange }) {
             <select
               value={durationMonths}
               onChange={(e) => onChange("durationMonths", e.target.value)}
-              className="w-full h-11 pl-3 pr-7 rounded-2xl bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 text-sm font-semibold text-gray-700 dark:text-gray-200 appearance-none focus:outline-none focus:ring-2 focus:ring-violet-200 cursor-pointer"
+              className="w-full h-11 pl-3 pr-7 rounded-2xl bg-gray-50 dark:bg-[#2A2845] border-2 border-gray-100 dark:border-gray-700 text-sm font-semibold text-gray-700 dark:text-gray-200 appearance-none focus:outline-none focus:ring-2 focus:ring-violet-200 cursor-pointer"
             >
               {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
                 <option key={m} value={String(m)}>
@@ -156,7 +159,7 @@ function DurationSelector({ value, durationMonths, customDate, onChange }) {
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
-                  className="w-full h-11 justify-start text-left font-semibold rounded-2xl border-2 border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-sm px-3 gap-1.5"
+                  className="w-full h-11 justify-start text-left font-semibold rounded-2xl border-2 border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-[#2A2845] text-sm px-3 gap-1.5"
                 >
                   <CalendarIcon className="h-3.5 w-3.5 text-violet-400 flex-shrink-0" />
                   <span
@@ -178,7 +181,7 @@ function DurationSelector({ value, durationMonths, customDate, onChange }) {
                 className="w-[260px] p-0 rounded-3xl shadow-2xl border-none overflow-hidden"
                 align="end"
               >
-                <div className="p-4 bg-white dark:bg-gray-900">
+                <div className="p-4 bg-white dark:bg-[#1A1830]">
                   <div className="flex items-center justify-between mb-4 px-1">
                     <Button
                       variant="ghost"
@@ -275,7 +278,7 @@ function DurationSelector({ value, durationMonths, customDate, onChange }) {
       </div>
 
       {value !== "no_limit" && (
-        <p className="text-[11px] text-gray-400 dark:text-gray-500 ml-1">
+        <p className="text-[11px] text-gray-400 dark:text-violet-300/70 ml-1">
           {value === "this_month" &&
             `마감 ${format(endOfMonth(new Date()), "yyyy.MM.dd")}`}
           {value === "this_year" &&
@@ -319,7 +322,7 @@ function ConfirmModal({
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.92, opacity: 0 }}
         transition={{ type: "spring", damping: 26, stiffness: 340 }}
-        className="w-full max-w-sm bg-white dark:bg-gray-900 rounded-[28px] p-6 shadow-2xl"
+        className="w-full max-w-sm bg-white dark:bg-[#1A1830] rounded-[28px] p-6 shadow-2xl"
       >
         <div
           className={`w-14 h-14 rounded-2xl ${iconBg} flex items-center justify-center mx-auto mb-4`}
@@ -329,13 +332,13 @@ function ConfirmModal({
         <h3 className="text-base font-black text-gray-900 dark:text-white text-center mb-2">
           {title}
         </h3>
-        <p className="text-xs text-gray-500 dark:text-gray-400 text-center leading-relaxed mb-6 whitespace-pre-line">
+        <p className="text-xs text-gray-500 dark:text-violet-200 text-center leading-relaxed mb-6 whitespace-pre-line">
           {description}
         </p>
         <div className="flex gap-2">
           <button
             onClick={onClose}
-            className="flex-1 h-12 rounded-2xl bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 font-bold text-sm"
+            className="flex-1 h-12 rounded-2xl bg-gray-100 dark:bg-[#2A2845] text-gray-600 dark:text-gray-300 font-bold text-sm"
           >
             취소
           </button>
@@ -407,7 +410,7 @@ function GoalFormModal({ mode = "add", initial = {}, onConfirm, onClose }) {
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 80, opacity: 0 }}
         transition={{ type: "spring", damping: 28, stiffness: 320 }}
-        className="w-full max-w-lg bg-white dark:bg-gray-900 rounded-t-[32px] px-6 pt-5 pb-10 shadow-2xl"
+        className="w-full max-w-lg bg-white dark:bg-[#1A1830] rounded-t-[32px] px-6 pt-5 pb-10 shadow-2xl"
       >
         <div className="w-10 h-1 rounded-full bg-gray-200 dark:bg-gray-700 mx-auto mb-6" />
         <div className="flex items-center justify-between mb-6">
@@ -416,7 +419,7 @@ function GoalFormModal({ mode = "add", initial = {}, onConfirm, onClose }) {
           </h2>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400"
+            className="p-2 rounded-xl bg-gray-100 dark:bg-[#2A2845] text-gray-500 dark:text-violet-200"
           >
             <X className="w-4 h-4" />
           </button>
@@ -433,7 +436,7 @@ function GoalFormModal({ mode = "add", initial = {}, onConfirm, onClose }) {
                 onChange={(e) => setTitle(e.target.value)}
                 maxLength={12}
                 placeholder="예: 꾸준히 운동하기"
-                className={`w-full rounded-2xl bg-gray-50 dark:bg-gray-800 border-2 px-4 py-3.5 text-sm font-semibold pr-14 outline-none transition-colors dark:text-white dark:placeholder:text-gray-600
+                className={`w-full rounded-2xl bg-gray-50 dark:bg-[#2A2845] border-2 px-4 py-3.5 text-sm font-semibold pr-14 outline-none transition-colors dark:text-white dark:placeholder:text-gray-600
                   ${
                     isTitleOver
                       ? "border-red-300 focus:border-red-400"
@@ -466,7 +469,7 @@ function GoalFormModal({ mode = "add", initial = {}, onConfirm, onClose }) {
               onChange={(e) => setDescription(e.target.value)}
               rows={4}
               placeholder="왜 이루고 싶은지, 어떻게 실천할지 자유롭게 써주세요..."
-              className="w-full rounded-2xl bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 focus:border-violet-300 dark:focus:border-violet-600 px-4 py-3.5 text-sm resize-none outline-none transition-colors dark:text-white dark:placeholder:text-gray-600"
+              className="w-full rounded-2xl bg-gray-50 dark:bg-[#2A2845] border-2 border-gray-100 dark:border-gray-700 focus:border-violet-300 dark:focus:border-violet-600 px-4 py-3.5 text-sm resize-none outline-none transition-colors dark:text-white dark:placeholder:text-gray-600"
             />
           </div>
 
@@ -518,7 +521,7 @@ function AnalysisModal({ goal, analysis, weeklyUsed, maxWeekly, onClose }) {
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 100, opacity: 0 }}
         transition={{ type: "spring", damping: 28, stiffness: 300 }}
-        className="w-full max-w-lg bg-white dark:bg-gray-900 rounded-t-[32px] px-6 pt-5 pb-12 shadow-2xl max-h-[85vh] overflow-y-auto"
+        className="w-full max-w-lg bg-white dark:bg-[#1A1830] rounded-t-[32px] px-6 pt-5 pb-12 shadow-2xl max-h-[85vh] overflow-y-auto"
       >
         <div className="w-10 h-1 rounded-full bg-gray-200 dark:bg-gray-700 mx-auto mb-6" />
         <div className="flex items-center justify-between mb-6">
@@ -537,7 +540,7 @@ function AnalysisModal({ goal, analysis, weeklyUsed, maxWeekly, onClose }) {
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400"
+            className="p-2 rounded-xl bg-gray-100 dark:bg-[#2A2845] text-gray-500 dark:text-violet-200"
           >
             <X className="w-4 h-4" />
           </button>
@@ -550,7 +553,7 @@ function AnalysisModal({ goal, analysis, weeklyUsed, maxWeekly, onClose }) {
           animate={{ opacity: 1, y: 0 }}
           className="space-y-5"
         >
-          <div className="bg-gray-50 dark:bg-gray-800 rounded-3xl p-5 flex items-center gap-5">
+          <div className="bg-gray-50 dark:bg-[#2A2845] rounded-3xl p-5 flex items-center gap-5">
             <div className="relative w-20 h-20 flex-shrink-0">
               <svg className="w-20 h-20 -rotate-90" viewBox="0 0 80 80">
                 <circle
@@ -592,7 +595,7 @@ function AnalysisModal({ goal, analysis, weeklyUsed, maxWeekly, onClose }) {
               </span>
             </div>
             <div>
-              <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">
+              <p className="text-[10px] font-bold text-gray-400 dark:text-violet-300/70 uppercase tracking-widest mb-1">
                 달성도
               </p>
               <p className="text-sm font-semibold text-gray-700 dark:text-gray-200 leading-relaxed">
@@ -773,16 +776,16 @@ function GoalDetail({
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -6 }}
         transition={{ duration: 0.22 }}
-        className="mt-2 bg-gray-50 dark:bg-gray-800/40 rounded-[24px] p-5 border border-gray-100 dark:border-gray-800"
+        className="mt-2 bg-gray-50 dark:bg-[#2A2845]/40 rounded-[24px] p-5 border border-gray-100 dark:border-purple-900/30"
       >
         <div className="mb-5">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+            <p className="text-[10px] font-black text-gray-400 dark:text-violet-300/70 uppercase tracking-widest">
               실천 현황
             </p>
             <p className="text-xs font-black text-violet-500 dark:text-violet-400">
               {doneCount} / {totalCount}
-              <span className="text-gray-400 dark:text-gray-500 font-semibold ml-1">
+              <span className="text-gray-400 dark:text-violet-300/70 font-semibold ml-1">
                 완료
               </span>
             </p>
@@ -796,7 +799,7 @@ function GoalDetail({
             />
           </div>
           {totalCount > 0 && (
-            <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1.5 text-right">
+            <p className="text-[10px] text-gray-400 dark:text-violet-300/70 mt-1.5 text-right">
               {progressPct}% 달성
             </p>
           )}
@@ -804,7 +807,7 @@ function GoalDetail({
 
         <div className="mb-4">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+            <p className="text-[10px] font-black text-gray-400 dark:text-violet-300/70 uppercase tracking-widest">
               목표 설명
             </p>
             <button
@@ -826,7 +829,7 @@ function GoalDetail({
 
         <div className="mb-5 flex items-center gap-1.5">
           <CalendarIcon className="w-3.5 h-3.5 text-violet-400 flex-shrink-0" />
-          <span className="text-xs font-bold text-gray-500 dark:text-gray-400">
+          <span className="text-xs font-bold text-gray-500 dark:text-violet-200">
             {goal.duration_type === "no_limit" || !goal.duration_type
               ? "꾸준히 (기한 없음)"
               : ddayText}
@@ -839,14 +842,14 @@ function GoalDetail({
           disabled={
             !isAnalysisUnlocked || isAnalysisLimitReached || analysisLoading
           }
-          className={`w-full h-16 rounded-2xl font-black text-base flex items-center justify-center gap-2.5 shadow-sm active:scale-[0.98] transition-all border ${
+          className={`w-full h-16 rounded-2xl font-black text-base flex items-center justify-center gap-2.5 active:scale-[0.98] transition-all border-2 ${
             !isAnalysisUnlocked
-              ? "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 border-gray-200 dark:border-gray-700 cursor-not-allowed"
+              ? "bg-gray-100 dark:bg-white/5 text-gray-400 dark:text-gray-500 border-gray-200 dark:border-white/10 cursor-not-allowed"
               : isAnalysisLimitReached
-              ? "bg-amber-50 dark:bg-amber-950/30 text-amber-400 dark:text-amber-500 border-amber-100 dark:border-amber-900/40 cursor-not-allowed"
+              ? "bg-amber-50 dark:bg-amber-500/10 text-amber-500 dark:text-amber-400 border-amber-200 dark:border-amber-500/30 cursor-not-allowed"
               : analysisLoading
-              ? "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-400 dark:text-indigo-500 border-indigo-100 dark:border-indigo-800/30 cursor-not-allowed"
-              : "bg-indigo-100 hover:bg-indigo-200 dark:bg-indigo-900/40 dark:hover:bg-indigo-900/60 text-indigo-800 dark:text-indigo-200 border-indigo-200 dark:border-indigo-800/50"
+              ? "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 border-indigo-200 dark:border-indigo-500/30 cursor-not-allowed"
+              : "bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-500/15 dark:hover:bg-indigo-500/25 text-indigo-700 dark:text-indigo-200 border-indigo-300 dark:border-indigo-400/50 shadow-sm dark:shadow-[0_0_16px_rgba(99,102,241,0.3)]"
           }`}
         >
           {!isAnalysisUnlocked ? (
@@ -932,17 +935,50 @@ function SortableGoalRow({
   const theme = GOAL_THEMES[idHash % GOAL_THEMES.length];
   const isCompleted = goal.is_completed;
 
+  // 다크모드 카드 배경: 불릿 색상 계열로 틴팅
+  const darkBgMap = {
+    "bg-violet-400": "dark:bg-violet-950/60 dark:border-violet-500/25",
+    "bg-rose-400": "dark:bg-rose-950/60   dark:border-rose-500/25",
+    "bg-amber-400": "dark:bg-amber-950/60  dark:border-amber-500/25",
+    "bg-emerald-400": "dark:bg-emerald-950/60 dark:border-emerald-500/25",
+    "bg-sky-400": "dark:bg-sky-950/60    dark:border-sky-500/25",
+    "bg-fuchsia-400": "dark:bg-fuchsia-950/60 dark:border-fuchsia-500/25",
+    "bg-pink-400": "dark:bg-pink-950/60   dark:border-pink-500/25",
+  };
+  const darkSelectedMap = {
+    "bg-violet-400":
+      "dark:bg-violet-900/70 dark:border-violet-400/50 dark:shadow-[0_0_16px_rgba(167,139,250,0.25)]",
+    "bg-rose-400":
+      "dark:bg-rose-900/70   dark:border-rose-400/50   dark:shadow-[0_0_16px_rgba(251,113,133,0.25)]",
+    "bg-amber-400":
+      "dark:bg-amber-900/70  dark:border-amber-400/50  dark:shadow-[0_0_16px_rgba(251,191,36,0.25)]",
+    "bg-emerald-400":
+      "dark:bg-emerald-900/70 dark:border-emerald-400/50 dark:shadow-[0_0_16px_rgba(52,211,153,0.25)]",
+    "bg-sky-400":
+      "dark:bg-sky-900/70    dark:border-sky-400/50    dark:shadow-[0_0_16px_rgba(56,189,248,0.25)]",
+    "bg-fuchsia-400":
+      "dark:bg-fuchsia-900/70 dark:border-fuchsia-400/50 dark:shadow-[0_0_16px_rgba(232,121,249,0.25)]",
+    "bg-pink-400":
+      "dark:bg-pink-900/70   dark:border-pink-400/50   dark:shadow-[0_0_16px_rgba(244,114,182,0.25)]",
+  };
+
+  const darkBg =
+    darkBgMap[theme.dot] ?? "dark:bg-violet-950/60 dark:border-violet-500/25";
+  const darkSelected =
+    darkSelectedMap[theme.dot] ??
+    "dark:bg-violet-900/70 dark:border-violet-400/50";
+
   return (
     <div ref={setNodeRef} style={style}>
       <div
-        className={`rounded-2xl border-2 transition-all duration-200 ${
+        className={`rounded-2xl border-2 transition-all duration-200 backdrop-blur-md ${
           isDragging
-            ? "bg-white dark:bg-gray-800 border-violet-300 dark:border-violet-600 shadow-2xl opacity-95 scale-[1.02]"
+            ? `bg-white ${darkBg} shadow-lg opacity-95 scale-[1.02]`
             : isSelected
-            ? "bg-white dark:bg-gray-800 border-violet-200 dark:border-violet-700/50 shadow-md"
+            ? `bg-white border-gray-200 shadow-md ${darkSelected}`
             : isCompleted
-            ? "bg-gray-50 dark:bg-gray-900 border-gray-100 dark:border-gray-800 opacity-60"
-            : "bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800"
+            ? "bg-gray-50 dark:bg-white/[0.03] border-gray-100 dark:border-white/5 opacity-60"
+            : `bg-white border-gray-100 ${darkBg}`
         }`}
       >
         <div className="flex items-center gap-3 px-4 py-4">
@@ -959,7 +995,9 @@ function SortableGoalRow({
 
           <div
             className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
-              isCompleted ? "bg-gray-300 dark:bg-gray-600" : theme.dot
+              isCompleted
+                ? "bg-gray-300 dark:bg-gray-600"
+                : `${theme.dot} ${theme.neon}`
             }`}
           />
 
@@ -991,7 +1029,7 @@ function SortableGoalRow({
               }}
               className={`w-8 h-8 rounded-xl flex items-center justify-center transition-colors ${
                 isCompleted
-                  ? "bg-gray-100 dark:bg-gray-800 text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+                  ? "bg-gray-100 dark:bg-[#2A2845] text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
                   : "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-500 hover:bg-emerald-100 dark:hover:bg-emerald-900/50"
               }`}
             >
@@ -1238,7 +1276,7 @@ export default function Goals() {
   const nextSlotLevel = [13, 67].find((l) => l > level) || null;
 
   return (
-    <div className="min-h-screen bg-[#FDFCFE] dark:bg-gray-950 pb-32 transition-colors duration-300">
+    <div className="min-h-screen bg-[#FDFCFE] dark:bg-[#0F0E17] pb-32 transition-colors duration-300">
       <div className="px-6 pt-12 pb-6">
         <motion.div
           initial={{ opacity: 0, y: -10 }}
@@ -1252,7 +1290,7 @@ export default function Goals() {
               <h1 className="text-2xl font-black text-gray-900 dark:text-white leading-tight">
                 목표 관리
               </h1>
-              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 font-semibold">
+              <p className="text-xs text-gray-400 dark:text-violet-300/70 mt-1 font-semibold">
                 {activeGoals.length}개 진행 중 · {completedGoals.length}개 달성
               </p>
             </div>
@@ -1274,7 +1312,7 @@ export default function Goals() {
       </div>
 
       <div className="px-5 space-y-3">
-        <div className="bg-white dark:bg-gray-900 rounded-[32px] p-5 shadow-[0_8px_40px_rgba(124,58,237,0.05)] border border-violet-50 dark:border-gray-800">
+        <div className="bg-white dark:bg-[#1A1830]/90 rounded-[32px] p-5 border border-violet-50 dark:border-violet-500/20 backdrop-blur-md shadow-[0_8px_40px_rgba(124,58,237,0.05)] dark:shadow-[0_8px_32px_rgba(139,92,246,0.15)]">
           <div className="flex items-center gap-2.5 mb-4">
             <div className="w-2 h-6 bg-violet-400 rounded-full shadow-[0_0_12px_rgba(167,139,250,0.3)]" />
             <p className="text-sm font-black text-gray-800 dark:text-gray-100">
@@ -1292,7 +1330,7 @@ export default function Goals() {
           ) : activeGoals.length === 0 ? (
             <div className="py-10 text-center">
               <p className="text-2xl mb-2">🎯</p>
-              <p className="text-sm font-bold text-gray-400 dark:text-gray-500">
+              <p className="text-sm font-bold text-gray-400 dark:text-violet-300/70">
                 아직 목표가 없어요
               </p>
               <p className="text-xs text-gray-300 dark:text-gray-600 mt-1">
@@ -1357,7 +1395,7 @@ export default function Goals() {
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white dark:bg-gray-900 rounded-[32px] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-50 dark:border-gray-800"
+            className="bg-white dark:bg-[#1A1830]/90 rounded-[32px] p-5 border border-gray-50 dark:border-emerald-500/15 backdrop-blur-md shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgba(16,185,129,0.08)]"
           >
             <div className="flex items-center gap-2.5 mb-4">
               <div className="w-2 h-6 bg-emerald-400 rounded-full" />

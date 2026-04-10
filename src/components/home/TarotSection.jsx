@@ -120,10 +120,10 @@ function hhToTimeSlotLabel(raw) {
 
 // ─── 시간대 라벨별 뱃지 색상 ──────────────────────────────────
 const timeSlotBadgeColors = {
-  오전: "bg-sky-100 text-sky-600 dark:bg-sky-900/40 dark:text-sky-400",
-  오후: "bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-400",
-  저녁: "bg-orange-100 text-orange-600 dark:bg-orange-900/40 dark:text-orange-400",
-  밤: "bg-indigo-100 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400",
+  오전: "bg-sky-100 text-sky-600 dark:bg-sky-500/90 dark:text-white",
+  오후: "bg-amber-100 text-amber-600 dark:bg-amber-500/90 dark:text-white",
+  저녁: "bg-orange-100 text-orange-600 dark:bg-orange-500/90 dark:text-white",
+  밤: "bg-indigo-100 text-indigo-600 dark:bg-indigo-500/90 dark:text-white",
 };
 
 function TarotDetailModal({ action, onClose, onAdd, added }) {
@@ -161,7 +161,7 @@ function TarotDetailModal({ action, onClose, onAdd, added }) {
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.85, opacity: 0, y: 20 }}
         onClick={(e) => e.stopPropagation()}
-        className={`relative bg-white dark:bg-gray-900 rounded-3xl w-full max-w-sm border-l-4 ${borderColor} overflow-hidden shadow-2xl`}
+        className={`relative bg-white dark:bg-[#1A1830] rounded-3xl w-full max-w-sm border-l-4 ${borderColor} overflow-hidden shadow-2xl`}
       >
         {/* 헤더 */}
         <div
@@ -176,7 +176,9 @@ function TarotDetailModal({ action, onClose, onAdd, added }) {
                 {action.keyword}
               </p>
               {timeSlot && timeBadgeStyle && (
-                <span className={`inline-flex items-center gap-0.5 mt-1 text-[10px] font-bold px-1.5 py-0.5 rounded-md leading-none ${timeBadgeStyle}`}>
+                <span
+                  className={`inline-flex items-center gap-0.5 mt-1 text-[10px] font-bold px-1.5 py-0.5 rounded-md leading-none ${timeBadgeStyle}`}
+                >
                   <Clock className="w-2.5 h-2.5" strokeWidth={2} />
                   {timeSlot} 추천
                 </span>
@@ -192,11 +194,11 @@ function TarotDetailModal({ action, onClose, onAdd, added }) {
         </div>
 
         {/* 본문 */}
-        <div className="p-6 space-y-5 bg-white dark:bg-gray-900">
+        <div className="p-6 space-y-5 bg-white dark:bg-[#1A1830]">
           <p className="text-xl font-black text-gray-800 dark:text-gray-100 leading-snug">
             {action.micro_action}
           </p>
-          <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-4 border border-gray-100 dark:border-gray-700">
+          <div className="bg-gray-50 dark:bg-[#2A2845] rounded-2xl p-4 border border-gray-100 dark:border-gray-700">
             <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed break-keep">
               {action.how}
               {action.fortune && (
@@ -216,7 +218,11 @@ function TarotDetailModal({ action, onClose, onAdd, added }) {
               added ? buttonAddedColor : buttonColor
             }`}
           >
-            {added ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+            {added ? (
+              <Check className="w-4 h-4" />
+            ) : (
+              <Plus className="w-4 h-4" />
+            )}
             {added ? "할일에 추가됨" : "할일 목록에 추가"}
           </button>
         </div>
@@ -286,7 +292,9 @@ function MiniTarotCard({
       </AnimatePresence>
 
       <div
-        className={`relative cursor-pointer transition-opacity ${added ? "opacity-40" : ""}`}
+        className={`relative cursor-pointer transition-opacity ${
+          added ? "opacity-40" : ""
+        }`}
         style={{ perspective: "800px", height: "150px" }}
         onClick={handleFlip}
       >
@@ -313,14 +321,18 @@ function MiniTarotCard({
             >
               {canFlip ? (
                 <>
-                  <div className="text-white/40 text-2xl font-serif select-none">✦</div>
+                  <div className="text-white/40 text-2xl font-serif select-none">
+                    ✦
+                  </div>
                   <p className="text-white/70 text-[10px] font-semibold tracking-widest uppercase">
                     열기
                   </p>
                 </>
               ) : (
                 <>
-                  <div className="text-white/30 text-2xl font-serif select-none">✦</div>
+                  <div className="text-white/30 text-2xl font-serif select-none">
+                    ✦
+                  </div>
                   <p className="text-white/40 text-[10px] font-semibold tracking-widest uppercase">
                     준비중
                   </p>
@@ -360,7 +372,7 @@ function MiniTarotCard({
                 className="flex items-center justify-center w-7 h-7 rounded-lg bg-white/60 dark:bg-white/10 hover:bg-white dark:hover:bg-white/20 active:scale-90 transition-all"
               >
                 <Maximize2
-                  className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400"
+                  className="w-3.5 h-3.5 text-gray-500 dark:text-violet-200"
                   strokeWidth={1.5}
                 />
               </button>
@@ -429,7 +441,9 @@ function InfiniteCardCarousel({
     setDirection(-1);
     setCurrentIndex((prev) => (prev - 1 + total) % total);
     checkAndShowAd();
-    setTimeout(() => { isAnimating.current = false; }, 350);
+    setTimeout(() => {
+      isAnimating.current = false;
+    }, 350);
   };
 
   const goRight = () => {
@@ -438,7 +452,9 @@ function InfiniteCardCarousel({
     setDirection(1);
     setCurrentIndex((prev) => (prev + 1) % total);
     checkAndShowAd();
-    setTimeout(() => { isAnimating.current = false; }, 350);
+    setTimeout(() => {
+      isAnimating.current = false;
+    }, 350);
   };
 
   const handleAreaClick = (e) => {
@@ -583,9 +599,15 @@ export default function TarotSection({
           className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
         >
           {collapsed ? (
-            <ChevronDown className="w-4 h-4 text-gray-400 dark:text-gray-500" strokeWidth={1.5} />
+            <ChevronDown
+              className="w-4 h-4 text-gray-400 dark:text-violet-300/70"
+              strokeWidth={1.5}
+            />
           ) : (
-            <ChevronUp className="w-4 h-4 text-gray-400 dark:text-gray-500" strokeWidth={1.5} />
+            <ChevronUp
+              className="w-4 h-4 text-gray-400 dark:text-violet-300/70"
+              strokeWidth={1.5}
+            />
           )}
         </button>
       </div>
@@ -602,7 +624,7 @@ export default function TarotSection({
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-6 gap-3">
                 <Loader2 className="w-8 h-8 text-violet-400 animate-spin drop-shadow-[0_0_8px_rgba(167,139,250,0.4)]" />
-                <p className="text-xs text-gray-400 dark:text-gray-500 font-medium">
+                <p className="text-xs text-gray-400 dark:text-violet-300/70 font-medium">
                   카드 생성 중...
                 </p>
               </div>

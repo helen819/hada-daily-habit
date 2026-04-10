@@ -106,7 +106,7 @@ export default function EnergyStats({ stats }) {
                   </span>
                 </div>
                 {/* 트랙을 카드보다 어둡게 — 진행된 부분이 확실히 보임 */}
-                <div className="h-2.5 bg-gray-100 dark:bg-[#1A1F2E] rounded-full overflow-hidden">
+                <div className="h-2.5 bg-gray-100 dark:bg-[#211F38] rounded-full overflow-hidden">
                   <motion.div
                     className={`h-full rounded-full ${cfg.barClass}`}
                     initial={{ width: 0 }}

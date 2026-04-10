@@ -68,6 +68,9 @@ const FORTUNE_DETAILED = [
     icon: Wand2,
     subtitle: "주간·월간·연간",
     gradient: "from-violet-300 to-purple-300",
+    glassDark:
+      "dark:bg-violet-900/40 dark:border-violet-500/30 dark:hover:bg-violet-900/60 dark:hover:border-violet-400/50",
+    iconNeon: "dark:drop-shadow-[0_0_6px_rgba(167,139,250,0.9)]",
   },
   {
     id: "love",
@@ -75,6 +78,9 @@ const FORTUNE_DETAILED = [
     icon: Heart,
     subtitle: "관계 에너지",
     gradient: "from-rose-300 to-pink-300",
+    glassDark:
+      "dark:bg-rose-900/40 dark:border-rose-500/30 dark:hover:bg-rose-900/60 dark:hover:border-rose-400/50",
+    iconNeon: "dark:drop-shadow-[0_0_6px_rgba(251,113,133,0.9)]",
   },
   {
     id: "wealth",
@@ -82,6 +88,9 @@ const FORTUNE_DETAILED = [
     icon: Banknote,
     subtitle: "금전 흐름",
     gradient: "from-yellow-300 to-amber-300",
+    glassDark:
+      "dark:bg-amber-900/40 dark:border-amber-500/30 dark:hover:bg-amber-900/60 dark:hover:border-amber-400/50",
+    iconNeon: "dark:drop-shadow-[0_0_6px_rgba(251,191,36,0.9)]",
   },
   {
     id: "career",
@@ -89,6 +98,9 @@ const FORTUNE_DETAILED = [
     icon: Briefcase,
     subtitle: "커리어 기회",
     gradient: "from-indigo-300 to-blue-300",
+    glassDark:
+      "dark:bg-indigo-900/40 dark:border-indigo-500/30 dark:hover:bg-indigo-900/60 dark:hover:border-indigo-400/50",
+    iconNeon: "dark:drop-shadow-[0_0_6px_rgba(99,102,241,0.9)]",
   },
   {
     id: "health",
@@ -96,6 +108,9 @@ const FORTUNE_DETAILED = [
     icon: Leaf,
     subtitle: "몸과 마음",
     gradient: "from-teal-300 to-emerald-300",
+    glassDark:
+      "dark:bg-teal-900/40 dark:border-teal-500/30 dark:hover:bg-teal-900/60 dark:hover:border-teal-400/50",
+    iconNeon: "dark:drop-shadow-[0_0_6px_rgba(45,212,191,0.9)]",
   },
 ];
 
@@ -350,7 +365,7 @@ function TraitsModal({ traits, onClose }) {
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 80, opacity: 0 }}
         transition={{ type: "spring", damping: 28, stiffness: 320 }}
-        className="w-full max-w-lg bg-white dark:bg-gray-900 rounded-t-[32px] px-6 pt-5 pb-12 shadow-2xl max-h-[85vh] overflow-y-auto"
+        className="w-full max-w-lg bg-white dark:bg-[#1A1830] rounded-t-[32px] px-6 pt-5 pb-12 shadow-2xl max-h-[85vh] overflow-y-auto"
       >
         <div className="w-10 h-1 rounded-full bg-gray-200 dark:bg-gray-700 mx-auto mb-6" />
         <div className="flex items-center justify-between mb-8">
@@ -364,7 +379,7 @@ function TraitsModal({ traits, onClose }) {
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400"
+            className="p-2 rounded-xl bg-gray-100 dark:bg-[#2A2845] text-gray-500 dark:text-violet-200"
           >
             <X className="w-4 h-4" />
           </button>
@@ -448,7 +463,7 @@ function ResetConfirmModal({ onConfirm, onCancel }) {
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.88, opacity: 0 }}
         transition={{ type: "spring", damping: 26, stiffness: 340 }}
-        className="bg-white dark:bg-gray-900 rounded-[28px] w-full max-w-sm p-6 shadow-2xl"
+        className="bg-white dark:bg-[#1A1830] rounded-[28px] w-full max-w-sm p-6 shadow-2xl"
       >
         <div className="flex flex-col items-center text-center gap-3">
           <div className="w-14 h-14 rounded-2xl bg-red-50 dark:bg-red-950/40 flex items-center justify-center">
@@ -457,7 +472,7 @@ function ResetConfirmModal({ onConfirm, onCancel }) {
           <h2 className="text-lg font-black text-gray-900 dark:text-white">
             정말 초기화할까요?
           </h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+          <p className="text-sm text-gray-500 dark:text-violet-200 leading-relaxed">
             모든 데이터(프로필, 할일, 기록 등)가
             <br />
             <span className="font-black text-red-400">영구적으로 삭제</span>
@@ -466,7 +481,7 @@ function ResetConfirmModal({ onConfirm, onCancel }) {
           <div className="flex gap-3 w-full mt-2">
             <button
               onClick={onCancel}
-              className="flex-1 h-12 rounded-2xl bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 font-bold text-sm"
+              className="flex-1 h-12 rounded-2xl bg-gray-100 dark:bg-[#2A2845] text-gray-600 dark:text-gray-300 font-bold text-sm"
             >
               취소
             </button>
@@ -496,10 +511,10 @@ function FortuneListItem({
       whileTap={!isLocked ? { scale: 0.98 } : {}}
       onClick={() => !isLocked && onClick(category)}
       disabled={isLoading || isLocked}
-      className={`w-full flex items-center gap-4 rounded-2xl px-4 py-3.5 border transition-all relative overflow-hidden shadow-sm ${
+      className={`w-full flex items-center gap-4 rounded-2xl px-4 py-3.5 border-2 transition-all relative overflow-hidden ${
         isLocked
-          ? "bg-gray-50 dark:bg-gray-800/30 border-gray-100 dark:border-gray-700/30 cursor-not-allowed opacity-70"
-          : "bg-white dark:bg-gray-800/60 border-gray-100 dark:border-gray-700/50 hover:shadow-sm"
+          ? "bg-white/5 dark:bg-white/[0.03] border-purple-900/20 dark:border-violet-800/20 cursor-not-allowed opacity-60"
+          : `bg-white border-gray-100 ${category.glassDark} transition-all`
       }`}
     >
       <div
@@ -517,7 +532,10 @@ function FortuneListItem({
         ) : isLocked ? (
           <Lock className="w-5 h-5 text-gray-400" />
         ) : (
-          <Icon className="w-5 h-5 text-white" strokeWidth={1.5} />
+          <Icon
+            className={`w-5 h-5 text-white ${category.iconNeon}`}
+            strokeWidth={1.5}
+          />
         )}
       </div>
       <div className="relative z-10 flex-1 text-left">
@@ -534,7 +552,7 @@ function FortuneListItem({
           className={`text-xs ${
             isLocked
               ? "text-gray-400 dark:text-gray-600"
-              : "text-gray-400 dark:text-gray-500"
+              : "text-gray-400 dark:text-violet-300/70"
           }`}
         >
           {isLoading
@@ -683,7 +701,7 @@ export default function Profile() {
 
   return (
     <>
-      <div className="min-h-screen bg-[#FDFCFE] dark:bg-gray-950 pb-32 transition-colors duration-300">
+      <div className="min-h-screen bg-[#FDFCFE] dark:bg-[#0F0E17] pb-32 transition-colors duration-300">
         <AdModal visible={showAdForBoost} onClose={handleBoostAdClose} />
         <AdModal visible={showAdForFortune} onClose={handleFortuneAdClose} />
 
@@ -731,7 +749,7 @@ export default function Profile() {
                 <ChevronRight className="w-3 h-3 text-violet-500 dark:text-violet-400" />
               </div>
             </button>
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 font-semibold">
+            <p className="text-xs text-gray-400 dark:text-violet-300/70 mt-1 font-semibold">
               6대 운명학 기반 알고리즘 계산
             </p>
           </motion.div>
@@ -743,7 +761,7 @@ export default function Profile() {
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.05 }}
-            className="flex bg-gray-100 dark:bg-gray-800/60 rounded-2xl p-1 gap-1"
+            className="flex bg-gray-100 dark:bg-[#2A2845]/60 rounded-2xl p-1 gap-1"
           >
             {TABS.map(({ key, label, icon: Icon }) => (
               <button
@@ -751,8 +769,8 @@ export default function Profile() {
                 onClick={() => setActiveTab(key)}
                 className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-black transition-all duration-200 ${
                   activeTab === key
-                    ? "bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-sm"
-                    : "text-gray-400 dark:text-gray-500"
+                    ? "bg-white dark:bg-[#1A1830] text-gray-900 dark:text-white shadow-sm"
+                    : "text-gray-400 dark:text-violet-300/70"
                 }`}
               >
                 <Icon
@@ -788,7 +806,7 @@ export default function Profile() {
                   className={`rounded-3xl p-6 border shadow-[0_4px_24px_rgba(196,181,253,0.15)] ${
                     isLuckyMode
                       ? "bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-950/30 dark:to-yellow-950/30 border-amber-200 dark:border-amber-800/50"
-                      : "bg-white dark:bg-gray-900 border-violet-100 dark:border-gray-800"
+                      : "bg-white dark:bg-[#1A1830] border-violet-100 dark:border-purple-900/30"
                   }`}
                 >
                   <div className="flex items-center justify-between mb-5">
@@ -810,7 +828,7 @@ export default function Profile() {
                         />
                       </div>
                       <div>
-                        <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide">
+                        <p className="text-xs font-medium text-gray-400 dark:text-violet-300/70 uppercase tracking-wide">
                           {isLuckyMode ? "행운 레벨" : "레벨"}
                         </p>
                         <motion.span
@@ -843,7 +861,7 @@ export default function Profile() {
                     className={`h-3 rounded-full overflow-hidden mb-3 ${
                       isLuckyMode
                         ? "bg-amber-100 dark:bg-amber-900/30"
-                        : "bg-violet-50 dark:bg-gray-800"
+                        : "bg-violet-50 dark:bg-[#2A2845]"
                     }`}
                   >
                     <motion.div
@@ -904,7 +922,7 @@ export default function Profile() {
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.08 }}
-                  className="bg-white dark:bg-gray-900 rounded-[32px] border border-gray-100 dark:border-gray-800 p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)]"
+                  className="bg-white dark:bg-[#1A1830] rounded-[32px] border border-gray-100 dark:border-purple-900/30 p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)]"
                 >
                   <div className="flex items-center gap-2.5 mb-4">
                     <div className="w-2 h-6 bg-violet-300 dark:bg-violet-600 rounded-full" />
@@ -923,7 +941,7 @@ export default function Profile() {
                     className={`w-full py-3.5 rounded-2xl border text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50 transition-colors ${
                       resetAllowed
                         ? "border-red-100 dark:border-red-900/40 text-red-400 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30"
-                        : "border-gray-100 dark:border-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed"
+                        : "border-gray-100 dark:border-purple-900/30 text-gray-400 dark:text-gray-600 cursor-not-allowed"
                     }`}
                   >
                     {resetting ? (
@@ -962,7 +980,7 @@ export default function Profile() {
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.16 }}
-                  className="bg-white dark:bg-gray-900 rounded-[32px] border border-gray-100 dark:border-gray-800 p-5 shadow-[0_4px_20px_rgba(0,0,0,0.03)] space-y-4"
+                  className="bg-white dark:bg-[#1A1830]/90 rounded-[32px] border border-gray-100 dark:border-purple-900/30 backdrop-blur-md p-5 dark:shadow-[0_4px_24px_rgba(139,92,246,0.12)] space-y-4"
                 >
                   <div>
                     <div className="flex items-center gap-2.5 mb-3">
@@ -987,11 +1005,11 @@ export default function Profile() {
                           </p>
                         </div>
                       </div>
-                      <div className="bg-white dark:bg-gray-900 border-t border-amber-100 dark:border-amber-900/30 px-5 py-4 space-y-3">
+                      <div className="bg-white dark:bg-[#1A1830] border-t border-amber-100 dark:border-amber-900/30 px-5 py-4 space-y-3">
                         {loadingDailyPreview ? (
                           <div className="flex items-center gap-2">
                             <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-400" />
-                            <p className="text-xs text-gray-400 dark:text-gray-500">
+                            <p className="text-xs text-gray-400 dark:text-violet-300/70">
                               운세 요약 중...
                             </p>
                           </div>
@@ -1000,12 +1018,12 @@ export default function Profile() {
                             <p className="text-sm text-gray-700 dark:text-gray-200 leading-relaxed">
                               ☀️ {dailyPreview.line1}
                             </p>
-                            <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+                            <p className="text-sm text-gray-500 dark:text-violet-200 leading-relaxed">
                               ✨ {dailyPreview.line2}
                             </p>
                           </div>
                         ) : (
-                          <p className="text-xs text-gray-400 dark:text-gray-500">
+                          <p className="text-xs text-gray-400 dark:text-violet-300/70">
                             오늘의 운세를 불러오는 중이에요...
                           </p>
                         )}
@@ -1043,7 +1061,7 @@ export default function Profile() {
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.16 }}
-                  className="bg-white dark:bg-gray-900 rounded-[32px] border border-gray-100 dark:border-gray-800 p-5 shadow-[0_4px_20px_rgba(0,0,0,0.03)] space-y-4"
+                  className="bg-white dark:bg-[#1A1830]/90 rounded-[32px] border border-gray-100 dark:border-purple-900/30 backdrop-blur-md p-5 dark:shadow-[0_4px_24px_rgba(139,92,246,0.12)] space-y-4"
                 >
                   <div>
                     <div className="flex items-center gap-2.5 mb-3">

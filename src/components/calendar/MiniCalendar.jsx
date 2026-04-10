@@ -35,18 +35,21 @@ export default function MiniCalendar({
     year === today.getFullYear();
 
   const dateKey = (d) =>
-    `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+    `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(
+      2,
+      "0",
+    )}`;
   const isSelected = (d) => dateKey(d) === selectedDate;
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-3xl p-4">
+    <div className="bg-white dark:bg-[#1A1830] rounded-3xl p-4">
       {/* 헤더 */}
       <div className="flex items-center justify-between mb-3">
         <button
           onClick={() => onMonthChange(-1)}
           className="p-1.5 rounded-lg hover:bg-violet-50 dark:hover:bg-gray-800 transition-colors"
         >
-          <ChevronLeft className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+          <ChevronLeft className="w-4 h-4 text-gray-400 dark:text-violet-300/70" />
         </button>
         <p className="text-sm font-bold text-gray-800 dark:text-gray-100">
           {year}년 {month + 1}월
@@ -55,7 +58,7 @@ export default function MiniCalendar({
           onClick={() => onMonthChange(1)}
           className="p-1.5 rounded-lg hover:bg-violet-50 dark:hover:bg-gray-800 transition-colors"
         >
-          <ChevronRight className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+          <ChevronRight className="w-4 h-4 text-gray-400 dark:text-violet-300/70" />
         </button>
       </div>
 

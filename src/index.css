@@ -40,25 +40,33 @@
         --safe-area-bottom: env(safe-area-inset-bottom, 0px);
     }
     .dark {
-        --background: 0 0% 3.9%;
-        --foreground: 0 0% 98%;
-        --card: 0 0% 3.9%;
+        --background: 243 24% 7%;
+        /* #0F0E17 */
+        --foreground: 251 100% 95%;
+        /* #EDE9FE */
+        --card: 244 28% 14%;
+        /* #1A1830 */
         --card-foreground: 0 0% 98%;
         --popover: 0 0% 3.9%;
         --popover-foreground: 0 0% 98%;
-        --primary: 0 0% 98%;
+        --primary: 263 70% 76%;
+        /* #A78BFA */
         --primary-foreground: 0 0% 9%;
         --secondary: 0 0% 14.9%;
         --secondary-foreground: 0 0% 98%;
-        --muted: 0 0% 14.9%;
-        --muted-foreground: 0 0% 63.9%;
+        --muted: 244 25% 18%;
+        /* #211F38 */
+        --muted-foreground: 251 40% 70%;
+        /* #C4B5FD */
         --accent: 0 0% 14.9%;
         --accent-foreground: 0 0% 98%;
         --destructive: 0 62.8% 30.6%;
         --destructive-foreground: 0 0% 98%;
-        --border: 0 0% 14.9%;
+        --border: 248 30% 26%;
+        /* rgba purple tint */
         --input: 0 0% 14.9%;
-        --ring: 0 0% 83.1%;
+        --ring: 263 70% 60%;
+        /* #8B5CF6 */
         --chart-1: 220 70% 50%;
         --chart-2: 160 60% 45%;
         --chart-3: 30 80% 55%;
@@ -99,4 +107,48 @@ body.modal-open nav {
 
 nav {
     transition: all 0.3s ease-in-out;
+}
+
+.glass-card {
+    background: rgba(35, 33, 60, 0.70);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(160, 140, 255, 0.18);
+    border-radius: 20px;
+}
+
+.glass-card-bright {
+    background: rgba(42, 40, 69, 0.75);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(160, 140, 255, 0.28);
+}
+
+.neon-glow-purple {
+    text-shadow: 0 0 10px rgba(167, 139, 250, 0.7), 0 0 22px rgba(139, 92, 246, 0.4);
+}
+
+.neon-glow-pink {
+    text-shadow: 0 0 10px rgba(244, 114, 182, 0.7), 0 0 22px rgba(236, 72, 153, 0.35);
+}
+
+.neon-progress {
+    background: linear-gradient(90deg, #8B5CF6, #A78BFA);
+    box-shadow: 0 0 8px rgba(139, 92, 246, 0.5);
+}
+
+
+/* 앰비언트 오라 — 카드 뒤 글로우 효과 */
+
+.ambient-purple::before {
+    content: '';
+    position: absolute;
+    top: -40px;
+    right: -40px;
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    background: rgba(139, 92, 246, 0.12);
+    filter: blur(40px);
+    pointer-events: none;
 }

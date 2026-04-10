@@ -72,8 +72,10 @@ function CountBadge({ text }) {
 
 function Row({ label, right }) {
   return (
-    <div className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800 last:border-0">
-      <span className="text-xs text-gray-500 dark:text-gray-400">{label}</span>
+    <div className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-purple-900/30 last:border-0">
+      <span className="text-xs text-gray-500 dark:text-violet-200">
+        {label}
+      </span>
       <div>{right}</div>
     </div>
   );
@@ -84,7 +86,7 @@ function Counter({ value, onChange, max }) {
     <div className="flex items-center gap-2">
       <button
         onClick={() => onChange(Math.max(0, value - 1))}
-        className="w-6 h-6 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 flex items-center justify-center text-sm font-bold active:scale-90"
+        className="w-6 h-6 rounded-lg bg-gray-100 dark:bg-[#2A2845] text-gray-600 dark:text-gray-300 flex items-center justify-center text-sm font-bold active:scale-90"
       >
         −
       </button>
@@ -95,7 +97,7 @@ function Counter({ value, onChange, max }) {
         onClick={() =>
           onChange(max === 999 ? value + 1 : Math.min(value + 1, max))
         }
-        className="w-6 h-6 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 flex items-center justify-center text-sm font-bold active:scale-90"
+        className="w-6 h-6 rounded-lg bg-gray-100 dark:bg-[#2A2845] text-gray-600 dark:text-gray-300 flex items-center justify-center text-sm font-bold active:scale-90"
       >
         +
       </button>
@@ -215,10 +217,10 @@ export default function DevUnlockPanel() {
               right: 0,
               zIndex: 9998,
             }}
-            className="bg-white dark:bg-gray-950 rounded-t-[28px] shadow-2xl border-t border-gray-200 dark:border-gray-800 max-h-[88vh] overflow-y-auto"
+            className="bg-white dark:bg-[#0F0E17] rounded-t-[28px] shadow-2xl border-t border-gray-200 dark:border-purple-900/30 max-h-[88vh] overflow-y-auto"
           >
             {/* 핸들 */}
-            <div className="sticky top-0 bg-white dark:bg-gray-950 pt-4 pb-2 px-5 z-10 border-b border-gray-100 dark:border-gray-800">
+            <div className="sticky top-0 bg-white dark:bg-[#0F0E17] pt-4 pb-2 px-5 z-10 border-b border-gray-100 dark:border-purple-900/30">
               <div className="w-10 h-1 rounded-full bg-gray-300 dark:bg-gray-700 mx-auto mb-3" />
               <div className="flex items-center justify-between">
                 <div>
@@ -271,7 +273,7 @@ export default function DevUnlockPanel() {
                       className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-colors ${
                         lv === level
                           ? "bg-violet-500 text-white border-violet-500"
-                          : "bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700"
+                          : "bg-gray-50 dark:bg-[#2A2845] text-gray-600 dark:text-violet-200 border-gray-200 dark:border-gray-700"
                       }`}
                     >
                       {lv}
@@ -465,7 +467,7 @@ export default function DevUnlockPanel() {
                       await saveAnalysisUsed(0);
                       await saveLetterUsed(0);
                     }}
-                    className="flex-1 py-2.5 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-xs font-bold active:scale-95"
+                    className="flex-1 py-2.5 rounded-xl bg-gray-100 dark:bg-[#2A2845] text-gray-600 dark:text-gray-300 text-xs font-bold active:scale-95"
                   >
                     사용 횟수 초기화
                   </button>
