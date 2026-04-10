@@ -263,6 +263,13 @@ function ConcernSelectorModal({ goals, onConfirm, onClose }) {
   const [selectedSub, setSelectedSub] = useState(null);
   const [openCatId, setOpenCatId] = useState(null);
 
+  useEffect(() => {
+    // 목표가 딱 1개만 있을 경우 자동으로 선택
+    if (goals && goals.length === 1) {
+      setSelectedGoalId(goals[0].id);
+    }
+  }, [goals]);
+
   const selectedGoal = goals.find((g) => g.id === selectedGoalId);
   const canConfirm = selectedGoalId && selectedCat && selectedSub;
 
