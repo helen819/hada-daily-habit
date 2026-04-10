@@ -472,7 +472,7 @@ function ResetConfirmModal({ onConfirm, onCancel }) {
           <h2 className="text-lg font-black text-gray-900 dark:text-white">
             정말 초기화할까요?
           </h2>
-          <p className="text-sm text-gray-500 dark:text-violet-200 leading-relaxed">
+          <p className="text-sm text-gray-500 dark:text-violet-200 leading-relaxed break-keep">
             모든 데이터(프로필, 할일, 기록 등)가
             <br />
             <span className="font-black text-red-400">영구적으로 삭제</span>
@@ -1015,15 +1015,15 @@ export default function Profile() {
                           </div>
                         ) : dailyPreview ? (
                           <div className="space-y-1">
-                            <p className="text-sm text-gray-700 dark:text-gray-200 leading-relaxed">
+                            <p className="text-sm text-gray-700 dark:text-gray-200 leading-relaxed break-keep">
                               ☀️ {dailyPreview.line1}
                             </p>
-                            <p className="text-sm text-gray-500 dark:text-violet-200 leading-relaxed">
+                            <p className="text-sm text-gray-500 dark:text-violet-200 leading-relaxed break-keep">
                               ✨ {dailyPreview.line2}
                             </p>
                           </div>
                         ) : (
-                          <p className="text-xs text-gray-400 dark:text-violet-300/70">
+                          <p className="text-xs text-gray-400 dark:text-violet-300/70 break-keep">
                             오늘의 운세를 불러오는 중이에요...
                           </p>
                         )}

@@ -96,7 +96,7 @@ function PosterCard({ record, index, colorPair, isDark }) {
           <div className="flex flex-col items-center gap-1 flex-1 justify-center min-h-0">
             <span className="text-lg mb-0.5">{record.emoji || "✨"}</span>
             <p
-              className="font-bold leading-[1.3] text-center"
+              className="font-bold leading-[1.3] text-center break-keep"
               style={{
                 color: color.text,
                 fontSize: getFontSize(),

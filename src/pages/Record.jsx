@@ -406,7 +406,7 @@ export default function Record() {
                                 >
                                   {goal && (
                                     <div className="px-4 py-2.5 bg-purple-50 dark:bg-purple-900/20 border-b border-gray-100 dark:border-purple-900/30">
-                                      <p className="text-xs font-black text-purple-600 dark:text-purple-400">
+                                      <p className="text-xs font-black text-purple-600 dark:text-purple-400 break-keep">
                                         🎯 {goal.title}
                                       </p>
                                     </div>
@@ -418,7 +418,7 @@ export default function Record() {
                                         className="flex items-center gap-3 py-2.5"
                                       >
                                         <CheckCircle2 className="w-4 h-4 text-purple-400 flex-shrink-0" />
-                                        <span className="text-sm text-gray-400 flex-1">
+                                        <span className="text-sm text-gray-400 flex-1 break-keep">
                                           {t.title}
                                         </span>
                                         <span className="text-[10px] font-bold text-purple-400">
@@ -432,7 +432,7 @@ export default function Record() {
                                         className="flex items-center gap-3 py-2.5"
                                       >
                                         <Circle className="w-4 h-4 text-gray-300 dark:text-gray-600 flex-shrink-0" />
-                                        <span className="text-sm text-gray-600 dark:text-gray-300 flex-1">
+                                        <span className="text-sm text-gray-600 dark:text-gray-300 flex-1 break-keep">
                                           {t.title}
                                         </span>
                                         <span className="text-[10px] font-bold text-gray-300 dark:text-gray-600">
@@ -519,10 +519,10 @@ export default function Record() {
                         HADA 요약
                       </p>
                     </div>
-                    <p className="text-sm font-bold text-gray-800 dark:text-white mb-1.5 leading-snug">
+                    <p className="text-sm font-bold text-gray-800 dark:text-white mb-1.5 leading-snug break-keep">
                       {summary.header_text}
                     </p>
-                    <p className="text-xs text-gray-500 dark:text-violet-200 leading-relaxed">
+                    <p className="text-xs text-gray-500 dark:text-violet-200 leading-relaxed break-keep">
                       {summary.encouragement}
                     </p>
                   </motion.div>

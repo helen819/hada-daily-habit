@@ -329,10 +329,10 @@ function ConfirmModal({
         >
           {icon}
         </div>
-        <h3 className="text-base font-black text-gray-900 dark:text-white text-center mb-2">
+        <h3 className="text-base font-black text-gray-900 dark:text-white text-center mb-2 break-keep">
           {title}
         </h3>
-        <p className="text-xs text-gray-500 dark:text-violet-200 text-center leading-relaxed mb-6 whitespace-pre-line">
+        <p className="text-xs text-gray-500 dark:text-violet-200 text-center leading-relaxed mb-6 whitespace-pre-line break-keep">
           {description}
         </p>
         <div className="flex gap-2">
@@ -469,7 +469,7 @@ function GoalFormModal({ mode = "add", initial = {}, onConfirm, onClose }) {
               onChange={(e) => setDescription(e.target.value)}
               rows={4}
               placeholder="왜 이루고 싶은지, 어떻게 실천할지 자유롭게 써주세요..."
-              className="w-full rounded-2xl bg-gray-50 dark:bg-[#2A2845] border-2 border-gray-100 dark:border-gray-700 focus:border-violet-300 dark:focus:border-violet-600 px-4 py-3.5 text-sm resize-none outline-none transition-colors dark:text-white dark:placeholder:text-gray-600"
+              className="w-full rounded-2xl bg-gray-50 dark:bg-[#2A2845] border-2 border-gray-100 dark:border-gray-700 focus:border-violet-300 dark:focus:border-violet-600 px-4 py-3.5 text-sm resize-none outline-none transition-colors dark:text-white dark:placeholder:text-gray-600 break-keep"
             />
           </div>
 
@@ -533,7 +533,7 @@ function AnalysisModal({ goal, analysis, weeklyUsed, maxWeekly, onClose }) {
               <p className="text-[10px] font-bold text-violet-500 dark:text-violet-400 uppercase tracking-widest">
                 HADA 분석
               </p>
-              <p className="text-sm font-black text-gray-900 dark:text-white leading-tight">
+              <p className="text-sm font-black text-gray-900 dark:text-white leading-tight break-keep">
                 {goal.title}
               </p>
             </div>
@@ -598,7 +598,7 @@ function AnalysisModal({ goal, analysis, weeklyUsed, maxWeekly, onClose }) {
               <p className="text-[10px] font-bold text-gray-400 dark:text-violet-300/70 uppercase tracking-widest mb-1">
                 달성도
               </p>
-              <p className="text-sm font-semibold text-gray-700 dark:text-gray-200 leading-relaxed">
+              <p className="text-sm font-semibold text-gray-700 dark:text-gray-200 leading-relaxed break-keep">
                 {analysis?.summary}
               </p>
             </div>
@@ -606,7 +606,7 @@ function AnalysisModal({ goal, analysis, weeklyUsed, maxWeekly, onClose }) {
 
           {analysis?.strengths?.length > 0 && (
             <div>
-              <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-2.5">
+              <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-2.5 break-keep">
                 ✅ 잘하고 있어요
               </p>
               <div className="space-y-2">
@@ -616,7 +616,7 @@ function AnalysisModal({ goal, analysis, weeklyUsed, maxWeekly, onClose }) {
                     className="flex items-start gap-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-2xl px-4 py-3"
                   >
                     <CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
-                    <p className="text-sm text-emerald-800 dark:text-emerald-300 font-medium">
+                    <p className="text-sm text-emerald-800 dark:text-emerald-300 font-medium break-keep">
                       {s}
                     </p>
                   </div>
@@ -627,7 +627,7 @@ function AnalysisModal({ goal, analysis, weeklyUsed, maxWeekly, onClose }) {
 
           {analysis?.suggestions?.length > 0 && (
             <div>
-              <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-2.5">
+              <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-2.5 break-keep">
                 💡 이렇게 해보세요
               </p>
               <div className="space-y-2">
@@ -636,10 +636,10 @@ function AnalysisModal({ goal, analysis, weeklyUsed, maxWeekly, onClose }) {
                     key={i}
                     className="flex items-start gap-3 bg-amber-50 dark:bg-amber-950/40 rounded-2xl px-4 py-3"
                   >
-                    <span className="text-amber-500 font-black text-xs mt-0.5 flex-shrink-0">
+                    <span className="text-amber-500 font-black text-xs mt-0.5 flex-shrink-0 break-keep">
                       {i + 1}
                     </span>
-                    <p className="text-sm text-amber-800 dark:text-amber-300 font-medium">
+                    <p className="text-sm text-amber-800 dark:text-amber-300 font-medium break-keep">
                       {s}
                     </p>
                   </div>
@@ -650,7 +650,7 @@ function AnalysisModal({ goal, analysis, weeklyUsed, maxWeekly, onClose }) {
 
           {analysis?.encouragement && (
             <div className="bg-violet-50 dark:bg-violet-950/40 rounded-3xl px-5 py-4 text-center border border-violet-100 dark:border-violet-900/50">
-              <p className="text-sm font-black text-violet-700 dark:text-violet-300">
+              <p className="text-sm font-black text-violet-700 dark:text-violet-300 break-keep">
                 ✨ {analysis.encouragement}
               </p>
             </div>
@@ -818,7 +818,7 @@ function GoalDetail({
               수정
             </button>
           </div>
-          <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
+          <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed whitespace-pre-wrap break-keep">
             {goal.description || (
               <span className="text-gray-300 dark:text-gray-600 italic">
                 설명이 없어요

@@ -113,9 +113,8 @@ function hhToTimeSlotLabel(raw) {
   if (isNaN(h)) return null;
   if (h >= 6 && h < 12) return "오전";
   if (h >= 12 && h < 18) return "오후";
-  if (h >= 18 && h < 21) return "저녁";
-  if (h >= 21 && h < 22) return "밤";
-  return null; // 범위 밖이면 뱃지 미표시
+  if (h >= 18 && h <= 22) return "저녁";
+  return "밤";
 }
 
 // ─── 시간대 라벨별 뱃지 색상 ──────────────────────────────────
@@ -172,7 +171,7 @@ function TarotDetailModal({ action, onClose, onAdd, added }) {
               <Icon className="w-5 h-5 text-white" strokeWidth={1.5} />
             </div>
             <div>
-              <p className="text-white/90 text-xs font-semibold uppercase tracking-widest">
+              <p className="text-white/90 text-xs font-semibold uppercase tracking-widest break-keep">
                 {action.keyword}
               </p>
               {timeSlot && timeBadgeStyle && (
@@ -195,14 +194,14 @@ function TarotDetailModal({ action, onClose, onAdd, added }) {
 
         {/* 본문 */}
         <div className="p-6 space-y-5 bg-white dark:bg-[#1A1830]">
-          <p className="text-xl font-black text-gray-800 dark:text-gray-100 leading-snug">
+          <p className="text-xl font-black text-gray-800 dark:text-gray-100 leading-snug break-keep">
             {action.micro_action}
           </p>
           <div className="bg-gray-50 dark:bg-[#2A2845] rounded-2xl p-4 border border-gray-100 dark:border-gray-700">
             <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed break-keep">
               {action.how}
               {action.fortune && (
-                <span className="block mt-2 text-violet-500 dark:text-violet-400 font-medium">
+                <span className="block mt-2 text-violet-500 dark:text-violet-400 font-medium break-keep">
                   ✨ {action.fortune}
                 </span>
               )}

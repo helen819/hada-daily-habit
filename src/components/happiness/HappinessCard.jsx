@@ -56,7 +56,7 @@ export default function HappinessCard({ record, index }) {
             {record.date ||
               new Date(record.created_date).toLocaleDateString("ko-KR")}
           </p>
-          <p className="text-sm text-gray-700 dark:text-gray-200 leading-relaxed break-words">
+          <p className="text-sm text-gray-700 dark:text-gray-200 leading-relaxed break-words break-keep">
             {record.text}
           </p>
         </div>

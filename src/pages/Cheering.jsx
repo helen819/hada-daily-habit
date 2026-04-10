@@ -193,10 +193,10 @@ function CheeringLetterModal({
               <p className="text-[10px] font-black text-fuchsia-500 dark:text-fuchsia-400 uppercase tracking-widest">
                 HADA 응원
               </p>
-              <p className="text-sm font-black text-gray-900 dark:text-white leading-tight">
+              <p className="text-sm font-black text-gray-900 dark:text-white leading-tight break-keep">
                 {goalTitle}
               </p>
-              <p className="text-[11px] text-gray-400 dark:text-violet-300/70 mt-0.5">
+              <p className="text-[11px] text-gray-400 dark:text-violet-300/70 mt-0.5 break-keep">
                 {concern} · {subConcern}
               </p>
             </div>
@@ -220,14 +220,14 @@ function CheeringLetterModal({
               <p className="text-[10px] font-black text-fuchsia-400 dark:text-fuchsia-500 uppercase tracking-widest mb-1.5">
                 잘하고 있어요
               </p>
-              <p className="text-sm text-gray-700 dark:text-gray-200 leading-relaxed">
+              <p className="text-sm text-gray-700 dark:text-gray-200 leading-relaxed break-keep">
                 {letter.empathy}
               </p>
             </div>
           )}
           {letter.core_message && (
             <div className="mb-4 bg-white/70 dark:bg-white/5 rounded-2xl px-4 py-3 border border-fuchsia-100 dark:border-fuchsia-800/30">
-              <p className="text-sm font-bold text-fuchsia-800 dark:text-fuchsia-200 leading-relaxed">
+              <p className="text-sm font-bold text-fuchsia-800 dark:text-fuchsia-200 leading-relaxed break-keep">
                 {letter.core_message}
               </p>
             </div>
@@ -237,13 +237,13 @@ function CheeringLetterModal({
               <p className="text-[10px] font-black text-violet-400 dark:text-violet-500 uppercase tracking-widest mb-1.5">
                 이렇게 해보세요
               </p>
-              <p className="text-sm text-gray-700 dark:text-gray-200 leading-relaxed">
+              <p className="text-sm text-gray-700 dark:text-gray-200 leading-relaxed break-keep">
                 {letter.advice}
               </p>
             </div>
           )}
           {letter.closing && (
-            <p className="text-sm font-bold text-fuchsia-600 dark:text-fuchsia-300 text-center pt-2 leading-relaxed">
+            <p className="text-sm font-bold text-fuchsia-600 dark:text-fuchsia-300 text-center pt-2 leading-relaxed break-keep">
               ✨ {letter.closing}
             </p>
           )}
@@ -764,13 +764,13 @@ export default function Cheering() {
                       탭해서 전체 보기 →
                     </span>
                   </div>
-                  <p className="text-base font-black text-amber-800 dark:text-amber-200 mb-1">
+                  <p className="text-base font-black text-amber-800 dark:text-amber-200 mb-1 break-keep">
                     {dailyCharm.name}
                   </p>
-                  <p className="text-xs font-bold text-amber-600 dark:text-amber-400 mb-2">
+                  <p className="text-xs font-bold text-amber-600 dark:text-amber-400 mb-2 break-keep">
                     {dailyCharm.effect}
                   </p>
-                  <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed line-clamp-2">
+                  <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed line-clamp-2 break-keep">
                     {dailyCharm.description}
                   </p>
                 </button>
@@ -807,7 +807,7 @@ export default function Cheering() {
                         <p className="text-[10px] font-black text-amber-500 dark:text-amber-400 uppercase tracking-widest">
                           오늘의 행운
                         </p>
-                        <p className="text-base font-black text-gray-900 dark:text-white leading-tight">
+                        <p className="text-base font-black text-gray-900 dark:text-white leading-tight break-keep">
                           {dailyCharm.name}
                         </p>
                       </div>
@@ -825,7 +825,7 @@ export default function Cheering() {
                       <p className="text-[10px] font-black text-amber-500 dark:text-amber-400 uppercase tracking-widest mb-1.5">
                         핵심 효과
                       </p>
-                      <p className="text-sm font-bold text-amber-800 dark:text-amber-200">
+                      <p className="text-sm font-bold text-amber-800 dark:text-amber-200 break-keep">
                         {dailyCharm.effect}
                       </p>
                     </div>
@@ -833,7 +833,7 @@ export default function Cheering() {
                       <p className="text-[10px] font-black text-amber-600 dark:text-amber-500 uppercase tracking-widest mb-1.5">
                         사용법 · 의미
                       </p>
-                      <p className="text-sm text-gray-700 dark:text-gray-200 leading-relaxed">
+                      <p className="text-sm text-gray-700 dark:text-gray-200 leading-relaxed break-keep">
                         {dailyCharm.description}
                       </p>
                     </div>
@@ -895,7 +895,7 @@ export default function Cheering() {
             </div>
 
             {!isLetterLocked && (
-              <p className="text-xs text-gray-500 dark:text-violet-200 leading-relaxed mb-4">
+              <p className="text-xs text-gray-500 dark:text-violet-200 leading-relaxed mb-4 break-keep">
                 목표를 향해 나아가다 보면 힘든 순간이 찾아오기 마련이에요. 어떤
                 고민인지 선택하면 HADA가 맞춤 응원 편지를 써드려요.
               </p>
@@ -987,13 +987,13 @@ export default function Cheering() {
                       탭해서 전체 보기 →
                     </span>
                   </div>
-                  <p className="text-xs font-bold text-fuchsia-700 dark:text-fuchsia-300 mb-1">
+                  <p className="text-xs font-bold text-fuchsia-700 dark:text-fuchsia-300 mb-1 break-keep">
                     {savedLetterMeta.goalTitle}
                   </p>
-                  <p className="text-[11px] text-gray-500 dark:text-violet-200 mb-3">
+                  <p className="text-[11px] text-gray-500 dark:text-violet-200 mb-3 break-keep">
                     {savedLetterMeta.concern} · {savedLetterMeta.subConcern}
                   </p>
-                  <p className="text-sm font-bold text-gray-800 dark:text-gray-200 leading-relaxed line-clamp-2">
+                  <p className="text-sm font-bold text-gray-800 dark:text-gray-200 leading-relaxed line-clamp-2 break-keep">
                     {savedLetter.core_message}
                   </p>
                 </button>

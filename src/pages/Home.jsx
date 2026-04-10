@@ -294,7 +294,7 @@ function GoalTodoPanel({ goalId, today, profile, todos = [], queryClient }) {
               )}
             </button>
             <span
-              className={`text-sm flex-1 ${
+              className={`text-sm flex-1 break-keep ${
                 todo.completed
                   ? "text-gray-400"
                   : "text-gray-700 dark:text-gray-200"
@@ -374,7 +374,7 @@ function GoalTodoPanel({ goalId, today, profile, todos = [], queryClient }) {
                         />
                       </div>
                       <div>
-                        <p className="text-white/80 text-xs font-semibold uppercase tracking-widest">
+                        <p className="text-white/80 text-xs font-semibold uppercase tracking-widest break-keep">
                           {selectedCard.card_keyword}
                         </p>
                         {(() => {
@@ -408,7 +408,7 @@ function GoalTodoPanel({ goalId, today, profile, todos = [], queryClient }) {
                       <p className="text-sm text-gray-600 dark:text-slate-300 leading-relaxed break-keep">
                         {selectedCard.card_how}
                         {selectedCard.card_fortune && (
-                          <span className="block mt-2 text-purple-600 dark:text-purple-300 font-medium">
+                          <span className="block mt-2 text-purple-600 dark:text-purple-300 font-medium break-keep">
                             ✨ {selectedCard.card_fortune}
                           </span>
                         )}
@@ -1034,7 +1034,7 @@ ${goalsContext}
                 ? `${reading.today_hint}`
                 : `안녕하세요, ${profile.full_name}님!`}
             </h1>
-            <p className="text-xs text-gray-400 dark:text-violet-300/70 mt-3 font-semibold">
+            <p className="text-xs text-gray-400 dark:text-violet-300/70 mt-3 font-semibold break-keep">
               {reading?.welcome_subtitle || profile.goal}
             </p>
           </motion.div>

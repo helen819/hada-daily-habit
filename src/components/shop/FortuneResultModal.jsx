@@ -40,10 +40,10 @@ function SummaryPeriodSection({ title, emoji, data, headerColor }) {
   if (!data) return null;
   return (
     <div className="bg-white dark:bg-[#211F38] rounded-2xl p-4 border border-gray-100 dark:border-[#424B63] shadow-sm space-y-2">
-      <p className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
+      <p className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider break-keep">
         {emoji} {title}
       </p>
-      <p className="text-sm text-gray-700 dark:text-slate-200 leading-relaxed">
+      <p className="text-sm text-gray-700 dark:text-slate-200 leading-relaxed break-keep">
         {data.summary}
       </p>
       {data.actionTips?.length > 0 && (
@@ -54,7 +54,7 @@ function SummaryPeriodSection({ title, emoji, data, headerColor }) {
                 className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0"
                 style={{ backgroundColor: headerColor }}
               />
-              <p className="text-xs text-gray-600 dark:text-slate-300 leading-snug">
+              <p className="text-xs text-gray-600 dark:text-slate-300 leading-snug break-keep">
                 {tip}
               </p>
             </div>
@@ -123,10 +123,10 @@ export default function FortuneResultModal({ result, category, onClose }) {
             >
               <X className="w-4 h-4 text-white" />
             </button>
-            <p className="text-xs font-bold opacity-70 uppercase tracking-widest mb-1">
+            <p className="text-xs font-bold opacity-70 uppercase tracking-widest mb-1 break-keep">
               {category?.title}
             </p>
-            <h2 className="text-xl font-black leading-snug mb-2">
+            <h2 className="text-xl font-black leading-snug mb-2 break-keep">
               {result.summary}
             </h2>
             <p className="text-[10px] opacity-60 leading-tight">
@@ -218,7 +218,7 @@ export default function FortuneResultModal({ result, category, onClose }) {
                               className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0"
                               style={{ backgroundColor: headerColor }}
                             />
-                            <p className="text-xs text-gray-700 dark:text-slate-200 font-medium leading-snug">
+                            <p className="text-xs text-gray-700 dark:text-slate-200 font-medium leading-snug break-keep">
                               {tip}
                             </p>
                           </div>
