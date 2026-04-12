@@ -31,14 +31,14 @@ class DailyAlarmPlugin : Plugin() {
     @PluginMethod
     fun scheduleAlarm(call: PluginCall) {
         val context = context
-        val prefs = context.getSharedPreferences("CAPPrefs", Context.MODE_PRIVATE)
+        val prefs = context.getSharedPreferences("CapacitorStorage", Context.MODE_PRIVATE)
 
         val apiKey = call.getString("apiKey") ?: run {
             call.reject("apiKey 없음")
             return
         }
         prefs.edit()
-            .putString("CAP_local-app_setting_gemini_api_key", "\"$apiKey\"")
+            .putString("local-app_setting_gemini_api_key", "\"$apiKey\"")
             .apply()
 
         val today = getKSTDateString()

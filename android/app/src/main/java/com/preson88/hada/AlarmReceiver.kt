@@ -97,10 +97,10 @@ class AlarmReceiver : BroadcastReceiver() {
         fallbackTitle: String,
         notificationId: Int
     ) {
-        val prefs = context.getSharedPreferences("CAPPrefs", Context.MODE_PRIVATE)
+        val prefs = context.getSharedPreferences("CapacitorStorage", Context.MODE_PRIVATE)
         val today = getKSTDateString()
 
-        val todosJson  = prefs.getString("CAP_local-app_entity_GoalTodo", "[]")
+        val todosJson  = prefs.getString("local-app_entity_GoalTodo", "[]")
         val todosArray = try { JSONArray(todosJson) } catch (e: Exception) { JSONArray() }
 
         // 오늘 날짜 + 카드에서 추가됨 + 미완료 + HH 범위 [fromHour, toHour) 필터
@@ -124,7 +124,7 @@ class AlarmReceiver : BroadcastReceiver() {
             val timeLabel = when {
                 fromHour < 12 -> "오전"
                 fromHour < 18 -> "오후"
-                fromHour < 21 -> "저녁"
+                fromHour < 22 -> "저녁"
                 else          -> "밤"
             }
             val notifTitle = "✨ ${timeLabel} 행운 실천 시간"
@@ -149,7 +149,7 @@ class AlarmReceiver : BroadcastReceiver() {
     // ═══════════════════════════════════════════════════════════════
 
     private fun getFirstGoalTitle(prefs: android.content.SharedPreferences): String {
-        val goalsJson  = prefs.getString("CAP_local-app_entity_Goal", "[]")
+        val goalsJson  = prefs.getString("local-app_entity_Goal", "[]")
         val goalsArray = try { JSONArray(goalsJson) } catch (e: Exception) { return "" }
 
         val active = mutableListOf<JSONObject>()
