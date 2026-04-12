@@ -228,6 +228,28 @@ export default function Record() {
     { key: "happiness", label: "행복", icon: Heart },
   ];
 
+  // 1. 이동 핸들러 추가 (Record 컴포넌트 내부, return 위에)
+  const handleMoveToToday = async (todo) => {
+    try {
+      await base44.entities.GoalTodo.update(todo.id, { date: today });
+      queryClient.invalidateQueries({
+        queryKey: ["allGoalTodosEver", profile?.id],
+      });
+      queryClient.invalidateQueries({ queryKey: ["allGoalTodos", today] });
+    } catch (e) {
+      console.error("이동 실패:", e);
+      alert("이동에 실패했습니다.");
+    }
+  };
+
+  // 2. 활성 목표 id set (진행 중인 목표만 버튼 표시용)
+  const activeGoalIds = useMemo(
+    () => new Set(goals.filter((g) => !g.is_completed).map((g) => g.id)),
+    [goals],
+  );
+
+  const isPastDate = selectedDate && selectedDate < today;
+
   return (
     <div className="min-h-screen bg-[#FDFCFE] dark:bg-[#0F0E17] pb-32 transition-colors duration-300">
       <FireworksEffect visible={showFireworks} />
@@ -435,9 +457,29 @@ export default function Record() {
                                         <span className="text-sm text-gray-600 dark:text-gray-300 flex-1 break-keep">
                                           {t.title}
                                         </span>
-                                        <span className="text-[10px] font-bold text-gray-300 dark:text-gray-600">
-                                          미완료
-                                        </span>
+                                        {isPastDate &&
+                                        activeGoalIds.has(t.goal_id) ? (
+                                          <div className="flex items-center gap-1.5 flex-shrink-0">
+                                            <span className="text-[10px] font-bold text-gray-300 dark:text-gray-600">
+                                              미완료
+                                            </span>
+                                            <button
+                                              onClick={() =>
+                                                handleMoveToToday(t)
+                                              }
+                                              className="flex-shrink-0 text-[10px] font-black px-2 py-1 rounded-lg
+          bg-purple-100 dark:bg-purple-900/40
+          text-purple-600 dark:text-purple-300
+          active:scale-95 transition-transform"
+                                            >
+                                              오늘로 이동
+                                            </button>
+                                          </div>
+                                        ) : (
+                                          <span className="text-[10px] font-bold text-gray-300 dark:text-gray-600">
+                                            미완료
+                                          </span>
+                                        )}
                                       </div>
                                     ))}
                                   </div>
