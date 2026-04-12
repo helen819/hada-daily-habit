@@ -469,55 +469,48 @@ function GoalDetailPanel({
   actions = [],
   todos = [],
   queryClient,
+  currentMode, // ← 새로 받음
 }) {
   const [isGenerating, setIsGenerating] = useState(false);
-  const hasTriggered = useRef(false);
+  const generatingRef = useRef(false);
+  const prevViewedCount = useRef(null);
 
-  useEffect(() => {
-    hasTriggered.current = false;
-  }, [profile?.current_mode]);
+  // 카드 생성 함수 (외부 호출 가능하도록 분리)
+  const generateActions = async (modeOverride) => {
+    if (generatingRef.current) return;
+    generatingRef.current = true;
+    setIsGenerating(true);
+    try {
+      const activeMode =
+        modeOverride || currentMode || profile?.current_mode || "action";
+      const config = MODE_CONFIGS[activeMode] || MODE_CONFIGS["action"];
+      const hour = new Date().getHours();
+      const timeSlot =
+        hour < 6
+          ? "밤"
+          : hour < 12
+          ? "오전"
+          : hour < 18
+          ? "오후"
+          : hour < 22
+          ? "저녁"
+          : "밤";
+      const availableHours = getAvailableHours(hour);
 
-  useEffect(() => {
-    if (hasTriggered.current) return;
+      const recentTodos = [...(todos || [])].sort(
+        (a, b) => new Date(b.created_at) - new Date(a.created_at),
+      );
+      const recentIncomplete = recentTodos
+        .filter((t) => !t.completed)
+        .slice(0, 5)
+        .map((t) => t.title);
+      const recentComplete = recentTodos
+        .filter((t) => t.completed)
+        .slice(0, 5)
+        .map((t) => t.title);
 
-    const recentTodos = [...(todos || [])].sort(
-      (a, b) => new Date(b.created_at) - new Date(a.created_at),
-    );
-    const recentIncomplete = recentTodos
-      .filter((t) => !t.completed)
-      .slice(0, 5)
-      .map((t) => t.title);
-    const recentComplete = recentTodos
-      .filter((t) => t.completed)
-      .slice(0, 5)
-      .map((t) => t.title);
-
-    const unviewed = actions.filter((a) => !a.viewed);
-    if (isGenerating || unviewed.length >= 5 || hasTriggered.current) return;
-
-    const generateActions = async (modeOverride) => {
-      hasTriggered.current = true;
-      setIsGenerating(true);
-      try {
-        const currentMode = modeOverride || profile?.current_mode || "action";
-        const config = MODE_CONFIGS[currentMode] || MODE_CONFIGS["action"];
-        const hour = new Date().getHours();
-        const timeSlot =
-          hour < 6
-            ? "밤"
-            : hour < 12
-            ? "오전"
-            : hour < 18
-            ? "오후"
-            : hour < 22
-            ? "저녁"
-            : "밤";
-
-        // ── 현재 시각부터 오늘 밤 10시(22) 사이에 가능한 HH 목록 ──
-        const availableHours = getAvailableHours(hour);
-
-        const res = await base44.integrations.Core.InvokeLLM({
-          prompt: `
+      const res = await base44.integrations.Core.InvokeLLM({
+        prompt: `
 너는 HADA 앱의 마이크로 액션 생성 엔진이다.
 
 === ${config.name} (${currentMode.toUpperCase()} MODE) ===
@@ -558,8 +551,8 @@ ${timeSlot} (현재 ${hour}시)
 
 [오늘 실행 가능한 시간 범위]
 현재 시각 이후 오늘 밤 10시(22시)까지 가능한 시간(24h HH): ${availableHours.join(
-            ", ",
-          )}
+          ", ",
+        )}
 - recommended_time 필드는 반드시 위 목록 중 정확히 하나의 HH 문자열("09", "14", "21" 등)로만 응답.
 - 5개 카드에 걸쳐 시간이 골고루 분포되도록 배분. 시간이 부족하면 중복 허용.
 - 집중이 필요한 행동은 오전~오후(06~17), 가벼운 행동은 저녁~밤(18~21)에 배치.
@@ -575,6 +568,7 @@ ${recentIncomplete.length ? recentIncomplete.join(", ") : "없음"}
 - 반드시 서로 다른 방향의 행동이어야 한다.
 - 너무 추상적이면 안 되고, 바로 실행 가능한 행동이어야 한다.
 - 반드시 정확히 5개의 카드를 cards 배열로 반환. 5개 미만·초과 금지.
+- 최근 완료한 행동들과 최근 미완료 행동들을 참고하되, 중복되는 행동은 피하라.
 
 각 카드 필드 규칙:
 - keyword: 10자 이내 핵심 단어 (짧게)
@@ -592,47 +586,81 @@ ${recentIncomplete.length ? recentIncomplete.join(", ") : "없음"}
 1~2분이면 바로 할 수 있는 사소한 행동만.
 전문 용어 사용 금지.
 부드러운 존댓말로 작성.`,
-          response_json_schema: {
-            type: "object",
-            properties: {
-              cards: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    keyword: { type: "string" },
-                    micro_action: { type: "string" },
-                    how: { type: "string" },
-                    fortune: { type: "string" },
-                    stat_focus: { type: "string" },
-                    recommended_time: { type: "string" },
-                  },
+        response_json_schema: {
+          type: "object",
+          properties: {
+            cards: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  keyword: { type: "string" },
+                  micro_action: { type: "string" },
+                  how: { type: "string" },
+                  fortune: { type: "string" },
+                  stat_focus: { type: "string" },
+                  recommended_time: { type: "string" },
                 },
               },
             },
           },
-        });
+        },
+      });
 
-        if (res.cards?.length) {
-          for (const card of res.cards) {
-            await base44.entities.GoalAction.create({
-              goal_id: goal.id,
-              user_profile_id: profile?.id,
-              date: today,
-              ...card,
-              completed: false,
-              viewed: false,
-            });
-          }
-          queryClient.invalidateQueries({ queryKey: ["allGoalActions"] });
+      if (res.cards?.length) {
+        for (const card of res.cards) {
+          await base44.entities.GoalAction.create({
+            goal_id: goal.id,
+            user_profile_id: profile?.id,
+            date: today,
+            ...card,
+            completed: false,
+            viewed: false,
+          });
         }
-      } finally {
-        setIsGenerating(false);
+        queryClient.invalidateQueries({ queryKey: ["allGoalActions"] });
       }
-    };
-    generateActions();
-  }, [goal.id, actions]);
+    } finally {
+      generatingRef.current = false;
+      setIsGenerating(false);
+    }
+  };
 
+  // ① 초기 생성: unviewed가 5개 미만일 때만
+  useEffect(() => {
+    const unviewed = actions.filter((a) => !a.viewed);
+    if (isGenerating || generatingRef.current) return;
+    if (unviewed.length < 5) {
+      generateActions();
+    }
+    // viewed 기준 초기값 세팅
+    prevViewedCount.current = actions.filter((a) => a.viewed).length;
+  }, [goal.id]);
+
+  // ② 모드 변경 감지 → 재생성
+  useEffect(() => {
+    const handleModeChange = (e) => {
+      const newMode = e.detail;
+      if (!newMode) return;
+      generateActions(newMode);
+    };
+    window.addEventListener("modeChanged", handleModeChange);
+    return () => window.removeEventListener("modeChanged", handleModeChange);
+  }, [goal.id, profile?.id, today, currentMode, todos]);
+
+  // ③ 5개 이상 오픈 감지 → 재생성
+  useEffect(() => {
+    if (prevViewedCount.current === null) return;
+    const viewedCount = actions.filter((a) => a.viewed).length;
+    const prev = prevViewedCount.current;
+    // 5의 배수를 새로 넘었을 때만 트리거 (예: 4→5, 9→10)
+    if (viewedCount > 0 && Math.floor(viewedCount / 5) > Math.floor(prev / 5)) {
+      prevViewedCount.current = viewedCount;
+      generateActions();
+    } else {
+      prevViewedCount.current = viewedCount;
+    }
+  }, [actions]);
   return (
     <div className="pt-2 space-y-10">
       <div className="px-1">
@@ -688,6 +716,7 @@ export default function Home() {
   const [isInitializing, setIsInitializing] = useState(true);
   const [showModeCard, setShowModeCard] = useState(false);
   const [isAppReady, setIsAppReady] = useState(false);
+  const [currentMode, setCurrentMode] = useState("action");
   const today = getKSTDateString();
 
   const hasGeneratedReading = useRef(false);
@@ -699,6 +728,11 @@ export default function Home() {
     queryFn: () => base44.entities.UserProfile.list(),
   });
   const profile = profiles?.[0];
+
+  // profile 로드 완료 후 동기화하는 useEffect 추가
+  useEffect(() => {
+    if (profile?.current_mode) setCurrentMode(profile.current_mode);
+  }, [profile?.current_mode]);
 
   const generateDailyReading = async (modeOverride) => {
     const currentMode = modeOverride || profile?.current_mode || "action";
@@ -948,6 +982,7 @@ ${goalsContext}
     const handleExternalModeChange = async (e) => {
       const newMode = e.detail;
       if (!newMode || newMode === profile?.current_mode) return;
+      setCurrentMode(newMode); // ← 추가
       isModeChanging.current = true;
       hasGeneratedReading.current = false;
       hasGeneratedActions.current = false;
@@ -1084,6 +1119,7 @@ ${goalsContext}
                   actions={currentActions}
                   todos={currentTodos}
                   queryClient={queryClient}
+                  currentMode={currentMode} // ← 추가
                 />
               </motion.div>
             )}
