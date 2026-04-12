@@ -116,27 +116,18 @@ class AlarmReceiver : BroadcastReceiver() {
         }
 
         if (matched.isNotEmpty()) {
-            // 매칭된 할일이 있을 때: 첫 번째 항목 내용으로 알림
             val first   = matched[0]
             val title   = first.optString("title", "")
-            val keyword = first.optString("card_keyword", "")
 
-            val timeLabel = when {
-                fromHour < 12 -> "오전"
-                fromHour < 18 -> "오후"
-                fromHour < 22 -> "저녁"
-                else          -> "밤"
-            }
-            val notifTitle = "✨ ${timeLabel} 행운 실천 시간"
-            val baseBody   = if (keyword.isNotEmpty()) "[$keyword] $title" else title
-            val finalBody  = if (matched.size > 1) "$baseBody 외 ${matched.size - 1}개" else baseBody
+            val baseBody  = title
+            val finalBody = if (matched.size > 1) "$baseBody 외 ${matched.size - 1}개" else baseBody
 
-            sendNotification(context, notifTitle, finalBody, notificationId)
+            sendNotification(context, fallbackTitle, finalBody, notificationId)  // ← fallbackTitle 고정
         } else {
             // 매칭 없을 때: 첫 번째 목표 이름을 포함한 독려 메시지
             val firstGoal = getFirstGoalTitle(prefs)
             val body = if (firstGoal.isNotEmpty()) {
-                "'$firstGoal' 목표를 위한 행운 카드를 확인해 보세요!"
+                "'$firstGoal' 목표를 위한 행운 실천 카드를 확인해 보세요!"
             } else {
                 "오늘 목표를 위한 행운 실천 카드를 확인하고 할일을 추가해 보세요!"
             }
