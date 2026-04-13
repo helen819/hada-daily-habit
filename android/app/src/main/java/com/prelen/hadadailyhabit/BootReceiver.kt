@@ -1,4 +1,4 @@
-package com.preson88.hada
+package com.prelen.hadadailyhabit
 
 import android.content.BroadcastReceiver
 import android.content.Context

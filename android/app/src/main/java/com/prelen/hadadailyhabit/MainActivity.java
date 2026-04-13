@@ -1,10 +1,8 @@
-package com.preson88.hada;
+package com.prelen.hadadailyhabit;
 
 import android.os.Bundle;
 import androidx.core.splashscreen.SplashScreen; // 임포트 추가
 import com.getcapacitor.BridgeActivity;
-
-import com.preson88.hada.DailyAlarmPlugin;
 
 public class MainActivity extends BridgeActivity {
     @Override

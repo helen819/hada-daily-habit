@@ -29,3 +29,8 @@ dist-ssr
 
 .env
 .env.local
+android/app/release/baselineProfiles/0/app-release.dm
+android/app/release/baselineProfiles/1/app-release.dm
+keystore/release-key.jks
+android/app/release/output-metadata.json
+android/app/src/main/assets/adi-registration.properties

@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.preson88.hada',
+  appId: 'com.prelen.hadadailyhabit',
   appName: 'hada-daily-habit',
   webDir: 'dist',
     plugins: {

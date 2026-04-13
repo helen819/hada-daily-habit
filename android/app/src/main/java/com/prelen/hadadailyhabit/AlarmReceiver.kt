@@ -1,4 +1,4 @@
-package com.preson88.hada
+package com.prelen.hadadailyhabit
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -8,7 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
-import com.preson88.hada.R
+import com.prelen.hadadailyhabit.R
 import kotlinx.coroutines.*
 import org.json.JSONArray
 import org.json.JSONObject

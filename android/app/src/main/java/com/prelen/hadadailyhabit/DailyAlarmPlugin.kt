@@ -1,4 +1,4 @@
-package com.preson88.hada
+package com.prelen.hadadailyhabit
 
 import android.app.AlarmManager
 import android.app.PendingIntent
