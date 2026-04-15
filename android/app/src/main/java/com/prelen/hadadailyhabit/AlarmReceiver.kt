@@ -22,6 +22,17 @@ class AlarmReceiver : BroadcastReceiver() {
         val alarmType = intent.getStringExtra("alarm_type") ?: ""
         val requestCode = intent.getIntExtra("request_code", -1)
 
+        // ── 알림 설정 확인 ──────────────────────────────────────────
+        val prefs = context.getSharedPreferences("CapacitorStorage", Context.MODE_PRIVATE)
+        val notifKey = "local-app_setting_notificationsEnabled"
+        // 값이 없으면 기본값 true (앱 첫 실행 or 초기화 후)
+        val notificationsEnabled = prefs.getString(notifKey, "true")
+        if (notificationsEnabled == "false") {
+            pendingResult.finish()
+            return
+        }
+        // ────────────────────────────────────────────────────────────
+
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 when (alarmType) {

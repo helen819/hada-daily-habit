@@ -17,6 +17,8 @@ import {
   X,
   Sparkles,
   Lock,
+  Bell,
+  BellOff,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import StatsRadar from "@/components/home/StatsRadar";
@@ -584,6 +586,8 @@ export default function Profile() {
   const [showTraitsModal, setShowTraitsModal] = useState(false);
   const [activeTab, setActiveTab] = useState("level");
 
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+
   const [showAdForBoost, setShowAdForBoost] = useState(false);
   const [xpBarPhase, setXpBarPhase] = useState("idle");
 
@@ -616,6 +620,24 @@ export default function Profile() {
     };
     load();
   }, [profile?.id]);
+
+  useEffect(() => {
+    const loadNotifSetting = async () => {
+      try {
+        const saved = await base44.storage.get("notificationsEnabled");
+        if (saved === false) setNotificationsEnabled(false);
+      } catch {}
+    };
+    loadNotifSetting();
+  }, []);
+
+  const handleNotificationToggle = async () => {
+    const next = !notificationsEnabled;
+    setNotificationsEnabled(next);
+    try {
+      await base44.storage.set("notificationsEnabled", next);
+    } catch {}
+  };
 
   const handleBoostClick = () => {
     setShowAdForBoost(true);
@@ -735,23 +757,67 @@ export default function Profile() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <p className="text-[10px] font-black text-violet-500 dark:text-violet-400 uppercase tracking-[0.3em] mb-2">
-              HADA
-            </p>
-            <button
-              onClick={() => setShowTraitsModal(true)}
-              className="group flex items-center gap-2 text-left active:opacity-60 transition-opacity"
-            >
-              <h1 className="text-2xl font-black text-gray-900 dark:text-white leading-tight">
-                프로필
-              </h1>
-              <div className="flex items-center justify-center w-5 h-5 rounded-full bg-violet-100 dark:bg-violet-900/40 mt-1">
-                <ChevronRight className="w-3 h-3 text-violet-500 dark:text-violet-400" />
+            <div className="flex items-end justify-between">
+              <div>
+                <p className="text-[10px] font-black text-violet-500 dark:text-violet-400 uppercase tracking-[0.3em] mb-2">
+                  HADA
+                </p>
+                <button
+                  onClick={() => setShowTraitsModal(true)}
+                  className="group flex items-center gap-2 text-left active:opacity-60 transition-opacity"
+                >
+                  <h1 className="text-2xl font-black text-gray-900 dark:text-white leading-tight">
+                    프로필
+                  </h1>
+                  <div className="flex items-center justify-center w-5 h-5 rounded-full bg-violet-100 dark:bg-violet-900/40 mt-1">
+                    <ChevronRight className="w-3 h-3 text-violet-500 dark:text-violet-400" />
+                  </div>
+                </button>
+                <p className="text-xs text-gray-400 dark:text-violet-300/70 mt-1 font-semibold">
+                  6대 운명학 기반 알고리즘 계산
+                </p>
               </div>
-            </button>
-            <p className="text-xs text-gray-400 dark:text-violet-300/70 mt-1 font-semibold">
-              6대 운명학 기반 알고리즘 계산
-            </p>
+
+              {/* 알림 토글 버튼 — mt-1 제거 */}
+              <div className="flex flex-col items-center gap-1">
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleNotificationToggle}
+                  className={`relative w-11 h-6 rounded-full flex items-center px-0.5 transition-colors duration-300 ${
+                    notificationsEnabled
+                      ? "bg-violet-500 dark:bg-violet-500"
+                      : "bg-gray-200 dark:bg-gray-700"
+                  }`}
+                >
+                  <motion.div
+                    className="w-5 h-5 rounded-full bg-white flex items-center justify-center shadow-sm flex-shrink-0"
+                    animate={{ x: notificationsEnabled ? 20 : 0 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                  >
+                    {notificationsEnabled ? (
+                      <Bell
+                        className="w-2.5 h-2.5 text-violet-500"
+                        strokeWidth={2.5}
+                      />
+                    ) : (
+                      <BellOff
+                        className="w-2.5 h-2.5 text-gray-400"
+                        strokeWidth={2.5}
+                      />
+                    )}
+                  </motion.div>
+                </motion.button>
+                <span
+                  className={`text-[10px] font-bold transition-colors ${
+                    notificationsEnabled
+                      ? "text-violet-500 dark:text-violet-400"
+                      : "text-gray-400 dark:text-gray-600"
+                  }`}
+                >
+                  {notificationsEnabled ? "알림 ON" : "알림 OFF"}
+                </span>
+              </div>
+            </div>
           </motion.div>
         </div>
 
