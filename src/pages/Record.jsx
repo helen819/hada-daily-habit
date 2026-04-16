@@ -571,7 +571,7 @@ export default function Record() {
                 )}
               </AnimatePresence>
 
-              {latestRecords.length > 0 && (
+              {latestRecords.length > 0 && !vaultUnlocked && (
                 <div>
                   <div className="flex items-center gap-2.5 mb-3 px-1">
                     <div className="w-2 h-6 bg-pink-300 rounded-full" />
@@ -583,7 +583,13 @@ export default function Record() {
                     {latestRecords.map((record, i) => (
                       <HappinessCard
                         key={record.id}
-                        record={record}
+                        record={{
+                          ...record,
+                          text:
+                            record.text?.length > 50
+                              ? record.text.slice(0, 50) + "..."
+                              : record.text,
+                        }}
                         index={i}
                       />
                     ))}

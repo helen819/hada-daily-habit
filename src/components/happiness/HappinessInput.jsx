@@ -6,7 +6,7 @@ import { Heart } from "lucide-react";
 import { Keyboard } from "@capacitor/keyboard";
 import { getKSTDateString } from "@/utils/date";
 
-const MAX_LENGTH = 100;
+const MAX_LENGTH = 5000;
 
 const moods = [
   { score: 1, emoji: "😔" },
