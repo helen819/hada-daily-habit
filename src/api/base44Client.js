@@ -274,6 +274,15 @@ export const base44 = {
         //   card_fortune    : 카드의 행운 메시지 (string)
         //   stat_focus      : 카드의 스탯 테마 (색상 결정용)
         GoalTodo: createEntity("GoalTodo"),
+
+        // ── AttendanceRecord 엔티티 ──────────────────────────────────
+        // 앱 출석 기록
+        // 저장 필드:
+        //   id              : 자동 UUID
+        //   created_at      : 자동 생성
+        //   user_profile_id : 소유 유저 ID
+        //   date            : 출석 날짜 "YYYY-MM-DD"
+        AttendanceRecord: createEntity("AttendanceRecord"),
     },
 
     integrations: {

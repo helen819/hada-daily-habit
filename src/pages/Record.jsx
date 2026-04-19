@@ -40,6 +40,7 @@ export default function Record() {
   const [showFireworks, setShowFireworks] = useState(false);
   const [fullRecords, setFullRecords] = useState([]);
   const [isFetchingFull, setIsFetchingFull] = useState(false);
+  const [showHappinessReward, setShowHappinessReward] = useState(false);
 
   const { data: profiles = [] } = useQuery({
     queryKey: ["userProfile"],
@@ -72,6 +73,15 @@ export default function Record() {
     enabled: !!profile?.id,
   });
 
+  const { data: attendanceRecords = [] } = useQuery({
+    queryKey: ["attendanceRecords", profile?.id],
+    queryFn: async () => {
+      const all = await base44.entities.AttendanceRecord.list();
+      return all.filter((r) => r.user_profile_id === profile.id);
+    },
+    enabled: !!profile?.id,
+  });
+
   const dateBadges = useMemo(() => {
     const map = {};
     happinessRecords.forEach((r) => {
@@ -93,12 +103,18 @@ export default function Record() {
       if (total >= 2 && ratio >= 0.7) map[date].add("fire");
       else if (total > 0 && ratio <= 0.2) map[date].add("rest");
     });
+
+    attendanceRecords.forEach((r) => {
+      if (!r.date) return;
+      if (!map[r.date]) map[r.date] = new Set();
+      map[r.date].add("stamp");
+    });
     const result = {};
     Object.entries(map).forEach(([date, set]) => {
       result[date] = [...set];
     });
     return result;
-  }, [happinessRecords, allGoalTodos]);
+  }, [happinessRecords, allGoalTodos, attendanceRecords]);
 
   const handleDateSelect = (date) => {
     setSelectedDate((prev) => (prev === date ? null : date));
@@ -126,10 +142,21 @@ export default function Record() {
 
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.HappinessRecord.create(data),
-    onSuccess: () => {
+    onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ["happinessRecords"] });
       setShowFireworks(true);
       setTimeout(() => setShowFireworks(false), 1200);
+
+      // XP +10 지급
+      if (profile?.id) {
+        const newXp = (profile.xp || 0) + 10;
+        await base44.entities.UserProfile.update(profile.id, {
+          xp: newXp,
+          level: Math.floor(newXp / 100) + 1,
+        });
+        queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+      }
+      setShowHappinessReward(true);
     },
   });
 
@@ -255,6 +282,47 @@ export default function Record() {
       <FireworksEffect visible={showFireworks} />
 
       <AnimatePresence>
+        {showHappinessReward && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[90] flex items-end justify-center pb-12 px-5 bg-black/40 backdrop-blur-sm"
+            onClick={() => setShowHappinessReward(false)}
+          >
+            <motion.div
+              initial={{ y: 60, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 60, opacity: 0 }}
+              transition={{ type: "spring", damping: 22 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-sm bg-white dark:bg-[#1A1830] rounded-[32px] p-7 shadow-2xl border border-pink-100 dark:border-pink-900/40 text-center"
+            >
+              <div className="text-5xl mb-4">💕</div>
+              <p className="text-[10px] font-black text-pink-500 uppercase tracking-[0.3em] mb-2">
+                HADA
+              </p>
+              <p className="text-xl font-black text-gray-900 dark:text-white mb-2 break-keep">
+                행복 기록 완료!
+              </p>
+              <p className="text-sm text-gray-500 dark:text-violet-200 leading-relaxed break-keep mb-5">
+                작은 순간들이 쌓여가고 있어요 ✨
+              </p>
+              <div className="inline-flex items-center gap-2 bg-pink-50 dark:bg-pink-900/30 px-5 py-2.5 rounded-2xl mb-6">
+                <span className="text-base font-black text-pink-600 dark:text-pink-300">
+                  행복 기록 +10 XP
+                </span>
+              </div>
+              <button
+                onClick={() => setShowHappinessReward(false)}
+                className="w-full py-4 bg-pink-500 text-white font-black rounded-2xl active:scale-95 transition-transform"
+              >
+                확인
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+
         {showPoster && (
           <HappinessPoster
             records={fullRecords}
@@ -385,7 +453,7 @@ export default function Record() {
                                 label: "할일 70% 이상 완료",
                               },
                               rest: { emoji: "😴", label: "할일 거의 미완료" },
-                              star: { emoji: "⭐", label: "일정 3개 이상" },
+                              stamp: { emoji: "✅", label: "출석 완료" },
                             };
                             const b = BADGE_LABELS[badge];
                             if (!b) return null;

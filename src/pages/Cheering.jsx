@@ -429,6 +429,9 @@ export default function Cheering() {
   const [savedLetterMeta, setSavedLetterMeta] = useState(null);
   const [weeklyLetterUsed, setWeeklyLetterUsed] = useState(0);
 
+  const [showCharmReward, setShowCharmReward] = useState(false);
+  const [showLetterReward, setShowLetterReward] = useState(false);
+
   const { data: profiles = [] } = useQuery({
     queryKey: ["userProfile"],
     queryFn: () => base44.entities.UserProfile.list(),
@@ -510,6 +513,31 @@ export default function Cheering() {
     charmPromiseRef.current = generateAICharm(profile);
   };
 
+  const handleCharmDetailClose = async () => {
+    setShowCharmDetail(false);
+    if (profile?.id) {
+      const newXp = (profile.xp || 0) + 10;
+      await base44.entities.UserProfile.update(profile.id, {
+        xp: newXp,
+        level: Math.floor(newXp / 100) + 1,
+      });
+      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+    }
+    setShowCharmReward(true);
+  };
+
+  const handleLetterClose = async () => {
+    setLetterResult(null);
+    if (profile?.id) {
+      const newXp = (profile.xp || 0) + 10;
+      await base44.entities.UserProfile.update(profile.id, {
+        xp: newXp,
+        level: Math.floor(newXp / 100) + 1,
+      });
+      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+    }
+    setShowLetterReward(true);
+  };
   const handleCharmAdClose = async () => {
     setShowAdForCharm(false);
     try {
@@ -798,7 +826,7 @@ export default function Cheering() {
                 exit={{ opacity: 0 }}
                 className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm"
                 onClick={(e) =>
-                  e.target === e.currentTarget && setShowCharmDetail(false)
+                  e.target === e.currentTarget && handleCharmDetailClose(false)
                 }
               >
                 <motion.div
@@ -824,7 +852,7 @@ export default function Cheering() {
                       </div>
                     </div>
                     <button
-                      onClick={() => setShowCharmDetail(false)}
+                      onClick={() => handleCharmDetailClose()}
                       className="p-2 rounded-xl bg-gray-100 dark:bg-[#2A2845] text-gray-500 dark:text-violet-200"
                     >
                       <X className="w-4 h-4" />
@@ -1029,8 +1057,95 @@ export default function Cheering() {
             goalTitle={letterResult.goalTitle}
             concern={letterResult.concern}
             subConcern={letterResult.subConcern}
-            onClose={() => setLetterResult(null)}
+            onClose={handleLetterClose}
           />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showCharmReward && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[90] flex items-end justify-center pb-12 px-5 bg-black/40 backdrop-blur-sm"
+            onClick={() => setShowCharmReward(false)}
+          >
+            <motion.div
+              initial={{ y: 60, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 60, opacity: 0 }}
+              transition={{ type: "spring", damping: 22 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-sm bg-white dark:bg-[#1A1830] rounded-[32px] p-7 shadow-2xl border border-amber-100 dark:border-amber-900/40 text-center"
+            >
+              <div className="text-5xl mb-4">🍀</div>
+              <p className="text-[10px] font-black text-amber-500 uppercase tracking-[0.3em] mb-2">
+                HADA
+              </p>
+              <p className="text-xl font-black text-gray-900 dark:text-white mb-2 break-keep">
+                행운 뽑기 완료!
+              </p>
+              <p className="text-sm text-gray-500 dark:text-violet-200 leading-relaxed break-keep mb-5">
+                행운이 함께하길 바라요 ✨
+              </p>
+              <div className="inline-flex items-center gap-2 bg-amber-50 dark:bg-amber-900/30 px-5 py-2.5 rounded-2xl mb-6">
+                <span className="text-base font-black text-amber-600 dark:text-amber-300">
+                  행운 뽑기 +10 XP
+                </span>
+              </div>
+              <button
+                onClick={() => setShowCharmReward(false)}
+                className="w-full py-4 bg-amber-500 text-white font-black rounded-2xl active:scale-95 transition-transform"
+              >
+                확인
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 응원 메시지 XP 보상 팝업 */}
+      <AnimatePresence>
+        {showLetterReward && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[90] flex items-end justify-center pb-12 px-5 bg-black/40 backdrop-blur-sm"
+            onClick={() => setShowLetterReward(false)}
+          >
+            <motion.div
+              initial={{ y: 60, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 60, opacity: 0 }}
+              transition={{ type: "spring", damping: 22 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-sm bg-white dark:bg-[#1A1830] rounded-[32px] p-7 shadow-2xl border border-fuchsia-100 dark:border-fuchsia-900/40 text-center"
+            >
+              <div className="text-5xl mb-4">💌</div>
+              <p className="text-[10px] font-black text-fuchsia-500 uppercase tracking-[0.3em] mb-2">
+                HADA
+              </p>
+              <p className="text-xl font-black text-gray-900 dark:text-white mb-2 break-keep">
+                응원 메시지 받기!
+              </p>
+              <p className="text-sm text-gray-500 dark:text-violet-200 leading-relaxed break-keep mb-5">
+                힘내세요! 잘 하고 있어요 🌸
+              </p>
+              <div className="inline-flex items-center gap-2 bg-fuchsia-50 dark:bg-fuchsia-900/30 px-5 py-2.5 rounded-2xl mb-6">
+                <span className="text-base font-black text-fuchsia-600 dark:text-fuchsia-300">
+                  HADA의 응원 +10 XP
+                </span>
+              </div>
+              <button
+                onClick={() => setShowLetterReward(false)}
+                className="w-full py-4 bg-fuchsia-500 text-white font-black rounded-2xl active:scale-95 transition-transform"
+              >
+                확인
+              </button>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>

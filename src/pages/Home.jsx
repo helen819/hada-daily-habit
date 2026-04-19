@@ -284,7 +284,7 @@ function GoalTodoPanel({ goalId, today, profile, todos = [], queryClient }) {
         {(tab === "ongoing" ? ongoing : done).map((todo) => (
           <div
             key={todo.id}
-            className="flex items-center gap-3 py-3 border-b border-gray-50 dark:border-purple-900/30/50 last:border-0"
+            className="flex items-center gap-3 py-3 border-b border-gray-50 dark:border-purple-900/20 last:border-0"
           >
             <button onClick={() => toggleTodo(todo)}>
               {todo.completed ? (
@@ -723,6 +723,8 @@ export default function Home() {
   const hasGeneratedActions = useRef(false);
   const isModeChanging = useRef(false);
 
+  const [showAttendancePopup, setShowAttendancePopup] = useState(false);
+
   const { data: profiles, isLoading: profileLoading } = useQuery({
     queryKey: ["userProfile"],
     queryFn: () => base44.entities.UserProfile.list(),
@@ -891,6 +893,28 @@ ${goalsContext}
     return newReading;
   };
 
+  const handleAttendanceCheck = async () => {
+    if (!profile?.id) return;
+    const existing = await base44.entities.AttendanceRecord.filter({
+      date: today,
+      user_profile_id: profile.id,
+    });
+    if (existing?.length > 0) return; // 이미 출석한 날
+
+    await base44.entities.AttendanceRecord.create({
+      date: today,
+      user_profile_id: profile.id,
+    });
+
+    const newXp = (profile.xp || 0) + 10;
+    await base44.entities.UserProfile.update(profile.id, {
+      xp: newXp,
+      level: Math.floor(newXp / 100) + 1,
+    });
+    queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+    setShowAttendancePopup(true);
+  };
+
   const { data: readings } = useQuery({
     queryKey: ["dailyReading", today],
     queryFn: async () => {
@@ -1002,6 +1026,7 @@ ${goalsContext}
 
   const handleModeSelect = async (mode) => {
     setShowModeCard(false);
+    await handleAttendanceCheck();
     if (mode === profile?.current_mode) return;
     isModeChanging.current = true;
     hasGeneratedReading.current = false;
@@ -1050,10 +1075,56 @@ ${goalsContext}
       {showModeCard && reading?.mode_card && (
         <ModeCard
           data={reading.mode_card}
-          onDismiss={() => setShowModeCard(false)}
+          onDismiss={async () => {
+            setShowModeCard(false);
+            await handleAttendanceCheck();
+          }}
           onSelect={handleModeSelect}
         />
       )}
+
+      <AnimatePresence>
+        {showAttendancePopup && !showModeCard && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[90] flex items-end justify-center pb-12 px-5 bg-black/40 backdrop-blur-sm"
+            onClick={() => setShowAttendancePopup(false)}
+          >
+            <motion.div
+              initial={{ y: 60, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 60, opacity: 0 }}
+              transition={{ type: "spring", damping: 22 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-sm bg-white dark:bg-[#1A1830] rounded-[32px] p-7 shadow-2xl border border-purple-100 dark:border-purple-900/40 text-center"
+            >
+              <div className="text-5xl mb-4">🎉</div>
+              <p className="text-[10px] font-black text-purple-500 uppercase tracking-[0.3em] mb-2">
+                HADA
+              </p>
+              <p className="text-xl font-black text-gray-900 dark:text-white mb-2 break-keep">
+                오늘 출석 완료!
+              </p>
+              <p className="text-sm text-gray-500 dark:text-violet-200 leading-relaxed break-keep mb-5">
+                꾸준히 나아가는 당신, 잘하고 있어요 ✨
+              </p>
+              <div className="inline-flex items-center gap-2 bg-purple-50 dark:bg-purple-900/30 px-5 py-2.5 rounded-2xl mb-6">
+                <span className="text-base font-black text-purple-600 dark:text-purple-300">
+                  출석 +10 XP
+                </span>
+              </div>
+              <button
+                onClick={() => setShowAttendancePopup(false)}
+                className="w-full py-4 bg-purple-600 text-white font-black rounded-2xl active:scale-95 transition-transform"
+              >
+                확인
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="min-h-screen bg-[#FDFCFE] dark:bg-[#0F0E17] pb-32 transition-colors duration-500">
         <div className="px-6 pt-12 pb-8">
@@ -1075,6 +1146,36 @@ ${goalsContext}
           </motion.div>
         </div>
 
+        {/* <button
+          onClick={async () => {
+            // 출석 기록 삭제
+            const records = await base44.entities.AttendanceRecord.filter({
+              date: today,
+              user_profile_id: profile?.id,
+            });
+            for (const r of records) {
+              await base44.entities.AttendanceRecord.delete(r.id);
+            }
+
+            // 오늘 DailyReading 삭제
+            const readings = await base44.entities.DailyReading.filter({
+              date: today,
+            });
+            for (const r of readings) {
+              await base44.entities.DailyReading.delete(r.id);
+            }
+
+            // homeInitDate + modeCardLastShownDate 초기화
+            await base44.storage.set("homeInitDate", "");
+            await base44.storage.set("modeCardLastShownDate", "");
+
+            alert("초기화 완료 — 앱 재시작하면 처음부터 다시 진행돼요");
+          }}
+          className="fixed bottom-40 right-4 z-50 bg-red-500 text-white text-xs px-3 py-2 rounded-xl"
+        >
+          출석 리셋
+        </button> */}
+
         <div className="px-5 space-y-6">
           <div className="bg-white dark:bg-[#1A1830] rounded-[32px] p-6 shadow-[0_8px_30px_rgba(120,50,255,0.04)] border border-purple-50/50 dark:border-purple-900/30">
             <div className="flex items-center justify-between mb-6">
@@ -1086,7 +1187,7 @@ ${goalsContext}
               </div>
               <div className="bg-purple-50 dark:bg-purple-900/40 px-3 py-1.5 rounded-2xl">
                 <span className="text-[10px] font-black text-purple-600 dark:text-purple-400 tracking-wider">
-                  할일 +10 XP
+                  할일 완료 +10 XP
                 </span>
               </div>
             </div>

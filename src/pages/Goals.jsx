@@ -1066,6 +1066,8 @@ export default function Goals() {
   const [showCannotAdd, setShowCannotAdd] = useState(false);
   const [showCannotDelete, setShowCannotDelete] = useState(false);
   const [analysisModal, setAnalysisModal] = useState(null);
+  const [showAnalysisReward, setShowAnalysisReward] = useState(false);
+  const [showGoalAddReward, setShowGoalAddReward] = useState(false);
 
   // 주간 분석 사용 횟수 관리
   const [weeklyAnalysisUsed, setWeeklyAnalysisUsed] = useState(0);
@@ -1192,6 +1194,17 @@ export default function Goals() {
     });
     await queryClient.invalidateQueries({ queryKey: ["goals", profile.id] });
     setShowAddModal(false);
+
+    // ✅ XP +10 지급
+    if (profile?.id) {
+      const newXp = (profile.xp || 0) + 10;
+      await base44.entities.UserProfile.update(profile.id, {
+        xp: newXp,
+        level: Math.floor(newXp / 100) + 1,
+      });
+      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+    }
+    setShowGoalAddReward(true);
   };
 
   const handleEdit = async ({
@@ -1424,7 +1437,19 @@ export default function Goals() {
             analysis={analysisModal.analysis}
             weeklyUsed={weeklyAnalysisUsed}
             maxWeekly={maxWeeklyAnalysis}
-            onClose={() => setAnalysisModal(null)}
+            onClose={async () => {
+              setAnalysisModal(null);
+              // XP +10 지급
+              if (profile?.id) {
+                const newXp = (profile.xp || 0) + 10;
+                await base44.entities.UserProfile.update(profile.id, {
+                  xp: newXp,
+                  level: Math.floor(newXp / 100) + 1,
+                });
+                queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+              }
+              setShowAnalysisReward(true);
+            }}
           />
         )}
       </AnimatePresence>
@@ -1502,6 +1527,89 @@ export default function Goals() {
             onConfirm={handleDeleteConfirmed}
             onClose={() => setDeleteConfirm(null)}
           />
+        )}
+        {showAnalysisReward && (
+          <motion.div
+            key="analysis-reward"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[90] flex items-end justify-center pb-12 px-5 bg-black/40 backdrop-blur-sm"
+            onClick={() => setShowAnalysisReward(false)}
+          >
+            <motion.div
+              initial={{ y: 60, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 60, opacity: 0 }}
+              transition={{ type: "spring", damping: 22 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-sm bg-white dark:bg-[#1A1830] rounded-[32px] p-7 shadow-2xl border border-violet-100 dark:border-violet-900/40 text-center"
+            >
+              <div className="text-5xl mb-4">✨</div>
+              <p className="text-[10px] font-black text-violet-500 uppercase tracking-[0.3em] mb-2">
+                HADA
+              </p>
+              <p className="text-xl font-black text-gray-900 dark:text-white mb-2 break-keep">
+                분석 완료!
+              </p>
+              <p className="text-sm text-gray-500 dark:text-violet-200 leading-relaxed break-keep mb-5">
+                목표를 돌아보는 시간, 잘하고 있어요 🎯
+              </p>
+              <div className="inline-flex items-center gap-2 bg-violet-50 dark:bg-violet-900/30 px-5 py-2.5 rounded-2xl mb-6">
+                <span className="text-base font-black text-violet-600 dark:text-violet-300">
+                  HADA 분석 받기 +10 XP
+                </span>
+              </div>
+              <button
+                onClick={() => setShowAnalysisReward(false)}
+                className="w-full py-4 bg-violet-600 text-white font-black rounded-2xl active:scale-95 transition-transform"
+              >
+                확인
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {showGoalAddReward && (
+          <motion.div
+            key="goal-add-reward"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[90] flex items-end justify-center pb-12 px-5 bg-black/40 backdrop-blur-sm"
+            onClick={() => setShowGoalAddReward(false)}
+          >
+            <motion.div
+              initial={{ y: 60, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 60, opacity: 0 }}
+              transition={{ type: "spring", damping: 22 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-sm bg-white dark:bg-[#1A1830] rounded-[32px] p-7 shadow-2xl border border-violet-100 dark:border-violet-900/40 text-center"
+            >
+              <div className="text-5xl mb-4">🎯</div>
+              <p className="text-[10px] font-black text-violet-500 uppercase tracking-[0.3em] mb-2">
+                HADA
+              </p>
+              <p className="text-xl font-black text-gray-900 dark:text-white mb-2 break-keep">
+                새 목표 추가 완료!
+              </p>
+              <p className="text-sm text-gray-500 dark:text-violet-200 leading-relaxed break-keep mb-5">
+                아주 큰 첫 걸음을 내딛었어요 ✨
+              </p>
+              <div className="inline-flex items-center gap-2 bg-violet-50 dark:bg-violet-900/30 px-5 py-2.5 rounded-2xl mb-6">
+                <span className="text-base font-black text-violet-600 dark:text-violet-300">
+                  목표 추가 +10 XP
+                </span>
+              </div>
+              <button
+                onClick={() => setShowGoalAddReward(false)}
+                className="w-full py-4 bg-violet-600 text-white font-black rounded-2xl active:scale-95 transition-transform"
+              >
+                확인
+              </button>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>

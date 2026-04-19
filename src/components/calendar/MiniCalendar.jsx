@@ -7,7 +7,7 @@ const BADGE_ICONS = {
   heart: "🩷",
   fire: "🔥",
   rest: "💤",
-  star: "⭐",
+  stamp: "✅",
 };
 
 export default function MiniCalendar({
@@ -96,7 +96,7 @@ export default function MiniCalendar({
               {d}
               {dateBadges?.[key]?.length > 0 ? (
                 <div className="flex gap-0.5 mt-0.5 justify-center leading-none">
-                  {dateBadges[key].slice(0, 2).map((badge, idx) => (
+                  {dateBadges[key].slice(0, 3).map((badge, idx) => (
                     <span key={idx} style={{ fontSize: 7, lineHeight: 1 }}>
                       {BADGE_ICONS[badge]}
                     </span>
