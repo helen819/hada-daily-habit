@@ -36,6 +36,9 @@ import {
 } from "@/config/unlockConfig";
 
 import DevUnlockPanel from "@/components/dev/DevUnlockPanel";
+import { useSubscription } from "@/hooks/useSubscription";
+
+import { useEffectiveLevel } from "@/hooks/useEffectiveLevel";
 
 function getToday() {
   return getKSTDateString();
@@ -576,7 +579,170 @@ function FortuneListItem({
     </motion.button>
   );
 }
+function SubscriptionModal({
+  onClose,
+  onPurchase,
+  isSubscribed,
+  currentPlanId,
+  expiryDate,
+}) {
+  // 요금제 라벨 변환
+  const PLAN_LABELS = {
+    "1week": "1주",
+    "1month": "1개월",
+    "1year": "연간",
+  };
 
+  const formattedExpiry = expiryDate
+    ? `${expiryDate.getFullYear()}년 ${
+        expiryDate.getMonth() + 1
+      }월 ${expiryDate.getDate()}일 ${String(expiryDate.getHours()).padStart(
+        2,
+        "0",
+      )}:${String(expiryDate.getMinutes()).padStart(2, "0")}`
+    : "";
+  const PLANS = [
+    {
+      basePlanId: "1week",
+      label: "1주",
+      price: "8,500원",
+      desc: "1주 광고 제거 및 운세 이용 가능",
+      type: "선불",
+      badge: "체험하기",
+    },
+    {
+      basePlanId: "1month",
+      label: "1개월",
+      price: "14,900원",
+      desc: "1개월 광고 제거 및 운세 이용 가능",
+      type: "자동갱신",
+    },
+    {
+      basePlanId: "1year",
+      label: "연간",
+      price: "129,000원",
+      desc: "1년 광고 제거 및 운세 이용 가능",
+      type: "자동갱신",
+    },
+  ];
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <motion.div
+        initial={{ y: 80, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 80, opacity: 0 }}
+        transition={{ type: "spring", damping: 28, stiffness: 300 }}
+        className="w-full max-w-lg bg-white dark:bg-[#1A1830] rounded-t-[32px] px-6 pt-5 pb-12 shadow-2xl"
+      >
+        <div className="w-10 h-1 rounded-full bg-gray-200 dark:bg-gray-700 mx-auto mb-6" />
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-lg font-black text-gray-900 dark:text-white">
+            광고 제거
+          </h2>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-xl bg-gray-100 dark:bg-[#2A2845] text-gray-500 dark:text-violet-200"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {isSubscribed ? (
+          <>
+            {/* 구독 중 상태 표시 */}
+            <div className="bg-violet-50 dark:bg-violet-950/30 rounded-2xl p-5 mb-6 border border-violet-100 dark:border-violet-800/40">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 rounded-2xl bg-violet-200 dark:bg-violet-800/60 flex items-center justify-center">
+                  <Sparkles className="w-5 h-5 text-violet-600 dark:text-violet-300" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black text-violet-500 dark:text-violet-400 uppercase tracking-widest">
+                    광고제거 이용중
+                  </p>
+                  <p className="text-sm font-black text-gray-900 dark:text-white">
+                    {PLAN_LABELS[currentPlanId] ?? currentPlanId} 구독
+                  </p>
+                </div>
+              </div>
+              {formattedExpiry && (
+                <p className="text-xs text-gray-500 dark:text-violet-300/70 mt-2">
+                  {formattedExpiry}까지 이용 가능해요
+                </p>
+              )}
+            </div>
+
+            <p className="text-xs text-gray-400 dark:text-violet-300/70 mb-6 leading-relaxed break-keep text-center">
+              취소해도 만료일까지 광고 없이 이용 가능해요
+            </p>
+
+            <button
+              onClick={() => {
+                window.open(
+                  "https://play.google.com/store/account/subscriptions?package=com.prelen.hadadailyhabit",
+                  "_system",
+                );
+                onClose();
+              }}
+              className="w-full py-4 rounded-2xl border border-gray-200 dark:border-gray-700 text-sm text-gray-500 dark:text-gray-400 font-bold flex items-center justify-center gap-2"
+            >
+              Google Play에서 구독 관리
+            </button>
+          </>
+        ) : (
+          <>
+            {/* 미구독 - 기존 구매 화면 */}
+
+            <p className="text-xs text-gray-400 dark:text-violet-300/70 mb-6">
+              구독 기간 동안 모든 광고가 제거됩니다
+            </p>
+
+            <div className="space-y-3 mb-6">
+              {PLANS.map((plan) => (
+                <button
+                  key={plan.basePlanId}
+                  onClick={() => onPurchase(plan.basePlanId)}
+                  className="w-full flex items-center justify-between px-5 py-4 rounded-2xl border-2 border-violet-100 dark:border-violet-800/40 bg-violet-50 dark:bg-violet-950/30 active:scale-[0.98] transition-all"
+                >
+                  <div className="text-left">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-black text-gray-900 dark:text-white">
+                        {plan.label}
+                      </p>
+                      {plan.badge && (
+                        <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-violet-500 text-white">
+                          {plan.badge}
+                        </span>
+                      )}
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
+                        {plan.type}
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-400 dark:text-violet-300/70 mt-0.5">
+                      {plan.desc}
+                    </p>
+                  </div>
+                  <p className="text-sm font-black text-violet-600 dark:text-violet-300">
+                    {plan.price}
+                  </p>
+                </button>
+              ))}
+            </div>
+
+            <p className="text-[10px] text-gray-400 dark:text-gray-600 text-center">
+              구독은 Google Play에서 관리되며 언제든지 취소할 수 있습니다
+            </p>
+          </>
+        )}
+      </motion.div>
+    </motion.div>
+  );
+}
 export default function Profile() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -599,12 +765,22 @@ export default function Profile() {
   const [showAdForFortune, setShowAdForFortune] = useState(false);
   const fortunePromiseRef = useRef(null);
 
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+  const {
+    isSubscribed,
+    currentPlanId,
+    expiryDate,
+    purchaseSubscription,
+    checkSubscription,
+  } = useSubscription();
+
   const { data: profiles, isLoading } = useQuery({
     queryKey: ["userProfile"],
     queryFn: () => base44.entities.UserProfile.list(),
   });
   const profile = profiles?.[0];
-  const level = profile?.level || 1;
+  const rawLevel = profile?.level || 1;
+  const level = useEffectiveLevel(rawLevel);
 
   const isLuckyMode = level >= LUCKY_LEVEL_THRESHOLD;
   const nextUnlockMessage = getNextUnlockMessage(level);
@@ -667,9 +843,15 @@ export default function Profile() {
 
   const handleCategoryClick = (category) => {
     setSelectedCategory(category);
-    setShowAdForFortune(true);
-    setLoadingFortune(true);
+    setLoadingFortune(true); // ← 구독자도 로더 표시
     fortunePromiseRef.current = generateFortune(profile, category);
+
+    if (isSubscribed) {
+      // 구독자 → 광고 없이 바로 처리
+      handleFortuneAdClose();
+    } else {
+      setShowAdForFortune(true);
+    }
   };
 
   const handleFortuneAdClose = async () => {
@@ -855,6 +1037,20 @@ export default function Profile() {
         </div>
 
         <div className="px-5 space-y-5">
+          <AnimatePresence>
+            {showSubscriptionModal && (
+              <SubscriptionModal
+                onClose={() => setShowSubscriptionModal(false)}
+                onPurchase={async (basePlanId) => {
+                  await purchaseSubscription(basePlanId);
+                  setShowSubscriptionModal(false);
+                }}
+                isSubscribed={isSubscribed}
+                currentPlanId={currentPlanId}
+                expiryDate={expiryDate}
+              />
+            )}
+          </AnimatePresence>
           <AnimatePresence mode="wait">
             {activeTab === "level" && (
               <motion.div
@@ -999,8 +1195,23 @@ export default function Profile() {
                   <StatsRadar stats={profile.base_stats} />
                 </motion.div>
 
-                {/* 초기화 버튼 */}
-                <div className="pt-2 pb-4">
+                <div className="pt-4 pb-4 space-y-3">
+                  {/* 광고 제거 버튼 */}
+                  <button
+                    onClick={() => setShowSubscriptionModal(true)}
+                    className="w-full py-3.5 rounded-2xl border border-violet-200 dark:border-violet-800/40 text-sm font-bold flex items-center justify-center gap-2 text-violet-600 dark:text-violet-300 hover:bg-violet-50 dark:hover:bg-violet-950/30 transition-colors"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    {isSubscribed
+                      ? expiryDate
+                        ? `${
+                            expiryDate.getMonth() + 1
+                          }월 ${expiryDate.getDate()}일까지 광고제거 이용중`
+                        : "광고제거 이용중"
+                      : "광고 제거"}
+                  </button>
+
+                  {/* 초기화 버튼 */}
                   <button
                     onClick={() => resetAllowed && setShowResetModal(true)}
                     disabled={resetting || !resetAllowed}

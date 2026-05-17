@@ -10,6 +10,7 @@ public class MainActivity extends BridgeActivity {
         // super.onCreate 이전에 호출해야 스플래시가 정상 작동합니다.
         SplashScreen.installSplashScreen(this);
         registerPlugin(DailyAlarmPlugin.class);
+        registerPlugin(BillingPlugin.class);
         super.onCreate(savedInstanceState);
     }
 }

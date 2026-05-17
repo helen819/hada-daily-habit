@@ -37,7 +37,7 @@ import {
 } from "@/config/unlockConfig";
 
 // ▼ 배포 시 false 로 바꾸면 버튼 자체가 사라짐
-const DEV_MODE = false;
+const DEV_MODE = true;
 
 // 해금 발생 레벨만 추린 프리셋
 const LEVEL_PRESETS = [

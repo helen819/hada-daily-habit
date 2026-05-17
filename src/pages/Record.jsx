@@ -23,6 +23,10 @@ import { getKSTDateString } from "@/utils/date";
 
 import { canViewHappinessVault } from "@/config/unlockConfig";
 
+import { useSubscription } from "@/hooks/useSubscription";
+
+import { useEffectiveLevel } from "@/hooks/useEffectiveLevel";
+
 export default function Record() {
   const queryClient = useQueryClient();
   const today = getKSTDateString();
@@ -47,7 +51,9 @@ export default function Record() {
     queryFn: () => base44.entities.UserProfile.list(),
   });
   const profile = profiles[0];
-  const level = profile?.level || 1;
+  const rawLevel = profile?.level || 1;
+  const level = useEffectiveLevel(rawLevel);
+  const { isSubscribed } = useSubscription();
   const vaultUnlocked = canViewHappinessVault(level);
 
   const { data: happinessRecords = [], isLoading: hapLoading } = useQuery({
@@ -162,7 +168,6 @@ export default function Record() {
 
   const handleOpenStorage = async () => {
     if (!vaultUnlocked) return;
-    setShowAd(true);
     setIsFetchingFull(true);
     try {
       const allData = await base44.entities.HappinessRecord.list("created_at");
@@ -171,6 +176,13 @@ export default function Record() {
       console.error("전체 기록 조회 실패:", e);
     } finally {
       setIsFetchingFull(false);
+    }
+
+    if (isSubscribed) {
+      // 구독자 → 광고 없이 바로 포스터 표시
+      setShowPoster(true);
+    } else {
+      setShowAd(true);
     }
   };
 

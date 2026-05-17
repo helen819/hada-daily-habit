@@ -322,12 +322,12 @@ export default function HappinessPoster({ records, onClose }) {
   // 날짜 오름차순 (index 0 = 가장 오래된)
   const sorted = useMemo(
     () =>
-      [...allRecords].sort((a, b) => {
+      [...records].sort((a, b) => {
         const dc = (a.date || "").localeCompare(b.date || "");
         if (dc !== 0) return dc;
         return new Date(a.created_at || 0) - new Date(b.created_at || 0);
       }),
-    [allRecords],
+    [records],
   );
 
   const total = sorted.length;
